@@ -2,6 +2,7 @@
 from fparser.two.parser import ParserFactory
 from fparser.common.readfortran import FortranStringReader
 import fparser.two.Fortran2003 as FortranStructs
+from fparser.two.utils import NoMatchError
 import pickle
 import os
 import re
@@ -30,12 +31,76 @@ def add_omp_identifier(code_buf):
 def remove_omp_identifier(code_buf):
     return reduce(lambda acc, cur: f'{acc}\n{cur[3:]}' if cur.startswith('###') else f'{acc}\n{cur}', code_buf.split('\n'))
 
+def remove_omp(code_buf):
+    code_buf = '\n' + code_buf
+
+    return reduce(lambda acc, cur: acc if cur.lstrip().startswith('!') else f'{acc}\n{cur}', code_buf.split('\n'))
+
+def is_iter(obj):
+    try:
+        iter(obj)
+        return True
+    except TypeError as te:
+        return False
+
 
 class OmpLoop:
     def __init__(self, omp_pragma, loop):
         self.omp_pragma = omp_pragma # omp pragma associated with the given loop
         self.loop = loop             # xml format representing AST structure of loop
 
+class LoopExtractor:
+    def __init__(self):
+        self.pragma = ''
+        self.loops = []
+        self.omp_pragmas = []
+
+    def is_leaf(self, node):
+        try:
+            ch = node.children
+            return False
+        except (TypeError, AttributeError) as e:
+            return True
+
+    def get_pragma(self, prog):
+        children = []
+
+        try:
+            for sub in prog.children:
+                if type(sub) is FortranStructs.Comment and is_for_pragma(str(sub).lower()): 
+                    return str(sub).lower()
+                elif not self.is_leaf(sub):
+                    self.get_pragma(sub)
+
+            return ''
+        except:
+            return None
+
+    def extract_loops(self, prog):
+        children = prog.children
+
+        if not is_iter(children):
+            return 
+
+        for sub in children:
+
+            if type(sub) is FortranStructs.Comment and is_for_pragma(str(sub).lower()):
+                self.pragma = str(sub)
+            elif type(sub) is FortranStructs.Block_Label_Do_Construct or type(sub) is FortranStructs.Block_Nonlabel_Do_Construct:
+
+                if len(self.pragma) != 0:
+                    self.omp_pragmas.append(self.pragma)
+                    self.loops.append(sub)
+                else:  #check for pragma
+                    pragma = self.get_pragma(sub)
+                    
+                    if pragma is not None: # manage to get pragma
+                        self.omp_pragmas.append(pragma)
+                        self.loops.append(sub)
+
+                self.pragma = ''
+            elif not self.is_leaf(sub):
+                self.extract_loops(sub)
 
 class FortranLoopParser:
     def __init__(self, omp_repo, ast_repo):
@@ -45,7 +110,6 @@ class FortranLoopParser:
         self.omp_repo = omp_repo
         self.ast_repo = ast_repo
         self.split_idx = len(os.path.join(self.root_dir, self.omp_repo)) + 1
-
 
     def create_directory(self, dirs):
         '''
@@ -71,24 +135,34 @@ class FortranLoopParser:
             return pickle.load(f)
 
     def create_ast(self, filepath, code_buf):
-        reader = FortranStringReader(code_buf, ignore_comments=False)
-        return self.parser(reader)
-        # try:
-        #     return self.parser.parse(code_buf)
-        # except pycparser.plyparser.ParseError:  
-        #     # print(f'Parser Error: {filepath}')
-        #     return
-        # except:  
-        #     # print(f'Unexpected Error: {filepath}')
-        #     return
+        try:
+            reader = FortranStringReader(code_buf, ignore_comments=False)
+            return self.parser(reader)
+        except NoMatchError:  
+            print(f'Parser Error: {filepath}')
+            return
+        except:  
+            # print(f'Unexpected Error: {filepath}')
+            return
 
     def parse_file(self, root_dir, file_name):
         '''
         Parse the given file into ast and extract to loops associated with omp pargma (or without)
         '''
+        neg = 0
         file_path = os.path.join(root_dir, file_name)
         save_dir = os.path.join(self.ast_repo, root_dir[self.split_idx: ])
         name = os.path.splitext(file_name)[0]
+
+        extractor = LoopExtractor()
+        
+        code_format = """
+            PROGRAM Main
+
+            {}
+
+            END PROGRAM Main
+            """
         
         with open(file_path, 'r') as f:
             
@@ -103,28 +177,27 @@ class FortranLoopParser:
             code = remove_omp_identifier(code)
             ast = self.create_ast(file_path, code)
 
-            # print(ast)
+            if ast is None:                 # file parsing failed
+                return 0, 0
 
-            return 0, 0
+            extractor.extract_loops(ast)
+            pragmas, loops = extractor.omp_pragmas, extractor.loops
 
-            # if ast is None:                 # file parsing failed
-            #     return 0, 0
+            for idx, (pragma, loop) in enumerate(zip(pragmas, loops)):
+                self.create_directory(save_dir) 
+                loop = str(loop)
+                loop = remove_omp(loop)
+                # print(f'===============\n{loop}\n=================')
 
-            # pfv.visit(ast)
+                loop = code_format.format(loop)
 
-            # for idx, (pragma, loop) in enumerate(zip(pfv.pragmas, pfv.pos_nodes)):
-            #     verify_loops.reset()
-            #     verify_loops.visit(loop)
+                if pragma == '':
+                    neg += 1
+                    self.save(os.path.join(save_dir, f'{name}_neg_{idx}.pickle'), None, loop)
+                else:
+                    self.save(os.path.join(save_dir, f'{name}_pos_{idx}.pickle'), pragma, loop)
 
-            #     if not verify_loops.found: # check for barrier/atomic inside a loop - usually a bad case
-            #         self.create_directory(save_dir) 
-            #         self.save(os.path.join(save_dir, f'{name}_pos_{idx}.pickle'), pragma, loop)
-
-            # for idx, loop in enumerate(pfv.neg_nodes):
-            #     self.create_directory(save_dir) 
-            #     self.save(os.path.join(save_dir, f'{name}_neg_{idx}.pickle'), None, loop)
-
-            # return len(pfv.pos_nodes), len(pfv.neg_nodes)
+            return len(pragmas) - neg, neg
 
     def scan_dir(self):
         total_pos = 0
@@ -147,130 +220,16 @@ class FortranLoopParser:
 
         return total_pos, total_neg
 
-code = """
-PROGRAM Area
-IMPLICIT NONE
-
-
-! Declare local variables
-REAL :: radius, Area_Circle
-INTEGER :: idx
-
-!$omp parallel do
-DO idx=1,3
-  print*, idx
-END DO
-
-! what
-DO 100 idx=1,3
-  print*, idx
-100 CONTINUE
-
-!$omp parallel do reduction
-DO idx=1,3
-  print*, idx
-END DO
-
-END PROGRAM Area
-"""
-
-
-code = remove_empty_lines(code)
-code = add_omp_identifier(code)
-code = LINE_COMMENT_RE.sub("", code)
-code = remove_omp_identifier(code)
-# print(code)
-
-READER = FortranStringReader(code, ignore_comments=False)
-F2008_PARSER = ParserFactory().create(std="f2008")
-PROGRAM = F2008_PARSER(READER)
-# print(PROGRAM)
-# PROGRAM
-
-
-# # parser = FortranLoopParser('repositories_openMP', 'fortran_loops')
+parser = FortranLoopParser('../repositories_openMP', '../fortran_loops')
 # parser = FortranLoopParser('../asd', 'fortran_eample')
 
-# # parser.parse_file('example.f90')
-# # data = parser.load('fortran_eample/area_neg_0.pickle')
+# data = parser.load('/home/talkad/Downloads/thesis/data_gathering_script/fortran_loops/bgin/Guided_Missile_Simulation/FFT/FFTE/dzfft2d_pos_0.pickle')
+# data = parser.load('fortran_eample/123/a_pos_4.pickle')
+# print(f'{data.omp_pragma}\n')
+# print(parser.create_ast('', data.loop))
 
-# total = parser.scan_dir()
-# print(total)
+total = parser.scan_dir()
+print(total)
 
-def is_leaf(node):
-    try:
-        ch = node.children
-        return False
-    except (TypeError, AttributeError) as e:
-        return True
-
-loops = []
-pragmas = []
-
-
-class what:
-    def __init__(self):
-        self.pragma = ''
-
-    def get_pragma(self, prog):
-        for sub in prog.children:
-            if type(sub) is FortranStructs.Comment and is_for_pragma(str(sub).lower()): 
-                return str(sub).lower()
-            elif not is_leaf(sub):
-                self.get_pragma(sub)
-
-        return ''
-
-    def func(self, prog):
-        for sub in prog.children:
-            # print(type(sub))
-            if type(sub) is FortranStructs.Comment and is_for_pragma(str(sub).lower()):
-                self.pragma = str(sub)
-                # print(self.pragma )
-            elif type(sub) is FortranStructs.Block_Label_Do_Construct or type(sub) is FortranStructs.Block_Nonlabel_Do_Construct:
-                loops.append(sub)
-                # print('aaaaaaaaaaaaaaaaaaaaaaaaaaa')
-                # print(sub)
-
-                if len(self.pragma) != 0:
-                    pragmas.append(self.pragma)
-                else:  #check for pragma
-                     pragmas.append(self.get_pragma(sub))
-                    # child = sub.children[1]
-                    # print(type(child))
-                    # if type(child) is FortranStructs.Comment and is_for_pragma(str(child).lower()): 
-                    #     pragmas.append(str(child))
-                    # else:
-                    #     pragmas.append('a')
-
-                # print(pragmas)
-
-                self.pragma = ''
-            elif not is_leaf(sub):
-                self.func(sub)
-
-
-w = what()
-w.func(PROGRAM)
-a = str(loops[2])
-a = LINE_COMMENT_RE.sub("", a)
-print(a)
-code_format = """
-PROGRAM Main
-IMPLICIT NONE
-
-{}
-
-END PROGRAM Main
-"""
-code = code_format.format(a)
-
-
-READER = FortranStringReader(code, ignore_comments=False)
-F2008_PARSER = ParserFactory().create(std="f2008")
-PROGRAM = F2008_PARSER(READER)
-
-print(PROGRAM)
-
-# for loop in loops:
-#     print('???' ,loop)
+# pos - 10402 
+# neg - 8103 

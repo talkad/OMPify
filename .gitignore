@@ -2,4 +2,5 @@
 **/fortran_xml_loops
 **/git_repos
 **/repositories_openMP
+**/fortran_loops
 git_clone.sh
