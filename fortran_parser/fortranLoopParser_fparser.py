@@ -175,47 +175,6 @@ END PROGRAM Area
 """
 
 
-code = """
-! ***************************************************
-! OpenMP tutorial
-! J. E. Drut
-! University of North Carolina
-! Chapel Hill
-!
-! CAP-REU program, July 2015
-! 
-! Example 1: Parallelizing a loop with OpenMP;
-!	     Basic understanding of threads.
-! ***************************************************
-
-PROGRAM Example1
-USE defs
-USE omp_lib
-
-IMPLICIT NONE
-
-INTEGER :: i,j,k
-REAL(DP) :: x,y,z
-
-! Get the maximum possible number of threads
-print*, OMP_GET_MAX_THREADS()
-
-! Set the number of available threads by hand
-!CALL OMP_SET_NUM_THREADS(N_thread)
-
-! Our most basic loop, now parallelized
-!$OMP PARALLEL DO
-DO i = 1, 100
-	print*, 'I should not be doing this so many times', i
-END DO
-!$OMP END PARALLEL DO
-
-! Run this code and notice the order in which the values of
-! i are printed to the screen.
-
-END PROGRAM
-"""
-
 code = remove_empty_lines(code)
 code = add_omp_identifier(code)
 code = LINE_COMMENT_RE.sub("", code)
@@ -270,8 +229,8 @@ class what:
                 # print(self.pragma )
             elif type(sub) is FortranStructs.Block_Label_Do_Construct or type(sub) is FortranStructs.Block_Nonlabel_Do_Construct:
                 loops.append(sub)
-                print('aaaaaaaaaaaaaaaaaaaaaaaaaaa')
-                print(sub)
+                # print('aaaaaaaaaaaaaaaaaaaaaaaaaaa')
+                # print(sub)
 
                 if len(self.pragma) != 0:
                     pragmas.append(self.pragma)
@@ -284,7 +243,7 @@ class what:
                     # else:
                     #     pragmas.append('a')
 
-                print(pragmas)
+                # print(pragmas)
 
                 self.pragma = ''
             elif not is_leaf(sub):
@@ -293,7 +252,25 @@ class what:
 
 w = what()
 w.func(PROGRAM)
-# print(pragmas)
+a = str(loops[2])
+a = LINE_COMMENT_RE.sub("", a)
+print(a)
+code_format = """
+PROGRAM Main
+IMPLICIT NONE
+
+{}
+
+END PROGRAM Main
+"""
+code = code_format.format(a)
+
+
+READER = FortranStringReader(code, ignore_comments=False)
+F2008_PARSER = ParserFactory().create(std="f2008")
+PROGRAM = F2008_PARSER(READER)
+
+print(PROGRAM)
 
 # for loop in loops:
 #     print('???' ,loop)
