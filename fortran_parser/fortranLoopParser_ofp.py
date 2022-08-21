@@ -147,7 +147,6 @@ class FortranLoopParser:
                 
 
     def scan_dir(self):
-        # check if fortran file
         total_pos = 0
         total_neg = 0
         omp_repo = os.path.join(self.root_dir, self.omp_repo)
