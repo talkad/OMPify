@@ -151,11 +151,14 @@ class CLoopParser:
         return total_pos, total_neg
 
 
-# parser = CLoopParser('../repositories_openMP', '../c_loops')
+parser = CLoopParser('../repositories_openMP', '../c_loops')
 # parser = CLoopParser('../asd', '../c_loops2')
 
-data = parser.load('/home/talkad/Downloads/thesis/data_gathering_script/c_loops/0xe1d1a/pcs/omp/vec_pos_0.pickle')
-print(data.loop)
+data = parser.load('/home/talkad/Downloads/thesis/data_gathering_script/c_loops/agdhruv/omp-parallel/addition_pos_0.pickle')
+ast = data.loop
+print(f'pragma: {data.omp_pragma}')
+print('code:\n')
+ast.show()
 
 # total = parser.scan_dir()
 # print(total)

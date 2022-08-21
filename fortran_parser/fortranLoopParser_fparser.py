@@ -223,13 +223,14 @@ class FortranLoopParser:
 parser = FortranLoopParser('../repositories_openMP', '../fortran_loops')
 # parser = FortranLoopParser('../asd', 'fortran_eample')
 
-# data = parser.load('/home/talkad/Downloads/thesis/data_gathering_script/fortran_loops/bgin/Guided_Missile_Simulation/FFT/FFTE/dzfft2d_pos_0.pickle')
+data = parser.load('/home/talkad/Downloads/thesis/data_gathering_script/fortran_loops/chdlkl/openmp/chap3/chap3_5_pos_3.pickle')
 # data = parser.load('fortran_eample/123/a_pos_4.pickle')
-# print(f'{data.omp_pragma}\n')
-# print(parser.create_ast('', data.loop))
+print(f'pragma: {data.omp_pragma}\n')
+print('code:')
+print(parser.create_ast('', data.loop))
 
-total = parser.scan_dir()
-print(total)
+# total = parser.scan_dir()
+# print(total)
 
 # pos - 10402 
 # neg - 8103 
