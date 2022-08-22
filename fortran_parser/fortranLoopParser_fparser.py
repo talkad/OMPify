@@ -7,9 +7,10 @@ import pickle
 import os
 import re
 from functools import reduce
+from collections import defaultdict
 
 # ignore line comment
-LINE_COMMENT_RE = re.compile("(^!.*)|(^c.*)|(^C.*)", re.MULTILINE)
+LINE_COMMENT_RE = re.compile("(^!.*)", re.MULTILINE)
 
 def is_for_pragma(line):
     '''
@@ -36,6 +37,21 @@ def remove_omp(code_buf):
 
     return reduce(lambda acc, cur: acc if cur.lstrip().startswith('!') else f'{acc}\n{cur}', code_buf.split('\n'))
 
+def remove_fortran_comments(code_buf):
+    return reduce(lambda acc, cur: acc if cur.lstrip().lower().startswith(('c ','c\t','c\n')) else f'{acc}\n{cur}', code_buf.split('\n'))
+
+def exclusion_case(code_buf):
+    '''
+    loop that contains critical or atomic are usually a bad scenario
+    '''
+    for line in code_buf.split('\n'):
+        l = line.lower()
+
+        if '!$omp ' in l and ('atomic' in l or 'barri' in l or 'critical' in l):
+            return True
+    
+    return False
+
 def is_iter(obj):
     try:
         iter(obj)
@@ -43,11 +59,22 @@ def is_iter(obj):
     except TypeError as te:
         return False
 
+def list_duplicates(seq):
+    tally = defaultdict(list)
+
+    for i,item in enumerate(seq):
+        tally[item].append(i)
+
+    return ((key,locs) for key,locs in tally.items() if len(locs)>1)
+
+# for dup in sorted(list_duplicates(source)):
+#     print(dup)
 
 class OmpLoop:
-    def __init__(self, omp_pragma, loop):
-        self.omp_pragma = omp_pragma # omp pragma associated with the given loop
-        self.loop = loop             # xml format representing AST structure of loop
+    def __init__(self, omp_pragma, ast_loop, textual_loop):
+        self.omp_pragma = omp_pragma         # omp pragma associated with the given loop
+        self.ast_loop = ast_loop             # ast format representing AST structure of loop
+        self.textual_loop = textual_loop     # textual representation of code
 
 class LoopExtractor:
     def __init__(self):
@@ -175,6 +202,8 @@ class FortranLoopParser:
             code = add_omp_identifier(code)
             code = LINE_COMMENT_RE.sub("", code)
             code = remove_omp_identifier(code)
+            code = remove_fortran_comments(code)
+            print(code)
             ast = self.create_ast(file_path, code)
 
             if ast is None:                 # file parsing failed
@@ -187,7 +216,7 @@ class FortranLoopParser:
                 self.create_directory(save_dir) 
                 loop = str(loop)
                 loop = remove_omp(loop)
-                # print(f'===============\n{loop}\n=================')
+                # print(f'===============\{pragma}:\n{loop}\n=================')
 
                 loop = code_format.format(loop)
 
@@ -220,17 +249,17 @@ class FortranLoopParser:
 
         return total_pos, total_neg
 
-parser = FortranLoopParser('../repositories_openMP', '../fortran_loops')
-# parser = FortranLoopParser('../asd', 'fortran_eample')
+# parser = FortranLoopParser('../repositories_openMP', '../fortran_loops')
+parser = FortranLoopParser('../asd', 'fortran_eample')
 
-data = parser.load('/home/talkad/Downloads/thesis/data_gathering_script/fortran_loops/chdlkl/openmp/chap3/chap3_5_pos_3.pickle')
+# data = parser.load('/home/talkad/Downloads/thesis/data_gathering_script/fortran_loops/chdlkl/openmp/chap3/chap3_5_pos_3.pickle')
 # data = parser.load('fortran_eample/123/a_pos_4.pickle')
-print(f'pragma: {data.omp_pragma}\n')
-print('code:')
-print(parser.create_ast('', data.loop))
+# print(f'pragma: {data.omp_pragma}\n')
+# print('code:')
+# print(parser.create_ast('', data.loop))
 
-# total = parser.scan_dir()
-# print(total)
+total = parser.scan_dir()
+print(total)
 
-# pos - 10402 
-# neg - 8103 
+# pos - 14474 
+# neg - 10481 

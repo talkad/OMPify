@@ -104,7 +104,7 @@ class CLoopParser:
 
             code = INCLUDES_RE.sub("", code)
             code = LINE_COMMENT_RE.sub("", code)
-            code = MULTILINE_COMMENT_RE.sub("", code)
+            code  = MULTILINE_COMMENT_RE.sub("", code)
             code = self.join_splited_lines(code)
             code = self.join_funcDecl(code)
             ast = self.create_ast(file_path, code)

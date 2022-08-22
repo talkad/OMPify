@@ -39,7 +39,9 @@ int gaussElim(double *A, double *b, double *det, int N)
         *det = *det * A[k*N+k];
     #pragma omp parallel
     {
+		/*
         #pragma omp for 
+		*/
             for (i=k+1; i<N; i++) {
                 ratio = A[i*N+k]/A[k*N+k];
                 b[i] = b[i] - b[k] * ratio;

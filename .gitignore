@@ -3,4 +3,5 @@
 **/git_repos
 **/repositories_openMP
 **/fortran_loops
+**/PCX
 git_clone.sh
