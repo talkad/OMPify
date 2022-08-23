@@ -1,95 +1,353 @@
-module m_iter_jacobi
-use m_global_data, only: mk, nthreads
-! openmp declaration
-!$ use omp_lib 
-contains
-    subroutine iter_jacobi(N,T_old,T_new,f,k_max,d,X_start, X_end, Y_start, Y_end)
-    implicit none
-    integer(mk) :: i, j, k, k_max, count0, count1, c_rate, tid
-    integer(mk) :: N
-    real(mk) :: elap_time, norm, sum, d, delta_X, delta_Y, X_start, X_end, Y_start, Y_end,norm1,norm2, aii, t0, t1
-    real(mk),dimension(:,:) :: T_new, T_old, f
+!
+! This file is part of TeaLeaf.
+!
+! TeaLeaf is free software: you can redistribute it and/or modify it under 
+! the terms of the GNU General Public License as published by the 
+! Free Software Foundation, either version 3 of the License, or (at your option) 
+! any later version.
+!
+! TeaLeaf is distributed in the hope that it will be useful, but 
+! WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or 
+! FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more 
+! details.
+!
+! You should have received a copy of the GNU General Public License along with 
+! TeaLeaf. If not, see http://www.gnu.org/licenses/.
+
+!>  @brief Fortran heat conduction kernel
+!>  @author Michael Boulton, Wayne Gaudin
+!>  @details Implicitly calculates the change in temperature using accelerated Chebyshev method
+
+MODULE tea_leaf_kernel_cheby_module
+
+    IMPLICIT NONE
+
+CONTAINS
+
+    SUBROUTINE tea_leaf_calc_2norm_kernel(x_min, &
+            x_max,             &
+            y_min,             &
+            y_max,             &
+            arr,               &
+            norm, &
+            dev_id)
+
+        IMPLICIT NONE
+
+        INTEGER(KIND=4):: x_min,x_max,y_min,y_max
+        REAL(KIND=8), DIMENSION(x_min-2:x_max+2,y_min-2:y_max+2) :: arr
+        REAL(KIND=8) :: norm
+        integer :: j,k,l,dev_id
 
 
-    delta_X = (X_end - X_start) / real(N+1, mk)
-    delta_Y = (Y_end - Y_start) / real(N+1, mk)
-    !print*, delta_X
-    !print*, delta_Y
-    norm = 50
-    k = 0
-    aii = 1.0/4.0
-    sum = 0.0
-    ! call system clock
-    !call system_clock(count=count0, count_rate=c_rate)
-    
-    !$ t0 = omp_get_wtime()
-     
-   
-    !$omp parallel default(shared) private(i, j, tid)
-      !$omp master
-!$  nthreads = omp_get_num_threads()
-      print*,'num threads iter jacobi = ', nthreads
-      !$omp end master
-    do while (norm > d .and. k < k_max)
-        
-    !   !$omp single !puts up a implicit barrier and every thread runs it.
-    !    sum = 0.0
-    !   !$omp end single
-        
-       !!$omp parallel do num_threads(nthreads) default(shared) private(i, j) 
-        !$omp do schedule(runtime) reduction(+ : sum) ! Can we place it only for the inner do where all the code is?
-        do j=2,N+1
-            do i=2,N+1
-                T_new(i,j) = aii * (T_old(i-1,j) +&
-                                        T_old(i+1,j) +&
-                                        T_old(i,j-1) +&
-                                        T_old(i,j+1) +&
-                                        delta_X*delta_Y * f(i,j))
-               ! !$omp critical(cric_sum)
-                sum = sum + (T_new(i,j) - T_old(i,j))*(T_new(i,j) - T_old(i,j))
-               ! !$omp end critical(cric_sum)
-                 !print*,'sum =', sum,'tid= ', tid   
-            enddo
-        !$  tid = omp_get_thread_num()
-        enddo
-      !$omp end do  
-    !!$omp end parallel do
-    !$omp single
-    k = k + 1
+        norm = 0.0_8
+        !$OMP TARGET DEVICE(dev_id)
+        !$OMP PARALLEL DO REDUCTION(+:norm)
+        DO k=y_min,y_max
+            DO j=x_min,x_max
+                norm = norm + arr(j, k)*arr(j, k)
+            ENDDO
+        ENDDO
+        !$OMP END PARALLEL DO
+        !$OMP END TARGET
+    end SUBROUTINE tea_leaf_calc_2norm_kernel
 
-    ! calculate the norm
-    norm = sum ** 0.5
+    SUBROUTINE tea_leaf_kernel_cheby_init(x_min,             &
+            x_max,             &
+            y_min,             &
+            y_max,             &
+            u,                &
+            u0,                &
+            p,                &
+            r,            &
+            Mi,            &
+            w,     &
+            z,            &
+            Kx,                &
+            Ky,  &
+            ch_alphas, &
+            ch_betas, &
+            max_cheby_iters, &
+            rx, &
+            ry, &
+            theta, &
+            error, &
+            preconditioner_on, &
+            dev_id)
+        IMPLICIT NONE
 
-    sum = 0.0
-    !print*,'k=',k, 'tid=',tid
-    !print*,'norm=',norm, 'tid=',tid
-    !$omp end single
-    !print*,'d',d !debug
-    !!$omp parallel default(shared) private(i,j)
-    !$omp do schedule(runtime)
-    do j=2,N+1
-        do i=2,N+1
-           T_old(i,j) = T_new(i,j)
+        LOGICAL :: preconditioner_on
+        INTEGER(KIND=4):: x_min,x_max,y_min,y_max
+        REAL(KIND=8), DIMENSION(x_min-2:x_max+2,y_min-2:y_max+2) :: u
+        REAL(KIND=8), DIMENSION(x_min-2:x_max+2,y_min-2:y_max+2) :: u0
+        REAL(KIND=8), DIMENSION(x_min-2:x_max+2,y_min-2:y_max+2) :: w
+        REAL(KIND=8), DIMENSION(x_min-2:x_max+2,y_min-2:y_max+2) :: p, r, Mi, z
+        REAL(KIND=8), DIMENSION(x_min-2:x_max+2,y_min-2:y_max+2) :: Kx, Ky
+
+        INTEGER :: j,k,l, max_cheby_iters,dev_id
+        REAL(KIND=8) ::  rx, ry, error, theta
+        REAL(KIND=8), DIMENSION(max_cheby_iters) :: ch_alphas, ch_betas
+
+        !$OMP TARGET DEVICE(dev_id)
+        !$OMP PARALLEL
+        IF (preconditioner_on) THEN
+            !$OMP DO
+            DO k=y_min,y_max
+                DO j=x_min,x_max
+                    w(j, k) = (1.0_8                                      &
+                        + rx*(Kx(j+1, k) + Kx(j, k)) &
+                        + ry*(Ky(j, k+1) + Ky(j, k)))*u(j, k)             &
+                        - rx*(Kx(j+1, k)*u(j+1, k) + Kx(j, k)*u(j-1, k)) &
+                        - ry*(Ky(j, k+1)*u(j, k+1) + Ky(j, k)*u(j, k-1)) 
+                    r(j, k) = u0(j, k) - w(j, k)
+
+                    p(j, k) = (Mi(j, k)*r(j, k))/theta
+                ENDDO
+            ENDDO
+            !$OMP END DO
+        ELSE
+            !$OMP DO
+            DO k=y_min,y_max
+                DO j=x_min,x_max
+                    w(j, k) = (1.0_8                                      &
+                        + rx*(Kx(j+1, k) + Kx(j, k)) &
+                        + ry*(Ky(j, k+1) + Ky(j, k)))*u(j, k)             &
+                        - rx*(Kx(j+1, k)*u(j+1, k) + Kx(j, k)*u(j-1, k)) &
+                        - ry*(Ky(j, k+1)*u(j, k+1) + Ky(j, k)*u(j, k-1)) 
+                    r(j, k) = u0(j, k) - w(j, k)
+
+                    p(j, k) = r(j, k)/theta
+                ENDDO
+            ENDDO
+            !$OMP END DO
+        ENDIF
+        !$OMP DO
+        DO k=y_min,y_max
+            DO j=x_min,x_max
+                u(j, k) = u(j, k) + p(j, k)
+            ENDDO
+        ENDDO
+        !$OMP END DO
+        !$OMP END PARALLEL
+        !$OMP END TARGET
+
+    END SUBROUTINE
+
+    SUBROUTINE tea_leaf_kernel_cheby_iterate(x_min,             &
+            x_max,             &
+            y_min,             &
+            y_max,             &
+            u,                &
+            u0,                &
+            p,                &
+            r,            &
+            Mi,            &
+            w,     &
+            z,            &
+            Kx,                &
+            Ky,  &
+            ch_alphas, &
+            ch_betas, &
+            max_cheby_iters, &
+            rx, &
+            ry, &
+            step, &
+            preconditioner_on, &
+            dev_id)
+
+        IMPLICIT NONE
+
+        LOGICAL :: preconditioner_on
+        INTEGER(KIND=4):: x_min,x_max,y_min,y_max,dev_id
+        REAL(KIND=8), DIMENSION(x_min-2:x_max+2,y_min-2:y_max+2) :: u
+        REAL(KIND=8), DIMENSION(x_min-2:x_max+2,y_min-2:y_max+2) :: u0
+        REAL(KIND=8), DIMENSION(x_min-2:x_max+2,y_min-2:y_max+2) :: w
+        REAL(KIND=8), DIMENSION(x_min-2:x_max+2,y_min-2:y_max+2) :: p, r, Mi, z
+        REAL(KIND=8), DIMENSION(x_min-2:x_max+2,y_min-2:y_max+2) :: Kx, Ky
+
+        INTEGER :: j,k,l
+
+        REAL(KIND=8) ::  rx, ry
+
+        INTEGER :: step, max_cheby_iters
+        REAL(KIND=8), DIMENSION(max_cheby_iters) :: ch_alphas, ch_betas
+
+        !$OMP TARGET DEVICE(dev_id)
+        !$OMP PARALLEL
+        IF (preconditioner_on) THEN
+            !$OMP DO
+            DO k=y_min,y_max
+                DO j=x_min,x_max
+                    w(j, k) = (1.0_8                                      &
+                        + rx*(Kx(j+1, k) + Kx(j, k)) &
+                        + ry*(Ky(j, k+1) + Ky(j, k)))*u(j, k)             &
+                        - rx*(Kx(j+1, k)*u(j+1, k) + Kx(j, k)*u(j-1, k)) &
+                        - ry*(Ky(j, k+1)*u(j, k+1) + Ky(j, k)*u(j, k-1))
+                    r(j, k) = u0(j, k) - w(j, k)
+
+                    p(j, k) = ch_alphas(step)*p(j, k) + ch_betas(step)*Mi(j, k)*r(j, k)
+                ENDDO
+            ENDDO
+            !$OMP END DO
+        ELSE
+            !$OMP DO
+            DO k=y_min,y_max
+                DO j=x_min,x_max
+                    w(j, k) = (1.0_8                                      &
+                        + rx*(Kx(j+1, k) + Kx(j, k)) &
+                        + ry*(Ky(j, k+1) + Ky(j, k)))*u(j, k)             &
+                        - rx*(Kx(j+1, k)*u(j+1, k) + Kx(j, k)*u(j-1, k)) &
+                        - ry*(Ky(j, k+1)*u(j, k+1) + Ky(j, k)*u(j, k-1)) 
+                    r(j, k) = u0(j, k) - w(j, k)
+
+                    p(j, k) = ch_alphas(step)*p(j, k) + ch_betas(step)*r(j, k)
+                ENDDO
+            ENDDO
+            !$OMP END DO
+        ENDIF
+        !$OMP DO
+        DO k=y_min,y_max
+            DO j=x_min,x_max
+                u(j, k) = u(j, k) + p(j, k)
+            ENDDO
+        ENDDO
+        !$OMP END DO
+        !$OMP END PARALLEL
+        !$OMP END TARGET
+
+    END SUBROUTINE tea_leaf_kernel_cheby_iterate
+
+    SUBROUTINE tea_leaf_kernel_cheby_copy_u(x_min,             &
+            x_max,             &
+            y_min,             &
+            y_max,             &
+            u0, u, &
+            dev_id)
+        IMPLICIT NONE
+
+        INTEGER(KIND=4):: x_min,x_max,y_min,y_max,dev_id
+        REAL(KIND=8), DIMENSION(x_min-2:x_max+2,y_min-2:y_max+2) :: u, u0
+        INTEGER(KIND=4) :: j,k,l
+
+        !$OMP TARGET DEVICE(dev_id)
+        !$OMP PARALLEL
+        !$OMP DO
+        DO k=y_min,y_max
+            DO j=x_min,x_max
+                u0(j, k) = u(j, k)
+            ENDDO
+        ENDDO
+        !$OMP END DO
+        !$OMP END PARALLEL
+        !$OMP END TARGET
+    end SUBROUTINE
+
+    SUBROUTINE tqli(d,e,n, info)
+        ! http://physics.sharif.edu/~jafari/fortran-codes/lanczos/tqli.f90
+        IMPLICIT NONE
+
+        REAL(KIND=8), DIMENSION(n) :: d,e
+        INTEGER :: i,iter,l,m,n,info
+        REAL(KIND=8) :: b,c,dd,f,g,p,r,s
+
+
+        e(:)=eoshift(e(:),1)
+        info = 0
+        DO l=1,n
+            iter=0
+            iterate: DO
+                DO m=l,n-1
+                    dd=ABS(d(m))+ABS(d(m+1))
+                    IF (ABS(e(m))+dd == dd) EXIT
+                ENDDO
+                IF (m == l) EXIT iterate
+                IF (iter == 30) THEN
+                    info=1
+                    RETURN
+                ENDIF
+                iter=iter+1
+                g=(d(l+1)-d(l))/(2.0_8*e(l))
+                r=SQRT(g**2.0_8+1.0_8**2.0_8)
+                g=d(m)-d(l)+e(l)/(g+SIGN(r,g))
+                s=1.0_8
+                c=1.0_8
+                p=0.0_8
+                DO i=m-1,l,-1
+                    f=s*e(i)
+                    b=c*e(i)
+                    r=SQRT(f**2.0_8+g**2.0_8)
+                    e(i+1)=r
+                    IF (r == 0.0_8) THEN
+                        d(i+1)=d(i+1)-p
+                        e(m)=0.0_8
+                        CYCLE iterate
+                    ENDIF
+                    s=f/r
+                    c=g/r
+                    g=d(i+1)-p
+                    r=(d(i)-g)*s+2.0_8*c*b
+                    p=s*r
+                    d(i+1)=g+p
+                    g=c*r-b
+                ENDDO
+                d(l)=d(l)-p
+                e(l)=g
+                e(m)=0.0_8
+            end do iterate
         end do
-     end do      
-    !$omp end do nowait
-    !!$omp end parallel
-    !print*,'*',  'tid=',tid
+    END SUBROUTINE tqli
 
-    enddo
-    !$omp end parallel
+    SUBROUTINE tea_calc_eigenvalues(cg_alphas, cg_betas, eigmin, eigmax, &
+            max_iters, tl_ch_cg_presteps, info)
+
+        INTEGER :: tl_ch_cg_presteps, max_iters
+        REAL(KIND=8), DIMENSION(max_iters) :: cg_alphas, cg_betas
+        REAL(KIND=8), DIMENSION(tl_ch_cg_presteps) :: diag, offdiag
+        ! z not used for this
+        REAL(KIND=8) :: eigmin, eigmax, tmp
+        INTEGER :: n, info
+        LOGICAL :: swapped
 
 
-    print*,'Total iterations=',k
-    print*,'converged norm=',norm
-    ! time
-    !call system_clock(count=count1)
-    !elap_time = real(count1 - count0)/real(c_rate)
-    !$ t1 = omp_get_wtime()
-    elap_time = t1 -t0
-    print*,'Wall time (fortran):', elap_time,'[s]' 
-    print*,'Iteration rate=', k/elap_time,'[iteration/s]'  
-    !print*,'delta_X*(N+1)=', delta_X*(N+1) !debug
-    !print*,'delta_Y*(N+1)=', delta_Y*(N+1) !debug
-    end subroutine iter_jacobi
-end module
+        diag = 0
+        offdiag = 0
+
+        DO n=1,tl_ch_cg_presteps
+            diag(n) = 1.0_8/cg_alphas(n)
+            IF (n .GT. 1) diag(n) = diag(n) + cg_betas(n-1)/cg_alphas(n-1)
+            IF (n .LT. tl_ch_cg_presteps) offdiag(n+1) = SQRT(cg_betas(n))/cg_alphas(n)
+        END DO
+
+     
+    END SUBROUTINE tea_calc_eigenvalues
+
+    SUBROUTINE tea_calc_ch_coefs(ch_alphas, ch_betas, eigmin, eigmax, &
+            theta, max_cheby_iters)
+
+        INTEGER :: n, max_cheby_iters
+        REAL(KIND=8), DIMENSION(max_cheby_iters) :: ch_alphas, ch_betas
+        REAL(KIND=8) :: eigmin, eigmax
+
+        REAL(KIND=8) :: theta, delta, sigma, rho_old, rho_new, cur_alpha, cur_beta
+
+        theta = (eigmax + eigmin)/2
+        delta = (eigmax - eigmin)/2
+        sigma = theta/delta
+
+        rho_old = 1.0_8/sigma
+
+        DO n=1,max_cheby_iters
+            rho_new = 1.0_8/(2.0_8*sigma - rho_old)
+            cur_alpha = rho_new*rho_old
+            cur_beta = 2.0_8*rho_new/delta
+
+            ch_alphas(n) = cur_alpha
+            ch_betas(n) = cur_beta
+
+            rho_old = rho_new
+        ENDDO
+
+    END SUBROUTINE tea_calc_ch_coefs
+
+END MODULE
+

@@ -108,7 +108,7 @@ PROGRAM Main
 END PROGRAM Main
 
 
-4. ragma: !$omp parallel do private( i, tid ) shared( a, b ) reduction( max:abmax )
+4. pragma: !$omp parallel do private( i, tid ) shared( a, b ) reduction( max:abmax )
 
 code:
 
