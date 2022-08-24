@@ -48,3 +48,19 @@ class ForLoopChecker(c_ast.NodeVisitor):
             self.found = True
         else:
             self.generic_visit(node)
+
+
+# Travels the node and define whether it contains func call in it
+class FuncCallChecker(c_ast.NodeVisitor):
+    """
+    Class that travels the node of a for loop that has an openmp directive to find an atomic
+    """
+    def __init__(self):
+        self.found = False
+
+    def reset(self):
+        self.found = False
+
+    def visit_FuncCall(self, node):
+        self.found = True
+

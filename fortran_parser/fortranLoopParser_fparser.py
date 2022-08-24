@@ -76,7 +76,7 @@ def join_splited_lines(code_buf):
 
 def remove_fortran_comments(code_buf):
     code = reduce(lambda acc, cur: acc if cur.lstrip().startswith('!') and not cur.lstrip().lower().startswith('!$omp') else f'{acc}\n{cur}', code_buf.split('\n'))
-    code = reduce(lambda acc, cur: acc if cur.lstrip().startswith('*') else f'{acc}\n{cur}', code.split('\n'))
+    code = reduce(lambda acc, cur: acc if cur.lstrip().startswith('*') else f'{acc}\n{cur}', code.split('\n')) 
     return reduce(lambda acc, cur: acc if cur.lstrip().lower().startswith(('c ','c\t','c\n')) else f'{acc}\n{cur}', code.split('\n'))
 
 def exclusion_case(code_buf):
@@ -370,19 +370,18 @@ class FortranLoopParser:
             if idx % (10**2) == 0:
                 print(f'Message {idx // (10**2)}) {total_files} {total_pos} {total_neg} \n {exclusions} \n\n')
 
-        print(total_pos, total_neg, exclusions, total_files, num_failed)
         return total_pos, total_neg, exclusions, total_files, num_failed
 
-parser = FortranLoopParser('../repositories_openMP', '../fortran_loops')
-# parser = FortranLoopParser('../asd', 'fortran_example')
+# parser = FortranLoopParser('../repositories_openMP', '../fortran_loops')
+parser = FortranLoopParser('../asd', 'fortran_example')
 
-data = parser.load('/home/talkad/Downloads/thesis/data_gathering_script/fortran_loops/AbbasHub/AMR-LBM-OpenMP-2D/Fill_Ghost_Cells_C_neg_1.pickle')
-print(f'pragma: {data.omp_pragma}\n')
-print('code:')
-print(parser.create_ast('', data.textual_loop))
+# data = parser.load('/home/talkad/Downloads/thesis/data_gathering_script/fortran_loops/AbbasHub/AMR-LBM-OpenMP-2D/Fill_Ghost_Cells_C_neg_1.pickle')
+# print(f'pragma: {data.omp_pragma}\n')
+# print('code:')
+# print(parser.create_ast('', data.textual_loop))
 
-# total = parser.scan_dir()
-# print(total)
+total = parser.scan_dir()
+print(total)
 
 # pos - 2753 
 # neg - 3331 
