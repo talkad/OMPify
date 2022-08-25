@@ -1,14 +1,16 @@
 import pycparser
+from pycparser import parse_file
 import pickle
 import os
-from pycparser import CParser
-from pycparser.c_ast import NodeVisitor, Constant, For
+# from pycparser import CParser
+# from pycparser.c_ast import NodeVisitor, Constant, For
 import re
 from visitors import *
 from functools import reduce
+import helper
 
 # ignore unsuported directives
-INCLUDES_RE = re.compile("^#include(.+)$|^#define(.+)$|^#ifdef(.+)$|^#endif(.*)$", re.MULTILINE)
+# INCLUDES_RE = re.compile("^#include(.+)$|^#define(.+)$|^#ifdef(.+)$|^#endif(.*)$", re.MULTILINE)
 # ignore one line comment
 LINE_COMMENT_RE = re.compile("//.*?\n" )
 # ignore multiline comment
@@ -24,7 +26,7 @@ class OmpLoop:
 class CLoopParser:
     def __init__(self, omp_repo, ast_repo):
         self.fortran_extensions = ['.c', '.cc', '.h']
-        self.parser = CParser()
+        # self.parser = CParser()
         self.root_dir = os.getcwd()
         self.omp_repo = omp_repo
         self.ast_repo = ast_repo
@@ -55,9 +57,18 @@ class CLoopParser:
         with open(file_path, 'rb') as f:
             return pickle.load(f)
 
-    def create_ast(self, filepath, code_buf):
+    def create_ast(self, filepath, repo_name, code_buf):
+        cpp_args = ['-nostdinc',  '-E'] # , r'-I' + FAKE_HEADER_PATH]  check it
+
+        headers = helper.get_headers(repo_name)
+        print(repo_name)
+
+        for header in headers:
+            cpp_args.append(r'-I' + header)
+
         try:
-            return self.parser.parse(code_buf)
+            return parse_file(file, use_cpp=True, cpp_path='mpicc', cpp_args = cpp_args)
+            # return self.parser.parse(code_buf)
         except pycparser.plyparser.ParseError:  
             # print(f'Parser Error: {filepath}')
             return
@@ -109,7 +120,7 @@ class CLoopParser:
         else:
             return False
 
-    def parse_file(self, root_dir, file_name, exclusions):
+    def parse(self, root_dir, file_name, exclusions):
         '''
         Parse the given file into ast and extract to loops associated with omp pargma (or without)
         '''
@@ -117,6 +128,10 @@ class CLoopParser:
         file_path = os.path.join(root_dir, file_name)
         save_dir = os.path.join(self.ast_repo, root_dir[self.split_idx: ])
         name = os.path.splitext(file_name)[0]
+
+        last_idx = root_dir.rfind('/') if len(self.root_dir + self.omp_repo) + 2 < root_dir.rfind('/') else len(root_dir)
+        repo_name = root_dir[len(self.root_dir + self.omp_repo) + 2: last_idx]
+        print(repo_name)
 
         pfv = PragmaForVisitor()
         verify_loops = ForLoopChecker()
@@ -129,13 +144,13 @@ class CLoopParser:
             except UnicodeDecodeError:
                 return 0, 0, False
 
-            code = INCLUDES_RE.sub("", code)
+            # code = INCLUDES_RE.sub("", code)
             code = LINE_COMMENT_RE.sub("", code)
             code  = MULTILINE_COMMENT_RE.sub("", code)
             code = self.remove_directives(code)
             code = self.join_splited_lines(code)
             code = self.join_funcDecl(code)
-            ast = self.create_ast(file_path, code)
+            ast = self.create_ast(file_path, repo_name, code)
 
             if ast is None:                 # file parsing failed
                 return 0, 0, False
@@ -191,7 +206,7 @@ class CLoopParser:
                 ext = os.path.splitext(file_name)[1].lower()
                 
                 if ext in self.fortran_extensions:
-                    pos, neg, is_parsed = self.parse_file(root, file_name, exclusions)
+                    pos, neg, is_parsed = self.parse(root, file_name, exclusions)
 
                     if pos is not None:
                         total_pos += pos
@@ -207,8 +222,8 @@ class CLoopParser:
         return total_pos, total_neg, exclusions, total_files, num_failed
 
 
-parser = CLoopParser('../repositories_openMP', '../c_loops')
-# parser = CLoopParser('../asd', 'c_loops2')
+# parser = CLoopParser('../repositories_openMP', '../c_loops')
+parser = CLoopParser('../asd', 'c_loops2')
 
 # data = parser.load('/home/talkad/Downloads/thesis/data_gathering_script/c_parser/c_loops2/123/threadGauss_pos_0.pickle')
 # ast = data.loop

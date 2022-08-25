@@ -372,8 +372,8 @@ class FortranLoopParser:
 
         return total_pos, total_neg, exclusions, total_files, num_failed
 
-# parser = FortranLoopParser('../repositories_openMP', '../fortran_loops')
-parser = FortranLoopParser('../asd', 'fortran_example')
+parser = FortranLoopParser('../repositories_openMP', '../fortran_loops22')
+# parser = FortranLoopParser('../asd', 'fortran_example')
 
 # data = parser.load('/home/talkad/Downloads/thesis/data_gathering_script/fortran_loops/AbbasHub/AMR-LBM-OpenMP-2D/Fill_Ghost_Cells_C_neg_1.pickle')
 # print(f'pragma: {data.omp_pragma}\n')
