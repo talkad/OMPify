@@ -24,6 +24,8 @@ class Parser(ABC):
         self.repo_path = repo_path
         self.parsed_path = parsed_path
         self.file_extensions = file_extensions
+        self.split_idx = len(os.path.join(self.root_dir, self.repo_path)) + 1
+        self.memory = []
  
     def create_directory(self, dirs):
         '''
@@ -49,15 +51,16 @@ class Parser(ABC):
             return pickle.load(f)
 
     @abstractmethod
-    def parse(self, code_buf, future):
+    def parse(self, file_path, code_buf):
         '''
-        The return value is boolean that indicates the parsing exit status.
+        Create the AST of a given code snippet
 
         Parameters:
-            code_buf - textual representation of the code
-            future   - a mutable struct that on success will contain the AST
+            file_path - the path of the file to be parsed
+            code_buf  - textual representation of the code
+            future    - a mutable struct that on success will contain the AST
         Returns:
-            True if the parsing succeeded, False otherwise
+            Return the AST of a given code. None on failure
         '''
 
         pass

@@ -123,10 +123,10 @@ class FortranLoopParser:
         '''
         file_path = os.path.join(root_dir, file_name)
         
-        with open(file_path, 'rb') as f:
+        with open(file_path, 'r') as f:
 
             try:
-                code = f.read().decode('utf-8')
+                code = f.read()
             except UnicodeDecodeError:
                 print(f'Decode error: {file_path}')
                 return None, None

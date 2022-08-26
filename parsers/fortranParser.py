@@ -6,6 +6,7 @@ import fparser.two.Fortran2003 as FortranStructs
 from fparser.two.utils import NoMatchError
 from functools import reduce
 from threading import Thread
+import helper
 
 
 def is_for_pragma(line):
@@ -50,28 +51,6 @@ def is_code_line(line):
     '''
     l = line.lstrip().lower()
     return not l.startswith(('c ','c\t','c\n', '!', '*'))
-
-def join_splited_lines(code_buf):
-    '''
-    Several Fortran files are splitting lines of code using & token. 
-    fparser fails to process this files. So we update this lines to be a single line.
-    '''
-    code = []
-    splitted_line = False
-
-    for line in code_buf.split('\n'):
-        if not splitted_line and len(line) > 0 and line[-1] == '&' and is_code_line(line):
-            code.append(line[:-1])
-            splitted_line = True
-        elif splitted_line and len(line) > 0 and line[-1] == '&' and is_code_line(line):
-            code[-1] += line[:-1]
-        elif splitted_line:
-            code[-1] += line
-            splitted_line = False
-        else:
-            code.append(line)
-
-    return '\n'.join(code)
 
 def remove_fortran_comments(code_buf):
     code = reduce(lambda acc, cur: acc if cur.lstrip().startswith('!') and not cur.lstrip().lower().startswith('!$omp') else f'{acc}\n{cur}', code_buf.split('\n'))
@@ -183,11 +162,9 @@ class FortranLoopParser(Parser):
     def __init__(self, repo_path, parsed_path):
         super().__init__(repo_path, parsed_path, ['.f', '.f90', '.f95'])
         self.parser = ParserFactory().create(std="f2008")
-        self.split_idx = len(os.path.join(self.root_dir, self.repo_path)) + 1
-        self.memory = []
 
 
-    def parse(self, code_buf, result):
+    def create_ast(self, file_path, code_buf, result):
         '''
         This weird module define termination point on failure.
         We will prevent this by using threads.
@@ -196,15 +173,15 @@ class FortranLoopParser(Parser):
             reader = FortranStringReader(code_buf, ignore_comments=False)
             result.append(self.parser(reader))
         except NoMatchError:  
-            # print(f'Parser Error: {filepath}')
+            # print(f'Parser Error: {file_path}')
             return
         except Exception as e:  
-            # print(f'Unexpected Error: {filepath} ->\n {e}')
+            # print(f'Unexpected Error: {file_path} ->\n {e}')
             return       
 
-    def create_ast(self, filepath, code_buf):
+    def parse(self, file_path, code_buf):
         future_result = []
-        t = Thread(target=self.parse, args=(code_buf, future_result))
+        t = Thread(target=self.create_ast, args=(file_path, code_buf, future_result))
 
         t.start()
         t.join(timeout=30)
@@ -216,6 +193,12 @@ class FortranLoopParser(Parser):
         else:
             return future_result[0]
 
+    def load(self, file_path):
+        omp_obj = super().load(file_path)
+        omp_obj.ast_loop = self.parse(file_path, omp_obj.textual_loop)
+
+        return omp_obj
+
     def code_preprocess_pipline(self, code):
         '''
         fix code structure so in can be parsed by fparser
@@ -223,7 +206,7 @@ class FortranLoopParser(Parser):
         code = remove_empty_lines(code)
         code = add_omp_identifier(code)
         code = remove_omp_identifier(code)
-        code = join_splited_lines(code)
+        code = helper.join_splited_lines(code, delimiter='&')
         return remove_fortran_comments(code)
 
     def parse_file(self, root_dir, file_name, exclusions):
@@ -253,7 +236,7 @@ class FortranLoopParser(Parser):
                 return 0, 0, False
 
             code = self.code_preprocess_pipline(code)
-            ast = self.create_ast(file_path, code)
+            ast = self.parse(file_path, code)
 
             if ast is None:                 # file parsing failed
                 return 0, 0, False
@@ -278,7 +261,7 @@ class FortranLoopParser(Parser):
                     exclusions['duplicates'] += 1
                     continue
 
-                ast_loop = self.create_ast(file_path, textual_loop)
+                ast_loop = self.parse(file_path, textual_loop)
                 if ast_loop is None:
                     continue
 
@@ -295,16 +278,16 @@ class FortranLoopParser(Parser):
             return pos, neg, True
 
 
-# parser = FortranLoopParser('../repositories_openMP', '../fortran_loops22')
-parser = FortranLoopParser('../asd', 'fortran_example')
+parser = FortranLoopParser('../repositories_openMP', '../fortran_loops')
+# parser = FortranLoopParser('../asd', 'fortran_example')
 
-data = parser.load('/home/talkad/Downloads/thesis/data_gathering_script/parsers/fortran_example/123/a_pos_0.pickle')
-print(f'pragma: {data.omp_pragma}\n')
-print('code:')
-print(parser.create_ast('', data.textual_loop))
+# data = parser.load('/home/talkad/Downloads/thesis/data_gathering_script/parsers/fortran_example/123/a_pos_0.pickle')
+# print(f'pragma: {data.omp_pragma}\n')
+# print('code:')
+# print(data.ast_loop)
 
-# total = parser.scan_dir()
-# print(total)
+total = parser.scan_dir()
+print(total)
 
 # pos - 2753 
 # neg - 3331 
