@@ -5,5 +5,4 @@
 **/fortran_loops
 **/PCX
 git_clone.sh
-_fake_defines.h
-_fake_typedefs.h
+**/utils

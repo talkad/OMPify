@@ -6,7 +6,6 @@ import fparser.two.Fortran2003 as FortranStructs
 from fparser.two.utils import NoMatchError
 from functools import reduce
 from threading import Thread
-import helper
 
 
 def is_for_pragma(line):
@@ -206,7 +205,7 @@ class FortranLoopParser(Parser):
         code = remove_empty_lines(code)
         code = add_omp_identifier(code)
         code = remove_omp_identifier(code)
-        code = helper.join_splited_lines(code, delimiter='&')
+        code = self.join_splited_lines(code, delimiter='&')
         return remove_fortran_comments(code)
 
     def parse_file(self, root_dir, file_name, exclusions):

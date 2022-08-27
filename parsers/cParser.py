@@ -1,10 +1,15 @@
 import os
 import pycparser
 from parser import Parser
+from pycparser.c_ast import For
 import pickle
 from visitors import *
 from functools import reduce
-import helper
+from fake_headers import fake
+import re
+
+
+INCLUDES_RE = re.compile("^#include(.+)$", re.MULTILINE)
 
 
 class CLoopParser(Parser):
@@ -21,6 +26,16 @@ class CLoopParser(Parser):
         return_types = ['char', 'short', 'int', 'long', 'float', 'double']
 
         return reduce(lambda acc, cur: f'{acc}\n{cur}' if cur.lstrip() in return_types else f'{acc} {cur}\n', code.split('\n'))
+
+    def update_include(self, file_path):
+        with open(file_path, "r+") as f:
+            code = f.read()
+            code = INCLUDES_RE.sub("", code)
+            code = f'#include \"_fake_defines.h\"\n#include \"_fake_typedefs.h\"\n{code}'
+
+            f.truncate(0)
+            f.seek(0)
+            f.write(code)
 
     def is_empty_loop(self, node):
         '''
@@ -43,21 +58,22 @@ class CLoopParser(Parser):
             return False
 
     def code_preprocess_pipline(self, code):
-        code = helper.join_splited_lines(code)
+        code = self.join_splited_lines(code)
         return self.join_funcDecl(code)
 
     def parse(self, file_path, code_buf):
         repo_name = file_path[len(self.repo_path + self.root_dir) + 2:]
         repo_name = repo_name[:repo_name.find('/') ]
+        cpp_args = ['-nostdinc',  '-E', r'-I' + os.path.join(self.root_dir, 'fake_headers', 'utils')]
 
-        cpp_args = ['-nostdinc',  '-E', r'-I' + helper.FAKE_DEFINES, r'-I' + helper.FAKE_TYPEDEFS]
+        # headers = helper.get_headers(repo_name)
+        # for header in headers:
+        #     cpp_args.append(r'-I' + header)
 
-        headers = helper.get_headers(repo_name)
-        for header in headers:
-            cpp_args.append(r'-I' + header)
+        self.update_include(file_path)
 
         try:
-            return pycparser.parse_file(file, use_cpp=True, cpp_path='mpicc', cpp_args = cpp_args)
+            return pycparser.parse_file(file_path, use_cpp=True, cpp_path='mpicc', cpp_args = cpp_args)
             # return self.parser.parse(code_buf)
         except pycparser.plyparser.ParseError:  
             # print(f'Parser Error: {file_path}')
@@ -79,14 +95,17 @@ class CLoopParser(Parser):
         verify_loops = ForLoopChecker()
         func_call_checker = FuncCallChecker()
 
-        with open(file_path, 'r') as f:
+        with open(file_path, 'r+') as f:
             
             try:
                 code = f.read()
             except UnicodeDecodeError:
                 return 0, 0, False
 
-            code = self.code_preprocess_pipline(code)
+            # code = self.code_preprocess_pipline(code)
+            # f.truncate(0)
+            # print(code)
+            # f.write(code)
             ast = self.parse(file_path, code)
 
             if ast is None:                 # file parsing failed
