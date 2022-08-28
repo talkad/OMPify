@@ -14,7 +14,7 @@ INCLUDES_RE = re.compile("^#include(.+)$", re.MULTILINE)
 
 class CLoopParser(Parser):
     def __init__(self, repo_path, parsed_path):
-        super().__init__(repo_path, parsed_path, ['.c', '.cc', '.h'])
+        super().__init__(repo_path, parsed_path, ['.c', '.h'])
 
     def join_funcDecl(self, code):
         '''
@@ -31,7 +31,7 @@ class CLoopParser(Parser):
         with open(file_path, "r+") as f:
             code = f.read()
             code = INCLUDES_RE.sub("", code)
-            code = f'#include \"_fake_defines.h\"\n#include \"_fake_typedefs.h\"\n{code}'
+            code = f'#include \"_fake_handcrafted.h\"\n#include \"{fake.COMMON_FAKE_DEFINES}\"\n#include \"{fake.COMMON_FAKE_TYPEDEFS}\"\n#include \"{fake.FAKE_DEFINES}\"\n#include \"{fake.FAKE_TYPEDEFS}\"\n{code}'
 
             f.truncate(0)
             f.seek(0)
@@ -139,7 +139,9 @@ class CLoopParser(Parser):
                                    
                 self.create_directory(save_dir) 
                 self.memory.append(code)
-                self.save(os.path.join(save_dir, f"{name}{'_neg_' if pragma is None else '_pos_'}{idx}.pickle"), pragma, loop)
+
+                generator = pycparser.c_generator.CGenerator()
+                self.save(os.path.join(save_dir, f"{name}{'_neg_' if pragma is None else '_pos_'}{idx}.pickle"), pragma, loop, generator.visit(loop))
 
                 if pragma is None:
                     neg += 1

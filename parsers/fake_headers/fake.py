@@ -3,22 +3,23 @@ import re
 from functools import reduce
 
 
-REPOS_DIR = '/home/talkad/Downloads/thesis/data_gathering_script/git_repos'
-# REPOS_DIR = '/home/talkad/Downloads/thesis/data_gathering_script/asd'
-
+# REPOS_DIR = '/home/talkad/Downloads/thesis/data_gathering_script/git_repos'
+REPOS_DIR = '/home/talkad/Downloads/thesis/data_gathering_script/asd'
 REPOS_OMP_DIR = '/home/talkad/Downloads/thesis/data_gathering_script/repositories_openMP'
 FAKE_DEFINES  = '_fake_defines.h'
 FAKE_TYPEDEFS = '_fake_typedefs.h'
+COMMON_FAKE_DEFINES  = '_common_fake_defines.h'
+COMMON_FAKE_TYPEDEFS = '_common_fake_typedefs.h'
 FAKE_INCLUDE  = f'#include \"{FAKE_DEFINES}\"\n#include \"{FAKE_TYPEDEFS}\"'
 
 
-def get_headers(repo_name):
+def get_headers(repo_dir, repo_name):
     '''
     For a given repo, return all headers file relative path 
     '''
     headers = []
-    path_length = len(REPOS_DIR) + len (repo_name) + 2              # remove two '/'
-    omp_repo = os.path.join(REPOS_DIR, repo_name)
+    path_length = len(repo_dir) + len (repo_name) + 2              # remove two '/'
+    omp_repo = os.path.join(repo_dir, repo_name)
 
     for idx, (root, dirs, files) in enumerate(os.walk(omp_repo)):
         for file_name in files:
@@ -55,7 +56,7 @@ def join_splited_lines(code_buf, delimiter='\\'):
     return '\n'.join(code)
 
 
-def get_directives(repo_name):
+def get_directives(repo_dir, repo_name):
     '''
     Extract all 'define' and 'typedef' directives from a given repo
 
@@ -63,13 +64,13 @@ def get_directives(repo_name):
         repo_name   - the name of the repo all the directives extracted from
     '''
 
-    headers = get_headers(repo_name)
+    headers = get_headers(repo_dir, repo_name)
     defines =  set()
     typedefs = set()
 
     for header in headers:
         # open file and extract #define and typedef
-        with open(os.path.join(REPOS_DIR, repo_name, header), 'r')  as f:
+        with open(os.path.join(repo_dir, repo_name, header), 'r')  as f:
             try:
                 code = f.read()
             except UnicodeDecodeError:
@@ -84,90 +85,33 @@ def get_directives(repo_name):
             # join splitted lines in code
             code = join_splited_lines(code)
 
-            # for directive in re.findall(r'#(\s*)define(\s*)(\w+)(\s*)(\w*)(\s*?)\n', code):
-            for directive in re.findall(r'#(\s*)define(\s*)(.*)\n', code):
-                defines.add(directive[2])
+            for directive in re.findall(r'#(\s*)define(\s*)(\w+)(\s)', code):
+                defines.add(f' {directive[2]} 1')
+
+            for directive in re.findall(r'#(\s*)define(\s*)(\w+)\((.*?)\)(.*)\n', code):
+                defines.add(f' {directive[2]} 1')
+                # defines.add(f' {directive[2]}({directive[3]}) 1')
 
             for directive in re.findall(r'(\s*)typedef(\s*)(\w+)(\s*)(\w+)(\s*);', code):
                 typedefs.add(f' int {directive[4]}')
-                # typedefs.add(f' {directive[2]} {directive[4]}')
 
             for directive in re.findall(r'(\s*)typedef(\s*)struct(\s*){(.+?)}(.+?);', code):
                 typedefs.add(f' int {directive[4]}')
-                # typedefs.add(f' struct {{ {directive[3]} }} {directive[4]}')
 
     return defines, typedefs
 
 
-def create_fake_headers(directory):
+def extract_common_directives():
     '''
-    Create all fake headers file and fill them with fake #include
+    Create fake headers that contain all defines and typedefs from /usr/include
     '''
-    print('========== create fake headers ==========')
-    for idx, (root, dirs, files) in enumerate(os.walk(REPOS_DIR)):
-        for file_name in files:
-            repo_name = root[len(REPOS_DIR) + 1:]
-            repo_name = repo_name[:repo_name.find('/') ] if '/' in repo_name else repo_name
-            if repo_name not in os.listdir(REPOS_OMP_DIR):
-                continue
+    fake_dir = 'utils'
 
-            ext = os.path.splitext(file_name)[1].lower()
-            if ext == '.h':
-                path = os.path.join(root, file_name)[len(os.path.join(REPOS_DIR))+1: ]
-                path = path[path.find('/')+1:]
-                path = os.path.join(directory, path)
-                dir_path = path[:path.rfind('/')]
+    if not os.path.exists(fake_dir):
+        os.makedirs(fake_dir)
 
-                if not os.path.exists(dir_path):
-                    os.makedirs(dir_path)
-
-                with open(path, "w") as f:
-                    f.write(FAKE_INCLUDE)
-
-        if idx > 0 and idx % 10**4 == 0:
-            print(f'files passed: {idx // 10**4}')
-
-
-def create_fake_repo(repo_name, directory):
-    '''
-    Create a fake version of a repository. keep only c and cc files and fake the headers
-    '''
-    repo_path = os.path.join(REPOS_DIR, repo_name)
-    extensions = ['.h', '.c']
-
-    for idx, (root, dirs, files) in enumerate(os.walk(repo_path)):
-        for file_name in files:
-
-            ext = os.path.splitext(file_name)[1].lower()
-
-            if ext in extensions:
-                path = os.path.join(root, file_name)[len(os.path.join(REPOS_DIR))+1: ]
-                path = path[path.find('/')+1:]
-                path = os.path.join(directory, path)
-                dir_path = path[:path.rfind('/')]
-
-                if not os.path.exists(dir_path):
-                    os.makedirs(dir_path)
-
-                if ext == '.h':
-                    with open(path, "w") as f:
-                        f.write(FAKE_INCLUDE)
-                else:
-                    with open(os.path.join(root, file_name), "r") as f:
-                        code = f.read()
-                    with open(path, "w") as f:
-                        f.write(code)
-                    
-
-def fake_repo(repo_name):
-    directory = 'fake_repo'
-    defines, typedefs = get_directives(repo_name)
-
-    # create fake repo clone
-    create_fake_repo(repo_name, directory)
-
-    # create fake headers
-    with open(os.path.join(directory, FAKE_DEFINES), 'w+') as define_file, open(os.path.join(directory, FAKE_TYPEDEFS), 'w+') as typedef_file:
+    with open(os.path.join(fake_dir, COMMON_FAKE_DEFINES), 'w+') as define_file, open(os.path.join(fake_dir, COMMON_FAKE_TYPEDEFS), 'w+') as typedef_file:
+        defines, typedefs = get_directives('/usr', 'include')
 
         for define in defines:
             define_file.write(f'#define {define}\n')
@@ -175,19 +119,17 @@ def fake_repo(repo_name):
         for typedef in typedefs:
             typedef_file.write(f'typedef {typedef};\n')
 
-
-fake_repo('0rky')
+extract_common_directives()
 
 
 def extract_all_directives():
     '''
-    Create fake headers which contain all defines and typedefs
+    Create fake headers that contain all defines and typedefs
     '''
     fake_dir = 'utils'
     defines_set = set()
     typedefs_set = set()
     relevant_repos = os.listdir(REPOS_OMP_DIR)
-    # create_fake_headers(fake_dir)
 
     if not os.path.exists(fake_dir):
         os.makedirs(fake_dir)
@@ -218,3 +160,51 @@ def extract_all_directives():
         for typedef in typedefs_set:
             typedef_file.write(f'typedef {typedef};\n')
 
+
+
+
+def extract_includes(file_path):
+    '''
+    Extract all #include directive from given file
+    '''
+
+    includes =  []
+
+    with open(file_path, 'r')  as f:
+        try:
+            code = f.read()
+        except UnicodeDecodeError:
+            return []
+
+        for directive in re.findall(r'#(\s*)include(\s*)("|<)(.*)("|>)', code):
+            includes.append(directive[3])
+
+    return includes
+
+
+def create_fake_headers(directory, headers):
+    '''
+    Create all fake headers file and fill them with fake #include
+    '''
+    if not os.path.exists(directory):
+        os.makedirs(directory)
+
+    for header in headers:
+        with open(os.path.join(directory, header), "w") as f:
+            f.write(FAKE_INCLUDE)
+   
+def remove_fake_headers(directory, headers):
+    '''
+    Remove given files
+    '''
+    for header in headers:
+        os.remove(os.path.join(directory, header))
+
+# extract_all_directives()
+
+
+
+
+# print(extract_includes("/home/talkad/Downloads/thesis/data_gathering_script/asd/123/cwt.c"))
+# ['stdio.h', 'stdlib.h', 'math.h', 'time.h', 'sys/time.h']
+# create_fake_headers('utils', ['stdio.h', 'stdlib.h', 'math.h', 'time.h', 'sys/time.h'])
