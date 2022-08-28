@@ -1,30 +1,3 @@
-#include "_fake_handcrafted.h"
-#include "_common_fake_defines.h"
-#include "_common_fake_typedefs.h"
-#include "_fake_defines.h"
-#include "_fake_typedefs.h"
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 /*************************************************************************************/
 /********************2D continous wavelet transform**************************************/
 /* This is the main program for the 2D_CWT calculation, it uses fft technique to compute
@@ -32,14 +5,21 @@ the cwt coefficients.
 
 Author: Manas Jyoti Das, July:05:2016 */
 
+#include<stdio.h>
+#include<stdlib.h>
+#include<math.h>
+#include<time.h>
+#include<sys/time.h>
+#include<omp.h>
+#include "cv.h"
+#include "highgui.h"
+#include "fftw3.h"
 
+#include "filter.h"
+#include "normfilter.h"
 
-
-
-
-
-// #define REAL 0
-// #define IMAG 1
+#define REAL 0
+#define IMAG 1
 
 float *filter_dx,*filter_dy;
 #pragma omp threadprivate(filter_dx,filter_dy)
@@ -65,14 +45,14 @@ int main(void)
 
 	//init_thread=fftwf_init_threads();
 
-	// fftwf_complex *transform,*mult_filt_data;
-	// fftwf_plan plan_forward,plan_backward;
+	fftwf_complex *transform,*mult_filt_data;
+	fftwf_plan plan_forward,plan_backward;
 
 	cvCvtColor(img,gray_img,CV_RGB2GRAY);
 	gettimeofday(&t0, 0);	
 
 	in=(float*)fftwf_malloc(sizeof(float)*img_dim);
-	// transform=(fftwf_complex*)fftwf_malloc(sizeof(fftwf_complex)*(gray_img->height*(gray_img->width/2+1)));
+	transform=(fftwf_complex*)fftwf_malloc(sizeof(fftwf_complex)*(gray_img->height*(gray_img->width/2+1)));
 		
 	/*********Generate filter scale**************/
 
@@ -90,7 +70,7 @@ int main(void)
 	count=0;
 	for(row=0;row<gray_img->height;row++)
 	{
-		// const uchar* ptr=(const uchar*)(gray_img->imageData+row*gray_img->widthStep);
+		const uchar* ptr=(const uchar*)(gray_img->imageData+row*gray_img->widthStep);
 		for(col=0;col<gray_img->width;col++)
 		{
 			in[count]=*ptr++;
@@ -114,7 +94,7 @@ int main(void)
 	filter_dx_rearrange=(float*)fftwf_malloc(sizeof(float)*(gray_img->height*(gray_img->width/2+1)));
 	filter_dy_rearrange=(float*)fftwf_malloc(sizeof(float)*(gray_img->height*(gray_img->width/2+1)));	
 	
-	// mult_filt_data=(fftwf_complex*)fftwf_malloc(sizeof(fftwf_complex)*(gray_img->height*(gray_img->width/2+1)));
+	mult_filt_data=(fftwf_complex*)fftwf_malloc(sizeof(fftwf_complex)*(gray_img->height*(gray_img->width/2+1)));
 
 	#pragma omp critical
 	{	fftwf_import_wisdom_from_filename(filename_mult);	
@@ -144,9 +124,9 @@ int main(void)
 	}
 
 
-	********** filter dx multiplication with data start *********//
+	//********** filter dx multiplication with data start *********//
 	
-	plan_backward=fftwf_plan_dft_c2r_2d(gray_img->height,gray_img->width,mult_filt_data,inverse_dx,FFTW_ESTIMATE);
+	//plan_backward=fftwf_plan_dft_c2r_2d(gray_img->height,gray_img->width,mult_filt_data,inverse_dx,FFTW_ESTIMATE);
 
 	for(i=0;i<(gray_img->height*(gray_img->width/2+1));i++)
 	{

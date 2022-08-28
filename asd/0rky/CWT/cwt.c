@@ -1,17 +1,3 @@
-#include "_fake_defines.h"
-#include "_fake_typedefs.h"
-
-
-
-
-
-
-
-
-
-
-
-
 /*************************************************************************************/
 /********************2D continous wavelet transform**************************************/
 /* This is the main program for the 2D_CWT calculation, it uses fft technique to compute
@@ -19,18 +5,18 @@ the cwt coefficients.
 
 Author: Manas Jyoti Das, July:05:2016 */
 
+#include<stdio.h>
+#include<stdlib.h>
+#include<math.h>
+#include<time.h>
+#include<sys/time.h>
+#include<omp.h>
+#include "cv.h"
+#include "highgui.h"
+#include "fftw3.h"
 
-
-
-
-
-
-
-
-
-
-
-
+#include "filter.h"
+#include "normfilter.h"
 
 #define REAL 0
 #define IMAG 1
