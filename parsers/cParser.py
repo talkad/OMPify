@@ -10,9 +10,6 @@ import re
 import tempfile
 
 
-INCLUDES_RE = re.compile("^#include(.+)$", re.MULTILINE)
-
-
 class CLoopParser(Parser):
     def __init__(self, repo_path, parsed_path):
         super().__init__(repo_path, parsed_path, ['.c', '.h'])
@@ -27,17 +24,6 @@ class CLoopParser(Parser):
         return_types = ['char', 'short', 'int', 'long', 'float', 'double']
 
         return reduce(lambda acc, cur: f'{acc}\n{cur}' if cur.lstrip() in return_types else f'{acc} {cur}\n', code.split('\n'))
-
-    def update_include(self, file_path):
-        with open(file_path, "r+") as f:
-            code = f.read()
-            code = INCLUDES_RE.sub("", code)
-            code = f'#include \"_fake_handcrafted.h\"\n#include \"{fake.COMMON_FAKE_DEFINES}\"\n#include \"{fake.COMMON_FAKE_TYPEDEFS}\"\n#include \"{fake.FAKE_DEFINES}\"\n#include \"{fake.FAKE_TYPEDEFS}\"\n{code}'
-
-            # f.truncate(0)
-            # f.seek(0)
-            # f.write(code)           
-        return code
 
     def is_empty_loop(self, node):
         '''
@@ -68,18 +54,12 @@ class CLoopParser(Parser):
         repo_name = repo_name[:repo_name.find('/') ]
         cpp_args = ['-nostdinc',  '-E', r'-I' + os.path.join(self.root_dir, 'fake_headers', 'utils')]
 
-        code = self.update_include(file_path)
+        _, headers, _ = fake.get_headers(fake.REPOS_DIR, repo_name)
+        for header in headers:
+            cpp_args.append(r'-I' + os.path.join(fake.REPOS_DIR, repo_name, header))
 
         try:
-            with tempfile.NamedTemporaryFile(suffix='.c', mode='w+t') as tmp:
-                # for idx, line in enumerate(code.split('\n')):
-                #     print(idx, line)
-                tmp.writelines(code)
-                tmp.seek(0)
-                ast = pycparser.parse_file(tmp.name, use_cpp=True, cpp_path='mpicc', cpp_args = cpp_args)
-                # generator = pycparser.c_generator.CGenerator()
-                # print(generator.visit(ast))
-                return ast
+            return pycparser.parse_file(file_path, use_cpp=True, cpp_path='mpicc', cpp_args = cpp_args)
         except pycparser.plyparser.ParseError as e:  
             print(f'Parser Error: {file_path} ->\n {e}')
             for idx in re.findall(r'(.*?):(\d+):(\d+)(.*)', str(e)):
@@ -161,17 +141,20 @@ class CLoopParser(Parser):
 
         # iterate over repos
         for idx, repo_name in enumerate(os.listdir(omp_repo)):
-            fake.extract_all_directives(repo_name)
-            _, headers = fake.get_headers(fake.REPOS_DIR, repo_name)
+            print('repo ', repo_name)
+            paths, _, _ = fake.get_headers(fake.REPOS_DIR, repo_name)
 
             for root, dirs, files in os.walk(os.path.join(omp_repo, repo_name)):
                 for file_name in files:
                     ext = os.path.splitext(file_name)[1].lower()
                     
                     if ext in self.file_extensions:
-
+                        print(file_name, ":")
                         includes = fake.extract_includes(os.path.join(root, file_name))
-                        fake.create_common_fake([itm for itm in includes if itm not in headers])
+
+                        for include in includes:
+                            if all([False for path in paths if path.endswith(include)]):
+                                fake.create_fake_header(include)
 
                         pos, neg, is_parsed = self.parse_file(root, file_name, exclusions)
 
