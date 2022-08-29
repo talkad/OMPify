@@ -1,0 +1,750 @@
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/TraceBot/bspfile.h ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/TraceBot/bspfile.h:185:2: before: byte
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/TraceBot/cl_cam.c ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/fake_headers/utils/_fake_typedefs.h:13:26: before: )
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/TraceBot/cl_demo.c ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/fake_headers/utils/_fake_typedefs.h:13:26: before: )
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/TraceBot/cl_ents.c ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/fake_headers/utils/_fake_typedefs.h:13:26: before: )
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/TraceBot/cl_input.c ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/fake_headers/utils/_fake_typedefs.h:13:26: before: )
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/TraceBot/cl_main.c ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/fake_headers/utils/_fake_typedefs.h:13:26: before: )
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/TraceBot/cl_parse.c ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/fake_headers/utils/_fake_typedefs.h:13:26: before: )
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/TraceBot/cl_pred.c ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/fake_headers/utils/_fake_typedefs.h:13:26: before: )
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/TraceBot/cl_tent.c ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/fake_headers/utils/_fake_typedefs.h:13:26: before: )
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/TraceBot/client.h ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/TraceBot/client.h:26:2: before: qboolean
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/TraceBot/cmd.c ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/fake_headers/utils/_fake_typedefs.h:13:26: before: )
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/TraceBot/cmd.h ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/TraceBot/cmd.h:76:10: before: Cmd_Exists
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/TraceBot/common.c ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/fake_headers/utils/_fake_typedefs.h:13:26: before: )
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/TraceBot/common.h ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/TraceBot/common.h:197:36: before: FILE
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/TraceBot/console.c ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/fake_headers/utils/_fake_typedefs.h:13:26: before: )
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/TraceBot/console.h ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/TraceBot/console.h:41:17: before: con_initialized
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/TraceBot/crc.c ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/fake_headers/utils/_fake_typedefs.h:13:26: before: )
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/TraceBot/crc.h ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/TraceBot/crc.h:23:48: before: byte
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/TraceBot/cvar.c ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/fake_headers/utils/_fake_typedefs.h:13:26: before: )
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/TraceBot/cvar.h ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/TraceBot/cvar.h:60:2: before: qboolean
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/TraceBot/draw.h ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/TraceBot/draw.h:24:15: before: *
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/TraceBot/gl_model.c ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/fake_headers/utils/_fake_typedefs.h:13:26: before: )
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/TraceBot/gl_model.h ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/TraceBot/modelgen.h:62:2: before: vec3_t
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/TraceBot/input.h ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/TraceBot/input.h:29:25: before: *
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/TraceBot/keys.c ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/fake_headers/utils/_fake_typedefs.h:13:26: before: )
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/TraceBot/keys.h ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/TraceBot/keys.h:130:17: before: chat_team
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/TraceBot/mathlib.c ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/fake_headers/utils/_fake_typedefs.h:13:26: before: )
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/TraceBot/menu.h ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/TraceBot/menu.h:37:8: before: *
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/TraceBot/modelgen.h ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/TraceBot/modelgen.h:62:2: before: vec3_t
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/TraceBot/net.h ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/TraceBot/net.h:26:2: before: byte
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/TraceBot/net_chan.c ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/fake_headers/utils/_fake_typedefs.h:13:26: before: )
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/TraceBot/net_udp.c ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/fake_headers/utils/_fake_typedefs.h:13:26: before: )
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/TraceBot/nonintel.c ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/fake_headers/utils/_fake_typedefs.h:13:26: before: )
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/TraceBot/pmove.c ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/fake_headers/utils/_fake_typedefs.h:13:26: before: )
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/TraceBot/pmove.h ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/TraceBot/pmove.h:23:2: before: vec3_t
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/TraceBot/pmovetst.c ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/fake_headers/utils/_fake_typedefs.h:13:26: before: )
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/TraceBot/protocol.h ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/TraceBot/protocol.h:259:2: before: vec3_t
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/TraceBot/quakedef.h ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/fake_headers/utils/_fake_typedefs.h:13:26: before: )
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/TraceBot/render.h ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/TraceBot/render.h:40:2: before: vec3_t
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/TraceBot/screen.h ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/TraceBot/screen.h:41:17: before: scr_disabled_for_loading
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/TraceBot/skin.c ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/fake_headers/utils/_fake_typedefs.h:13:26: before: )
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/TraceBot/sound.h ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/TraceBot/sound.h:35:2: before: cache_user_t
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/TraceBot/sv_ccmds.c ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/fake_headers/utils/_fake_typedefs.h:13:26: before: )
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/TraceBot/sys_linux.c ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/fake_headers/utils/_fake_typedefs.h:13:26: before: )
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/TraceBot/vid.h ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/TraceBot/vid.h:26:14: before: pixel_t
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/TraceBot/view.c ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/fake_headers/utils/_fake_typedefs.h:13:26: before: )
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/TraceBot/view.h ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/TraceBot/view.h:22:15: before: v_gamma
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/TraceBot/wad.c ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/fake_headers/utils/_fake_typedefs.h:13:26: before: )
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/TraceBot/wad.h ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/TraceBot/wad.h:42:2: before: byte
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/TraceBot/zone.c ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/fake_headers/utils/_fake_typedefs.h:13:26: before: )
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/VideoClient/anorm_dots.h ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/VideoClient/anorm_dots.h:20:1: before: {
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/VideoClient/anorms.h ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/VideoClient/anorms.h:20:1: before: {
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/VideoClient/bspfile.h ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/VideoClient/bspfile.h:185:2: before: byte
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/VideoClient/cd_linux.c ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/fake_headers/utils/_fake_typedefs.h:13:26: before: )
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/VideoClient/cdaudio.h ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/VideoClient/cdaudio.h:22:24: before: track
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/VideoClient/cl_cam.c ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/fake_headers/utils/_fake_typedefs.h:13:26: before: )
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/VideoClient/cl_demo.c ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/fake_headers/utils/_fake_typedefs.h:13:26: before: )
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/VideoClient/cl_ents.c ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/fake_headers/utils/_fake_typedefs.h:13:26: before: )
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/VideoClient/cl_input.c ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/fake_headers/utils/_fake_typedefs.h:13:26: before: )
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/VideoClient/cl_main.c ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/fake_headers/utils/_fake_typedefs.h:13:26: before: )
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/VideoClient/cl_parse.c ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/fake_headers/utils/_fake_typedefs.h:13:26: before: )
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/VideoClient/cl_pred.c ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/fake_headers/utils/_fake_typedefs.h:13:26: before: )
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/VideoClient/cl_tent.c ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/fake_headers/utils/_fake_typedefs.h:13:26: before: )
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/VideoClient/client.h ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/VideoClient/client.h:26:2: before: qboolean
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/VideoClient/cmd.c ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/fake_headers/utils/_fake_typedefs.h:13:26: before: )
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/VideoClient/cmd.h ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/VideoClient/cmd.h:76:10: before: Cmd_Exists
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/VideoClient/common.c ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/fake_headers/utils/_fake_typedefs.h:13:26: before: )
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/VideoClient/common.h ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/VideoClient/common.h:197:36: before: FILE
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/VideoClient/console.c ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/fake_headers/utils/_fake_typedefs.h:13:26: before: )
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/VideoClient/console.h ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/VideoClient/console.h:41:17: before: con_initialized
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/VideoClient/crc.c ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/fake_headers/utils/_fake_typedefs.h:13:26: before: )
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/VideoClient/crc.h ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/VideoClient/crc.h:23:48: before: byte
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/VideoClient/cvar.c ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/fake_headers/utils/_fake_typedefs.h:13:26: before: )
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/VideoClient/cvar.h ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/VideoClient/cvar.h:60:2: before: qboolean
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/VideoClient/draw.h ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/VideoClient/draw.h:24:15: before: *
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/VideoClient/gl_draw.c ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/fake_headers/utils/_fake_typedefs.h:13:26: before: )
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/VideoClient/gl_mesh.c ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/fake_headers/utils/_fake_typedefs.h:13:26: before: )
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/VideoClient/gl_model.c ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/fake_headers/utils/_fake_typedefs.h:13:26: before: )
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/VideoClient/gl_model.h ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/VideoClient/modelgen.h:62:2: before: vec3_t
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/VideoClient/gl_ngraph.c ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/fake_headers/utils/_fake_typedefs.h:13:26: before: )
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/VideoClient/gl_refrag.c ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/fake_headers/utils/_fake_typedefs.h:13:26: before: )
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/VideoClient/gl_rlight.c ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/fake_headers/utils/_fake_typedefs.h:13:26: before: )
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/VideoClient/gl_rmain.c ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/fake_headers/utils/_fake_typedefs.h:13:26: before: )
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/VideoClient/gl_rmisc.c ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/fake_headers/utils/_fake_typedefs.h:13:26: before: )
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/VideoClient/gl_rsurf.c ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/fake_headers/utils/_fake_typedefs.h:13:26: before: )
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/VideoClient/gl_screen.c ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/fake_headers/utils/_fake_typedefs.h:13:26: before: )
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/VideoClient/gl_vidlinuxglx.c ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/fake_headers/utils/_fake_typedefs.h:13:26: before: )
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/VideoClient/gl_warp.c ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/fake_headers/utils/_fake_typedefs.h:13:26: before: )
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/VideoClient/gl_warp_sin.h ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/VideoClient/gl_warp_sin.h:20:2: before: 0
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/VideoClient/glquake.h ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/fake_headers/utils/_fake_typedefs.h:13:26: before: )
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/VideoClient/input.h ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/VideoClient/input.h:29:25: before: *
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/VideoClient/keys.c ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/fake_headers/utils/_fake_typedefs.h:13:26: before: )
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/VideoClient/keys.h ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/VideoClient/keys.h:130:17: before: chat_team
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/VideoClient/mathlib.c ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/fake_headers/utils/_fake_typedefs.h:13:26: before: )
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/VideoClient/menu.c ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/fake_headers/utils/_fake_typedefs.h:13:26: before: )
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/VideoClient/menu.h ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/VideoClient/menu.h:37:8: before: *
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/VideoClient/modelgen.h ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/VideoClient/modelgen.h:62:2: before: vec3_t
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/VideoClient/net.h ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/VideoClient/net.h:26:2: before: byte
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/VideoClient/net_chan.c ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/fake_headers/utils/_fake_typedefs.h:13:26: before: )
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/VideoClient/net_udp.c ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/fake_headers/utils/_fake_typedefs.h:13:26: before: )
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/VideoClient/nonintel.c ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/fake_headers/utils/_fake_typedefs.h:13:26: before: )
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/VideoClient/pmove.c ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/fake_headers/utils/_fake_typedefs.h:13:26: before: )
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/VideoClient/pmove.h ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/VideoClient/pmove.h:23:2: before: vec3_t
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/VideoClient/pmovetst.c ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/fake_headers/utils/_fake_typedefs.h:13:26: before: )
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/VideoClient/protocol.h ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/VideoClient/protocol.h:259:2: before: vec3_t
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/VideoClient/quakedef.h ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/fake_headers/utils/_fake_typedefs.h:13:26: before: )
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/VideoClient/r_local.h ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/fake_headers/utils/_fake_typedefs.h:13:26: before: )
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/VideoClient/r_part.c ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/fake_headers/utils/_fake_typedefs.h:13:26: before: )
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/VideoClient/render.h ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/VideoClient/render.h:40:2: before: vec3_t
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/VideoClient/sbar.c ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/fake_headers/utils/_fake_typedefs.h:13:26: before: )
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/VideoClient/screen.h ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/VideoClient/screen.h:41:17: before: scr_disabled_for_loading
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/VideoClient/skin.c ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/fake_headers/utils/_fake_typedefs.h:13:26: before: )
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/VideoClient/snd_dma.c ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/fake_headers/utils/_fake_typedefs.h:13:26: before: )
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/VideoClient/snd_linux.c ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/fake_headers/utils/_fake_typedefs.h:13:26: before: )
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/VideoClient/snd_mem.c ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/fake_headers/utils/_fake_typedefs.h:13:26: before: )
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/VideoClient/snd_mix.c ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/fake_headers/utils/_fake_typedefs.h:13:26: before: )
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/VideoClient/sound.h ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/VideoClient/sound.h:35:2: before: cache_user_t
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/VideoClient/sv_ccmds.c ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/fake_headers/utils/_fake_typedefs.h:13:26: before: )
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/VideoClient/sys_linux.c ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/fake_headers/utils/_fake_typedefs.h:13:26: before: )
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/VideoClient/vid.h ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/VideoClient/vid.h:26:14: before: pixel_t
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/VideoClient/view.c ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/fake_headers/utils/_fake_typedefs.h:13:26: before: )
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/VideoClient/view.h ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/VideoClient/view.h:22:15: before: v_gamma
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/VideoClient/wad.c ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/fake_headers/utils/_fake_typedefs.h:13:26: before: )
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/VideoClient/wad.h ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/VideoClient/wad.h:42:2: before: byte
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/VideoClient/zone.c ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/fake_headers/utils/_fake_typedefs.h:13:26: before: )
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/server/bspfile.h ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/server/bspfile.h:159:2: before: byte
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/server/cmd.c ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/fake_headers/utils/_fake_typedefs.h:13:26: before: )
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/server/cmd.h ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/server/cmd.h:86:1: before: qboolean
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/server/common.c ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/fake_headers/utils/_fake_typedefs.h:13:26: before: )
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/server/common.h ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/server/common.h:65:1: before: TM_CALLABLE
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/server/crc.c ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/fake_headers/utils/_fake_typedefs.h:13:26: before: )
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/server/cvar.c ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/fake_headers/utils/_fake_typedefs.h:13:26: before: )
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/server/cvar.h ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/server/cvar.h:68:2: before: qboolean
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/server/mathlib.c ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/fake_headers/utils/_fake_typedefs.h:13:26: before: )
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/server/mathlib.h ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/server/mathlib.h:60:1: before: TM_CALLABLE
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/server/md4.c ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/fake_headers/utils/_fake_typedefs.h:13:26: before: )
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/server/model.c ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/fake_headers/utils/_fake_typedefs.h:13:26: before: )
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/server/model.h ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/server/model.h:47:2: before: byte
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/server/net.h ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/server/net.h:38:2: before: byte
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/server/net_chan.c ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/fake_headers/utils/_fake_typedefs.h:13:26: before: )
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/server/net_udp.c ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/fake_headers/utils/_fake_typedefs.h:13:26: before: )
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/server/pmove.c ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/fake_headers/utils/_fake_typedefs.h:13:26: before: )
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/server/pmove.h ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/server/pmove.h:33:2: before: vec3_t
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/server/pmovetst.c ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/fake_headers/utils/_fake_typedefs.h:13:26: before: )
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/server/pr_cmds.c ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/fake_headers/utils/_fake_typedefs.h:13:26: before: )
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/server/pr_comp.h ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/server/pr_comp.h:161:2: before: byte
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/server/pr_edict.c ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/fake_headers/utils/_fake_typedefs.h:13:26: before: )
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/server/pr_exec.c ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/fake_headers/utils/_fake_typedefs.h:13:26: before: )
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/server/progdefs.h ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/server/progdefs.h:25:2: before: string_t
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/server/progs.h ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/server/pr_comp.h:161:2: before: byte
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/server/protocol.h ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/server/protocol.h:267:2: before: vec3_t
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/server/qwsvdef.h ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/fake_headers/utils/_fake_typedefs.h:13:26: before: )
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/server/server.h ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/server/server.h:47:2: before: qboolean
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/server/sv_ccmds.c ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/fake_headers/utils/_fake_typedefs.h:13:26: before: )
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/server/sv_ents.c ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/fake_headers/utils/_fake_typedefs.h:13:26: before: )
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/server/sv_init.c ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/fake_headers/utils/_fake_typedefs.h:13:26: before: )
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/server/sv_main.c ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/fake_headers/utils/_fake_typedefs.h:13:26: before: )
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/server/sv_move.c ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/fake_headers/utils/_fake_typedefs.h:13:26: before: )
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/server/sv_nchan.c ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/fake_headers/utils/_fake_typedefs.h:13:26: before: )
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/server/sv_phys.c ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/fake_headers/utils/_fake_typedefs.h:13:26: before: )
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/server/sv_send.c ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/fake_headers/utils/_fake_typedefs.h:13:26: before: )
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/server/sv_user.c ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/fake_headers/utils/_fake_typedefs.h:13:26: before: )
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/server/sys.h ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/server/sys.h:39:1: before: TM_CALLABLE
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/server/tm_io.c ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/fake_headers/utils/_fake_typedefs.h:13:26: before: )
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/server/tm_io.h ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/server/tm_io.h:17:18: before: inTransaction
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/server/tm_lib.c ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/fake_headers/utils/_fake_typedefs.h:13:26: before: )
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/server/tm_macros.h ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/fake_headers/utils/_fake_typedefs.h:13:26: before: )
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/server/tm_vsprintf.c ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/fake_headers/utils/_fake_typedefs.h:13:26: before: )
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/server/world.c ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/fake_headers/utils/_fake_typedefs.h:13:26: before: )
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/server/world.h ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/server/world.h:32:2: before: vec3_t
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/server/zone.c ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/fake_headers/utils/_fake_typedefs.h:13:26: before: )
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/server/zone.h ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/server/zone.h:98:1: before: TM_CALLABLE
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/TraceBot/bspfile.h ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/TraceBot/bspfile.h:185:2: before: byte
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/TraceBot/cl_cam.c ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/fake_headers/utils/_fake_typedefs.h:21:19: before: )
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/TraceBot/cl_demo.c ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/fake_headers/utils/_fake_typedefs.h:21:19: before: )
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/TraceBot/cl_ents.c ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/fake_headers/utils/_fake_typedefs.h:21:19: before: )
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/TraceBot/cl_input.c ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/fake_headers/utils/_fake_typedefs.h:21:19: before: )
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/TraceBot/cl_main.c ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/fake_headers/utils/_fake_typedefs.h:21:19: before: )
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/TraceBot/cl_parse.c ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/fake_headers/utils/_fake_typedefs.h:21:19: before: )
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/TraceBot/cl_pred.c ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/fake_headers/utils/_fake_typedefs.h:21:19: before: )
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/TraceBot/cl_tent.c ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/fake_headers/utils/_fake_typedefs.h:21:19: before: )
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/TraceBot/client.h ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/TraceBot/client.h:26:2: before: qboolean
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/TraceBot/cmd.c ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/fake_headers/utils/_fake_typedefs.h:21:19: before: )
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/TraceBot/cmd.h ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/TraceBot/cmd.h:76:10: before: Cmd_Exists
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/TraceBot/common.c ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/fake_headers/utils/_fake_typedefs.h:21:19: before: )
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/TraceBot/common.h ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/TraceBot/common.h:197:36: before: FILE
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/TraceBot/console.c ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/fake_headers/utils/_fake_typedefs.h:21:19: before: )
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/TraceBot/console.h ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/TraceBot/console.h:41:17: before: con_initialized
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/TraceBot/bspfile.h ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/TraceBot/bspfile.h:185:2: before: byte
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/TraceBot/cl_cam.c ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/fake_headers/utils/_fake_typedefs.h:29:14: before: void
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/TraceBot/bspfile.h ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/TraceBot/bspfile.h:185:2: before: byte
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/TraceBot/cl_cam.c ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/fake_headers/utils/_fake_typedefs.h:14:20: before: )
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/TraceBot/cl_demo.c ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/fake_headers/utils/_fake_typedefs.h:14:20: before: )
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/TraceBot/cl_ents.c ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/fake_headers/utils/_fake_typedefs.h:14:20: before: )
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/TraceBot/cl_input.c ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/fake_headers/utils/_fake_typedefs.h:14:20: before: )
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/TraceBot/cl_main.c ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/fake_headers/utils/_fake_typedefs.h:14:20: before: )
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/TraceBot/cl_parse.c ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/fake_headers/utils/_fake_typedefs.h:14:20: before: )
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/TraceBot/cl_pred.c ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/fake_headers/utils/_fake_typedefs.h:14:20: before: )
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/TraceBot/cl_tent.c ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/fake_headers/utils/_fake_typedefs.h:14:20: before: )
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/TraceBot/client.h ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/TraceBot/client.h:26:2: before: qboolean
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/TraceBot/cmd.c ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/fake_headers/utils/_fake_typedefs.h:14:20: before: )
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/TraceBot/cmd.h ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/TraceBot/cmd.h:76:10: before: Cmd_Exists
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/TraceBot/common.c ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/fake_headers/utils/_fake_typedefs.h:14:20: before: )
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/TraceBot/common.h ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/TraceBot/common.h:197:36: before: FILE
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/TraceBot/console.c ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/fake_headers/utils/_fake_typedefs.h:14:20: before: )
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/TraceBot/console.h ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/TraceBot/console.h:41:17: before: con_initialized
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/TraceBot/crc.c ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/fake_headers/utils/_fake_typedefs.h:14:20: before: )
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/TraceBot/crc.h ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/TraceBot/crc.h:23:48: before: byte
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/TraceBot/cvar.c ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/fake_headers/utils/_fake_typedefs.h:14:20: before: )
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/TraceBot/cvar.h ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/TraceBot/cvar.h:60:2: before: qboolean
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/TraceBot/draw.h ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/TraceBot/draw.h:24:15: before: *
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/TraceBot/gl_model.c ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/fake_headers/utils/_fake_typedefs.h:14:20: before: )
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/TraceBot/gl_model.h ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/TraceBot/modelgen.h:62:2: before: vec3_t
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/TraceBot/input.h ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/TraceBot/input.h:29:25: before: *
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/TraceBot/keys.c ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/fake_headers/utils/_fake_typedefs.h:14:20: before: )
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/TraceBot/keys.h ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/TraceBot/keys.h:130:17: before: chat_team
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/TraceBot/mathlib.c ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/fake_headers/utils/_fake_typedefs.h:14:20: before: )
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/TraceBot/menu.h ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/TraceBot/menu.h:37:8: before: *
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/TraceBot/modelgen.h ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/TraceBot/modelgen.h:62:2: before: vec3_t
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/TraceBot/net.h ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/TraceBot/net.h:26:2: before: byte
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/TraceBot/net_chan.c ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/fake_headers/utils/_fake_typedefs.h:14:20: before: )
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/TraceBot/net_udp.c ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/fake_headers/utils/_fake_typedefs.h:14:20: before: )
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/TraceBot/bspfile.h ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/TraceBot/bspfile.h:185:2: before: byte
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/TraceBot/cl_cam.c ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/fake_headers/utils/_fake_typedefs.h:3:19: before: )
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/TraceBot/cl_demo.c ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/fake_headers/utils/_fake_typedefs.h:3:19: before: )
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/TraceBot/cl_ents.c ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/fake_headers/utils/_fake_typedefs.h:3:19: before: )
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/TraceBot/cl_input.c ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/fake_headers/utils/_fake_typedefs.h:3:19: before: )
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/TraceBot/cl_main.c ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/fake_headers/utils/_fake_typedefs.h:3:19: before: )
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/TraceBot/cl_parse.c ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/fake_headers/utils/_fake_typedefs.h:3:19: before: )
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/TraceBot/cl_pred.c ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/fake_headers/utils/_fake_typedefs.h:3:19: before: )
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/TraceBot/cl_tent.c ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/fake_headers/utils/_fake_typedefs.h:3:19: before: )
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/TraceBot/client.h ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/TraceBot/client.h:26:2: before: qboolean
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/TraceBot/cmd.c ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/fake_headers/utils/_fake_typedefs.h:3:19: before: )
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/TraceBot/cmd.h ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/TraceBot/cmd.h:76:10: before: Cmd_Exists
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/TraceBot/common.c ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/fake_headers/utils/_fake_typedefs.h:3:19: before: )
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/TraceBot/common.h ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/TraceBot/common.h:197:36: before: FILE
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/TraceBot/console.c ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/fake_headers/utils/_fake_typedefs.h:3:19: before: )
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/TraceBot/console.h ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/TraceBot/console.h:41:17: before: con_initialized
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/TraceBot/crc.c ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/fake_headers/utils/_fake_typedefs.h:3:19: before: )
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/TraceBot/bspfile.h ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/TraceBot/bspfile.h:185:2: before: byte
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/TraceBot/cl_cam.c ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/fake_headers/utils/_fake_typedefs.h:22:26: before: )
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/TraceBot/cl_demo.c ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/fake_headers/utils/_fake_typedefs.h:22:26: before: )
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/TraceBot/cl_ents.c ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/fake_headers/utils/_fake_typedefs.h:22:26: before: )
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/TraceBot/cl_input.c ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/fake_headers/utils/_fake_typedefs.h:22:26: before: )
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/TraceBot/cl_main.c ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/fake_headers/utils/_fake_typedefs.h:22:26: before: )
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/TraceBot/cl_parse.c ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/fake_headers/utils/_fake_typedefs.h:22:26: before: )
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/TraceBot/cl_pred.c ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/fake_headers/utils/_fake_typedefs.h:22:26: before: )
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/TraceBot/cl_tent.c ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/fake_headers/utils/_fake_typedefs.h:22:26: before: )
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/TraceBot/client.h ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/TraceBot/client.h:26:2: before: qboolean
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/jrk/QuakeTM/client/TraceBot/cmd.c ->
+ /home/talkad/Downloads/thesis/data_gathering_script/parsers/fake_headers/utils/_fake_typedefs.h:22:26: before: )
+

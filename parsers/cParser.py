@@ -45,28 +45,24 @@ class CLoopParser(Parser):
         else:
             return False
 
-    def code_preprocess_pipline(self, code):
-        code = self.join_splited_lines(code)
-        return self.join_funcDecl(code)
-
     def parse(self, file_path, code_buf):
         repo_name = file_path[len(self.repo_path + self.root_dir) + 2:]
         repo_name = repo_name[:repo_name.find('/') ]
-        cpp_args = ['-nostdinc',  '-E', r'-I' + os.path.join(self.root_dir, 'fake_headers', 'utils')]
+        cpp_args = ['-nostdinc', '-w', '-E', r'-I' + os.path.join(self.root_dir, 'fake_headers', 'utils')]
 
         _, headers, _ = fake.get_headers(fake.REPOS_DIR, repo_name)
-        for header in headers:
+        for header in list(headers)[:150]:
             cpp_args.append(r'-I' + os.path.join(fake.REPOS_DIR, repo_name, header))
 
         try:
             return pycparser.parse_file(file_path, use_cpp=True, cpp_path='mpicc', cpp_args = cpp_args)
         except pycparser.plyparser.ParseError as e:  
-            print(f'Parser Error: {file_path} ->\n {e}')
-            for idx in re.findall(r'(.*?):(\d+):(\d+)(.*)', str(e)):
-                print("line:", code.split('\n')[int(idx[1]) - 1])
+            with open('error_logger.txt', 'a') as f:
+                f.write(f'Parser Error: {file_path} ->\n {e}\n\n')
+            print(f'{e}')
             return
         except Exception as e:  
-            print(f'Unexpected Error: {file_path} ->\n {e}')
+            # print(f'Unexpected Error: {file_path} ->\n {e}')
             return
 
     def parse_file(self, root_dir, file_name, exclusions):
@@ -141,21 +137,16 @@ class CLoopParser(Parser):
 
         # iterate over repos
         for idx, repo_name in enumerate(os.listdir(omp_repo)):
-            print('repo ', repo_name)
-            paths, _, _ = fake.get_headers(fake.REPOS_DIR, repo_name)
+            # print('repo ', repo_name)
+            fake.remove_utils()
+            fake.create_fake_headers(repo_name)
+            fake.create_not_exists_headers(omp_repo, repo_name)
 
             for root, dirs, files in os.walk(os.path.join(omp_repo, repo_name)):
                 for file_name in files:
                     ext = os.path.splitext(file_name)[1].lower()
                     
                     if ext in self.file_extensions:
-                        print(file_name, ":")
-                        includes = fake.extract_includes(os.path.join(root, file_name))
-
-                        for include in includes:
-                            if all([False for path in paths if path.endswith(include)]):
-                                fake.create_fake_header(include)
-
                         pos, neg, is_parsed = self.parse_file(root, file_name, exclusions)
 
                         if pos is not None:
@@ -166,7 +157,9 @@ class CLoopParser(Parser):
                             num_failed += 1
                         total_files += 1
 
-            if idx % (10**2) == 0:
+            if idx % (10) == 0:
+                with open('success_logger.txt', 'a') as f:
+                    f.write("{:20}{:10}   |   {:20} {:10}\n\n".format("files processed: ", total_files, "failed to parse: ", num_failed))
                 print("{:20}{:10}   |   {:20} {:10}".format("files processed: ", total_files, "failed to parse: ", num_failed))
                 print("{:20}{:10}   |   {:20} {:10}".format("pos examples: ", total_pos, "neg examples: ", total_neg))
                 print(f'exclusions: {exclusions}\n')
