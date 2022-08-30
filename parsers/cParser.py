@@ -52,26 +52,6 @@ class CLoopParser(Parser):
         else:
             return False
 
-
-    def update_include(self, file_path):
-        with open(file_path, "r+") as f:
-            code = f.read()
-            code_buf = []
-
-            for line in code.split('\n'):
-                # if any([True for directive in ['#include', ] if directive in line]):
-                if line.lstrip().startswith('#') and '#define' not in line.lower() and  'pragma' not in line.lower():
-                    continue
-                code_buf.append(line)
-            
-            code = '\n'.join(code_buf)
-            code = f'#include \"new_header.h\"\n#include \"_fake_define.h\"\n{code}'
-
-            f.truncate(0)
-            f.seek(0)
-            f.write(code)
-
-
     def create_ast(self, file_path, code_buf, result):
         repo_name = file_path[len(self.repo_path + self.root_dir) + 2:]
         repo_name = repo_name[:repo_name.find('/') ]
@@ -86,30 +66,15 @@ class CLoopParser(Parser):
                 code = f.read()    
                 tmp.write(code)
                 tmp.seek(0)
-                # self.update_include(tmp.name)
-                # tmp.seek(0)
                 ast = pycparser.parse_file(tmp.name, use_cpp=True, cpp_path='mpicc', cpp_args = cpp_args)
                 result['ast'] = ast
 
-            # self.update_include(file_path)
-            # ast = pycparser.parse_file(file_path, use_cpp=True, cpp_path='mpicc', cpp_args = cpp_args)
-            # result['ast'] = ast
-            # print('ok', str(ast)[:50])
         except pycparser.plyparser.ParseError as e:  
             log('error_logger.txt', f'Parser Error: {file_path} ->\n {e}\n')
-
-                # for idx in re.findall(r'(.*?):(\d+):(\d+)(.*)', str(e)):
-                #     f.write("line:  " + code.split('\n')[int(idx[1]) - 2] + " \n\n")
-            # print(f'{file_path}\n{e}\n')
             return
         except Exception as e:  
-            # log('error_logger.txt', f'Unexpected Error: {file_path} ->\n {e}\n')
-            # with open('error_logger.txt', 'a') as f:
-            #     f.write(f'Unexpected Error: {file_path} ->\n {e}\n')
-            print(f'Unexpected Error: {file_path} ->\n {e}')
+            log('error_logger.txt', f'Unexpected Error: {file_path} ->\n {e}\n')
             return   
-
-
 
     def parse(self, file_path, code_buf):
         manager = Manager()
@@ -215,9 +180,6 @@ class CLoopParser(Parser):
         # iterate over repos
         for idx, repo_name in enumerate(os.listdir(omp_repo)):
             print(repo_name)
-            # fake.remove_utils()
-            # fake.create_fake_headers(repo_name)
-            # fake.create_not_exists_headers(omp_repo, repo_name)
 
             for root, dirs, files in os.walk(os.path.join(omp_repo, repo_name)):
                 for file_name in files:
@@ -245,8 +207,6 @@ class CLoopParser(Parser):
 
             if idx % (2) == 0:
                 log('success_logger.txt', "{:20}{:10}   |   {:20} {:10}\n\n".format("files processed: ", total_files, "failed to parse: ", num_failed))
-                # with open('success_logger.txt', 'a') as f:
-                    # f.write("{:20}{:10}   |   {:20} {:10}\n\n".format("files processed: ", total_files, "failed to parse: ", num_failed))
                 print("{:20}{:10}   |   {:20} {:10}".format("files processed: ", total_files, "failed to parse: ", num_failed))
                 print("{:20}{:10}   |   {:20} {:10}".format("pos examples: ", total_pos, "neg examples: ", total_neg))
                 print(f'exclusions: {exclusions}\n')
@@ -254,10 +214,10 @@ class CLoopParser(Parser):
         return total_pos, total_neg, exclusions, total_files, num_failed
 
 
-parser = CLoopParser('../repositories_openMP', '../c_loops')
-# parser = CLoopParser('../asd', 'c_loops2')
+# parser = CLoopParser('../repositories_openMP', '../c_loops')
+parser = CLoopParser('../asd', 'c_loops2')
 
-# data = parser.load('/home/talkad/Downloads/thesis/data_gathering_script/parsers/c_loops2/aalty/MPI-OpenMP-Mandlebrot-Set/ms_mpi_dynamic_neg_1.pickle')
+# data = parser.load('/home/talkad/Downloads/thesis/data_gathering_script/parsers/c_loops2/123/a_pos_0.pickle')
 # print(f'pragma: {data.omp_pragma}')
 # print('code:\n')
 # print(data.textual_loop)

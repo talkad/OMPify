@@ -8,6 +8,7 @@
         "compute.h": "c",
         "omp.h": "c",
         "assert.h": "c",
-        "errno.h": "c"
+        "errno.h": "c",
+        "quakedef.h": "c"
     }
 }

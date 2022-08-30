@@ -15,7 +15,9 @@ class PragmaForVisitor(c_ast.NodeVisitor):
             self.found = False
         else:
             self.neg_nodes.append(node)
-            # self.generic_visit(node)
+        
+        # capture inner for loops as well
+        self.generic_visit(node)
 
     def visit_Pragma(self, node):
         line = node.string.lower()

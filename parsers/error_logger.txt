@@ -1,0 +1,6 @@
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/123/a.c ->
+ /tmp/tmpp7r18g9_.c:4:1: before: for
+
+Unexpected Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/123/a.c ->
+ Command '['mpicc', '-nostdinc', '-w', '-E', '-I/home/talkad/Downloads/thesis/data_gathering_script/parsers/fake_headers/utils', '/tmp/tmprhq9wxgs.c']' returned non-zero exit status 1.
+
