@@ -10,7 +10,8 @@ REPOS_OMP_DIR = '/home/talkad/Downloads/thesis/data_gathering_script/repositorie
 FAKE_DIR = '/home/talkad/Downloads/thesis/data_gathering_script/parsers/fake_headers/utils'
 FAKE_DEFINES  = '_fake_defines.h'
 FAKE_TYPEDEFS = '_fake_typedefs.h'
-FAKE_INCLUDE  = f'#include \"{FAKE_DEFINES}\"\n#include \"{FAKE_TYPEDEFS}\"\n#include \"../fake_handcrafted/_fake_handcrafted.h\"'
+# FAKE_INCLUDE  = f'#include \"{FAKE_DEFINES}\"\n#include \"{FAKE_TYPEDEFS}\"\n#include \"../fake_handcrafted/_fake_handcrafted.h\"'
+FAKE_INCLUDE  = f'#include \"_fake_types.h\"'
 
 
 
@@ -93,10 +94,10 @@ def get_directives(code):
 
     for directive in re.findall(r'(\s*)typedef(\s*)struct(\s*){(.|\n)+?}(.+?);', code):
         typedefs.add(directive[4])
-             
         # typedefs.add(f' int {directive[4]}')
 
     return defines, func_defines, func_names, typedefs
+
 
 
 def get_repo_directives(repo_dir, repo_name):
@@ -131,49 +132,33 @@ def get_repo_directives(repo_dir, repo_name):
     return define_set, func_defines_set, func_names_set, typedef_set
 
 
-def get_all_directives():
+def extract_typedef_directives():
     '''
-    iterate over all repos and /usr/include and extract all directives
+    Create fake headers contains typedefs
     '''
-    print('extract common headers directives')
-    define_set, func_defines_set, func_names_set, typedef_set = get_repo_directives('/usr', 'include')
-    print('finished to extract common headers directives')
+    typedefs_set = set()
+    relevant_repos = os.listdir(REPOS_OMP_DIR)
 
-    # for idx, repo in enumerate(os.listdir(REPOS_OMP_DIR)):
-    #     defines, func_defines, func_names, typdefs = get_repo_directives(REPOS_DIR, repo)
-
-    #     define_set |= defines
-    #     func_defines_set += func_defines
-    #     func_names_set += func_names
-    #     typedef_set |= typdefs
-
-    #     if idx > 0 and idx % 100 == 0:
-    #         break
-    #         print(f'repo: {idx}')
-
-    return define_set, func_defines_set, func_names_set, typedef_set
-
-
-def extract_all_directives():
-    '''
-    Create fake headers that contain all defines and typedefs
-    '''
     if not os.path.exists(FAKE_DIR):
         os.makedirs(FAKE_DIR)
 
-    with open(os.path.join(FAKE_DIR, FAKE_DEFINES), 'w+') as define_file, open(os.path.join(FAKE_DIR, FAKE_TYPEDEFS), 'w+') as typedef_file:
-        defines, func_defines, func_names, typedefs = get_all_directives()
-        def_func_dict = {k:v for k,v in list(zip(func_names, func_defines))}
+    # iterate over all the relevant repositories
+    for idx, repo_name in enumerate(os.listdir(REPOS_DIR)):
 
-        for define in defines:
-            define_file.write(f'#define {define} 1\n')
+        if repo_name not in relevant_repos:
+            continue
 
-        for def_func in def_func_dict:
-            if def_func not in defines:
-                define_file.write(f'#define {def_func_dict[def_func]} 1\n')
+        _, _, _, typedefs = get_repo_directives(REPOS_DIR, repo_name)
 
         for typedef in typedefs:
-            if ')' not in typedef or '}' not in typedef:
+            typedefs_set.add(typedef)
+
+        if idx > 0 and idx % 10**2 == 0:
+            print(f'repos passed: {idx}')
+
+    with open(os.path.join(FAKE_DIR, '_fake_types.h'), 'w+') as typedef_file:
+        for typedef in typedefs_set:
+            if ')' not in typedef and '}' not in typedef:
                 typedef_file.write(f'typedef int {typedef};\n')
 
 
@@ -196,7 +181,8 @@ def create_fake_headers(repo_name):
                 define_file.write(f'#define {def_func_dict[def_func]} 1\n')
 
         for typedef in typedefs:
-            typedef_file.write(f'typedef int {typedef};\n')
+            if ')' not in typedef and '}' not in typedef:
+                typedef_file.write(f'typedef int {typedef};\n')
 
 
 
@@ -237,7 +223,12 @@ def create_fake_header(header):
 
 
 def create_not_exists_headers(repo_dir, repo_name):
+    '''
+    Create fake headers for headers that don't exist in the given repo
+    '''
     paths, _, _ = get_headers(REPOS_DIR, repo_name)
+
+    create_fake_header('new_header.h')
 
     for root, dirs, files in os.walk(os.path.join(repo_dir, repo_name)):
         for file_name in files:
@@ -246,8 +237,8 @@ def create_not_exists_headers(repo_dir, repo_name):
             if ext in ['.h', '.c']:
                 includes = extract_includes(os.path.join(root, file_name))
                 for include in includes:
-                    if all([False for path in paths if path.endswith('/' + include)]):
-                        create_fake_header(include)
+                    # if all([False for path in paths if path.endswith('/' + include)]):
+                    create_fake_header(include)
 
 
 
@@ -256,4 +247,42 @@ def remove_utils():
         shutil.rmtree(FAKE_DIR)
     except:
         return
+
+
+
+# with open("/home/talkad/Downloads/thesis/data_gathering_script/_fake_types.h", 'r') as f:
+#     code = f.read()
+#     code_buf = []
+#     for line in code.split('\n'):
+#         if len(line.split()) != 3 or '[' in line or '#' in line or ']' in line or '*' in line or '<' in line or '>' in line or ':' in line:
+#             continue
+#         code_buf.append(line)
+
+#     with open('a.h', 'w') as f2:
+#         f2.write('\n'.join(code_buf))
+
+
+
+def create_fake_defines(path):
+    if not os.path.exists(FAKE_DIR):
+        os.makedirs(FAKE_DIR)
+
+    # path = "/home/talkad/Downloads/thesis/data_gathering_script/asd/ryanfb/teem-parallel/src/unrrdu/dice.c"
+    defs = dict()
+    with open(os.path.join(FAKE_DIR, '_fake_define.h'), 'w') as f, open(path, 'r') as f2:
+        code = f2.read()
+        LINE_COMMENT_RE = re.compile("//.*?\n" )
+        MULTILINE_COMMENT_RE = re.compile("/\*.*?\*/", re.DOTALL)
+        code = LINE_COMMENT_RE.sub("", code)
+        code  = MULTILINE_COMMENT_RE.sub("", code)
+
+        for func_call in re.findall(r'[_A-Z]+\([^\)]*\)', code):
+            print('aaaa', func_call)
+            defs[func_call[:func_call.find('(')]] =  "(" + ', '.join([chr(ord('a') + i) for i in range(func_call.count(',') + 1)]) + ") 1"
+            print(defs[func_call[:func_call.find('(')]])
+
+        for _def in defs:
+            f.write(f'#define {_def}{defs[_def]}\n')
+            # print("#define " + _def[:_def.find('(')] + "(" + ', '.join([chr(ord('a') + i) for i in range(defs[_def].count(',') + 1)]) + ") 1")
+
 

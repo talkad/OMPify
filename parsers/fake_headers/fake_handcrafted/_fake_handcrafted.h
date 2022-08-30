@@ -2,10 +2,62 @@ typedef int fd_set;
 typedef int data_t;
 typedef int BITMAP;
 typedef int Bool;
+typedef int BOOL;
+typedef int Agraph_t;
+typedef int SDL_Surface;
+typedef int APIENTRY;
+typedef int cvar_t;
+typedef int usercmd_t;
+typedef int png_bytep;
+typedef int trace_state_t;
+typedef int cache_user_t;
+typedef int miptex_t;
+typedef int MPI_Request;
+typedef int png_structp;
+typedef int MPI_Comm;
+typedef int png_infop;
+typedef int byte;
+typedef int mnode_t;
+typedef int dlight_t;
+typedef int ddef_t;
+typedef int texture_t;
+typedef int glpoly_t;
+typedef int GLXContext;
+typedef int msurface_t;
+typedef int particle_t;
+typedef int surf_t;
+typedef int dprograms_t;
+typedef int dfunction_t;
+typedef int edge_t;
+typedef int alight_t;
+typedef int trace_t;
+typedef int XKeyEvent;
+typedef int mtriangle_t;
+typedef int edict_t;
+typedef int finalvert_t;
+typedef int auxvert_t;
+typedef int mspriteframe_t;
+typedef int client_t;
+typedef int server_static_t;
+typedef int TM_packets_t;
+typedef int xcommand_t;
+typedef int link_t;
+typedef int mleaf_t;
+typedef int vec3_t;
+typedef int mplane_t;
+typedef int vrect_t;
+typedef int player_info_t;
+typedef int player_state_t;
+typedef int efrag_t;
+typedef int frame_t;
+typedef int sfx_t;
 typedef int graymap_t;
+typedef int client_static_t;
+typedef int entity_t;
 typedef int matrix_t;
 typedef int color_t;
 typedef int size_t;
+typedef int model_t;
 typedef int GLFWvidmode;
 typedef int GLFWwindow;
 typedef int splatt_csf;
@@ -251,14 +303,14 @@ typedef struct MirBufferStream MirBufferStream;
 typedef struct MirPersistentId MirPersistentId;
 typedef struct MirBlob MirBlob;
 typedef struct MirDisplayConfig MirDisplayConfig;
-typedef int vec3_t;
-typedef int qboolean;
-typedef int 
 typedef int realtype;
 typedef int mxArray;
 typedef int Uint8;
 typedef int Uint16;
 typedef int Uint32;
+typedef int vec_3;
+typedef int sizebuf_t;
+typedef int qboolean;
 #define USE_OPENMP 1
 /*python*/
 typedef int PyObject;
@@ -632,3 +684,9 @@ typedef uint32_t xcb_visualid_t;
 #define __alignas_is_defined 1
 #define __alignof_is_defined 1
 #define restrinct
+#define VERSION 1
+#define __TIME__ 1
+#define __DATE__ 1
+#define DECLARE_NEST_LOCK(lck) 1
+#define VectorCopy(a,b) 1
+// #define THREADPRIVATE(a) 1

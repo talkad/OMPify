@@ -8,6 +8,13 @@ from functools import reduce
 from fake_headers import fake
 import re
 import tempfile
+from multiprocessing import Process, Manager
+import tempfile
+
+
+def log(file_name, msg):
+    with open(file_name, 'a') as f:
+        f.write(f'{msg}\n')
 
 
 class CLoopParser(Parser):
@@ -45,7 +52,27 @@ class CLoopParser(Parser):
         else:
             return False
 
-    def parse(self, file_path, code_buf):
+
+    def update_include(self, file_path):
+        with open(file_path, "r+") as f:
+            code = f.read()
+            code_buf = []
+
+            for line in code.split('\n'):
+                # if any([True for directive in ['#include', ] if directive in line]):
+                if line.lstrip().startswith('#') and '#define' not in line.lower() and  'pragma' not in line.lower():
+                    continue
+                code_buf.append(line)
+            
+            code = '\n'.join(code_buf)
+            code = f'#include \"new_header.h\"\n#include \"_fake_define.h\"\n{code}'
+
+            f.truncate(0)
+            f.seek(0)
+            f.write(code)
+
+
+    def create_ast(self, file_path, code_buf, result):
         repo_name = file_path[len(self.repo_path + self.root_dir) + 2:]
         repo_name = repo_name[:repo_name.find('/') ]
         cpp_args = ['-nostdinc', '-w', '-E', r'-I' + os.path.join(self.root_dir, 'fake_headers', 'utils')]
@@ -55,15 +82,51 @@ class CLoopParser(Parser):
             cpp_args.append(r'-I' + os.path.join(fake.REPOS_DIR, repo_name, header))
 
         try:
-            return pycparser.parse_file(file_path, use_cpp=True, cpp_path='mpicc', cpp_args = cpp_args)
+            with tempfile.NamedTemporaryFile(suffix='.c', mode='w+') as tmp, open(file_path, 'r') as f:    
+                code = f.read()    
+                tmp.write(code)
+                tmp.seek(0)
+                # self.update_include(tmp.name)
+                # tmp.seek(0)
+                ast = pycparser.parse_file(tmp.name, use_cpp=True, cpp_path='mpicc', cpp_args = cpp_args)
+                result['ast'] = ast
+
+            # self.update_include(file_path)
+            # ast = pycparser.parse_file(file_path, use_cpp=True, cpp_path='mpicc', cpp_args = cpp_args)
+            # result['ast'] = ast
+            # print('ok', str(ast)[:50])
         except pycparser.plyparser.ParseError as e:  
-            with open('error_logger.txt', 'a') as f:
-                f.write(f'Parser Error: {file_path} ->\n {e}\n\n')
-            print(f'{e}')
+            log('error_logger.txt', f'Parser Error: {file_path} ->\n {e}\n')
+
+                # for idx in re.findall(r'(.*?):(\d+):(\d+)(.*)', str(e)):
+                #     f.write("line:  " + code.split('\n')[int(idx[1]) - 2] + " \n\n")
+            # print(f'{file_path}\n{e}\n')
             return
         except Exception as e:  
-            # print(f'Unexpected Error: {file_path} ->\n {e}')
+            # log('error_logger.txt', f'Unexpected Error: {file_path} ->\n {e}\n')
+            # with open('error_logger.txt', 'a') as f:
+            #     f.write(f'Unexpected Error: {file_path} ->\n {e}\n')
+            print(f'Unexpected Error: {file_path} ->\n {e}')
+            return   
+
+
+
+    def parse(self, file_path, code_buf):
+        manager = Manager()
+        return_dict = manager.dict()
+        t = Process(target=self.create_ast, args=(file_path, code_buf, return_dict), daemon=True)
+
+        t.start()
+        t.join(60.0)
+
+        if t.is_alive():
+            t.terminate()
             return
+        elif len(return_dict) == 0:
+            return
+        else:
+            return return_dict['ast']
+
 
     def parse_file(self, root_dir, file_name, exclusions):
         '''
@@ -99,11 +162,12 @@ class CLoopParser(Parser):
                 func_call_checker.reset()
 
                 verify_loops.visit(loop)
-                if verify_loops.found:  # undesired tokens found
+                if verify_loops.found:  # undesired     tokens found
                     exclusions['bad_case'] += 1
                     continue
-
-                code = str(loop)
+                
+                generator = pycparser.c_generator.CGenerator()
+                code = generator.visit(loop)
                 if code in self.memory:
                     exclusions['duplicates'] += 1
                     continue
@@ -118,9 +182,7 @@ class CLoopParser(Parser):
                                    
                 self.create_directory(save_dir) 
                 self.memory.append(code)
-
-                generator = pycparser.c_generator.CGenerator()
-                self.save(os.path.join(save_dir, f"{name}{'_neg_' if pragma is None else '_pos_'}{idx}.pickle"), pragma, loop, generator.visit(loop))
+                self.save(os.path.join(save_dir, f"{name}{'_neg_' if pragma is None else '_pos_'}{idx}.pickle"), pragma, loop, code)
 
                 if pragma is None:
                     neg += 1
@@ -129,7 +191,22 @@ class CLoopParser(Parser):
 
             return pos, neg, True
 
+    def is_cpp_header(self, file_path):
+        code = ''
+        includes = fake.extract_includes(file_path)
+
+        if any([True for include in includes if not include.endswith('.h')]):
+            return True
+
+        with open(file_path, 'r') as f:
+            code = f.read()
+        
+        return 'using namespace' in code
+
+
     def scan_dir(self):
+        LOGGER = 'cpp_headers.txt'
+
         total_files, num_failed = 0, 0
         total_pos, total_neg = 0, 0
         omp_repo = os.path.join(self.root_dir, self.repo_path)
@@ -137,16 +214,21 @@ class CLoopParser(Parser):
 
         # iterate over repos
         for idx, repo_name in enumerate(os.listdir(omp_repo)):
-            # print('repo ', repo_name)
-            fake.remove_utils()
-            fake.create_fake_headers(repo_name)
-            fake.create_not_exists_headers(omp_repo, repo_name)
+            print(repo_name)
+            # fake.remove_utils()
+            # fake.create_fake_headers(repo_name)
+            # fake.create_not_exists_headers(omp_repo, repo_name)
 
             for root, dirs, files in os.walk(os.path.join(omp_repo, repo_name)):
                 for file_name in files:
+                    file_path = os.path.join(root, file_name)
                     ext = os.path.splitext(file_name)[1].lower()
                     
                     if ext in self.file_extensions:
+                        if ext == '.h' and self.is_cpp_header(file_path):
+                            log('cpp_header.txt', file_path)
+                            continue
+
                         pos, neg, is_parsed = self.parse_file(root, file_name, exclusions)
 
                         if pos is not None:
@@ -155,11 +237,16 @@ class CLoopParser(Parser):
 
                         if not is_parsed:
                             num_failed += 1
+
+                            if ext == '.h':
+                                log('cpp_header.txt', file_path)
+
                         total_files += 1
 
-            if idx % (10) == 0:
-                with open('success_logger.txt', 'a') as f:
-                    f.write("{:20}{:10}   |   {:20} {:10}\n\n".format("files processed: ", total_files, "failed to parse: ", num_failed))
+            if idx % (2) == 0:
+                log('success_logger.txt', "{:20}{:10}   |   {:20} {:10}\n\n".format("files processed: ", total_files, "failed to parse: ", num_failed))
+                # with open('success_logger.txt', 'a') as f:
+                    # f.write("{:20}{:10}   |   {:20} {:10}\n\n".format("files processed: ", total_files, "failed to parse: ", num_failed))
                 print("{:20}{:10}   |   {:20} {:10}".format("files processed: ", total_files, "failed to parse: ", num_failed))
                 print("{:20}{:10}   |   {:20} {:10}".format("pos examples: ", total_pos, "neg examples: ", total_neg))
                 print(f'exclusions: {exclusions}\n')
@@ -167,14 +254,14 @@ class CLoopParser(Parser):
         return total_pos, total_neg, exclusions, total_files, num_failed
 
 
-# parser = CLoopParser('../repositories_openMP', '../c_loops')
-parser = CLoopParser('../asd', 'c_loops2')
+parser = CLoopParser('../repositories_openMP', '../c_loops')
+# parser = CLoopParser('../asd', 'c_loops2')
 
-# data = parser.load('/home/talkad/Downloads/thesis/data_gathering_script/c_parser/c_loops2/123/threadGauss_pos_0.pickle')
-# ast = data.loop
+# data = parser.load('/home/talkad/Downloads/thesis/data_gathering_script/parsers/c_loops2/aalty/MPI-OpenMP-Mandlebrot-Set/ms_mpi_dynamic_neg_1.pickle')
 # print(f'pragma: {data.omp_pragma}')
 # print('code:\n')
-# ast.show()
+# print(data.textual_loop)
+
 
 total = parser.scan_dir()
 print(total)
