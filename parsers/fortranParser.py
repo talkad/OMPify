@@ -107,6 +107,9 @@ class LoopExtractor:
             return True
 
     def get_pragma(self, prog):
+        '''
+        Extract pragma for given sub-program
+        '''
         children = []
 
         try:
@@ -133,6 +136,9 @@ class LoopExtractor:
                 return False
 
     def extract_loops(self, prog):
+        '''
+        Extract all loops from given program
+        '''
         children = prog.children
 
         if not is_iter(children):

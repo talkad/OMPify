@@ -9,6 +9,8 @@
         "omp.h": "c",
         "assert.h": "c",
         "errno.h": "c",
-        "quakedef.h": "c"
+        "quakedef.h": "c",
+        "iostream": "cpp",
+        "algorithm": "cpp"
     }
 }

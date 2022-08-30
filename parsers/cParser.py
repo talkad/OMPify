@@ -42,52 +42,6 @@ class CLoopParser(Parser):
         else:
             return False
 
-    # def remove_if_directive(self, code):
-    #     code_buf = []
-
-    #     for line in code.split('\n'):
-    #         if line.lower().startswith(('#ifdef', '#ifdnef', '#if', '#elif', '#else', '#endif')):
-    #             continue
-
-    #         code_buf.append(line)
-
-    #     return '\n'.join(code_buf)
-
-
-    # def update_if_directive(self, bool_lst, line_idx_lst, code):
-    #     '''
-    #     The C preprocessor removes code segmentes according to #if-like directives
-    #     we will bypass this issue by tweeking the conditions
-
-    #     Parameters:
-    #         bool_lst- boolean list indicates if to add ! (not) before a condition
-    #         line_idx_lst- the lines to be updated
-    #         code-  the original code
-
-    #     Returns:
-    #         The updated code
-    #     '''
-    #     code_buf = code.split('\n')
-
-    #     for upt, idx in zip(bool_lst, line_idx_lst):
-    #         if upt:
-    #             tokens = code_buf[idx].splt()
-
-    #             if len(tokens) > 1:
-    #                 code_buf[idx] = tokens[0] + "! (" + tokens[1:] + ")"
-
-    #     return '\n'.join(code_buf)
-
-    # def find_if_directives(code):
-    #     '''
-    #     Find the #if directives and iterate over all possible combinations
-    #     '''
-    #     lines_idx = []
-    #     for idx, line in enumerate(code.split('\n')):
-    #         if line.lower().startswith(('#ifdef', '#ifdnef', '#if', '#elif')):
-    # ...
-                
-
     def create_ast(self, file_path, code_buf, result):
         repo_name = file_path[len(self.repo_path + self.root_dir) + 2:]
         repo_name = repo_name[:repo_name.find('/') ]
