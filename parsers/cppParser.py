@@ -12,81 +12,14 @@ from multiprocessing import Process, Manager
 import tempfile
 
 
-
 def log(file_name, msg):
     with open(file_name, 'a') as f:
         f.write(f'{msg}\n')
 
 
-class CLoopParser(Parser):
+class CppLoopParser(Parser):
     def __init__(self, repo_path, parsed_path):
         super().__init__(repo_path, parsed_path, ['.c', '.h'])
-
-    def is_empty_loop(self, node):
-        '''
-        precondition - node is a For struct
-        '''
-        children = dict(node.children())
-
-        try:
-            # if there is no 'block_items' attribute than it's another compound struct
-            temp = children['stmt'].block_items
-        except:
-            return False
-
-        if children['stmt'].block_items is None:
-            return True
-        elif all(type(child) is For for child in children['stmt'].block_items):
-             # return true if one of the for loops is empty
-            return any(self.is_empty_loop(child) for child in children['stmt'].block_items)
-        else:
-            return False
-
-    # def remove_if_directive(self, code):
-    #     code_buf = []
-
-    #     for line in code.split('\n'):
-    #         if line.lower().startswith(('#ifdef', '#ifdnef', '#if', '#elif', '#else', '#endif')):
-    #             continue
-
-    #         code_buf.append(line)
-
-    #     return '\n'.join(code_buf)
-
-
-    # def update_if_directive(self, bool_lst, line_idx_lst, code):
-    #     '''
-    #     The C preprocessor removes code segmentes according to #if-like directives
-    #     we will bypass this issue by tweeking the conditions
-
-    #     Parameters:
-    #         bool_lst- boolean list indicates if to add ! (not) before a condition
-    #         line_idx_lst- the lines to be updated
-    #         code-  the original code
-
-    #     Returns:
-    #         The updated code
-    #     '''
-    #     code_buf = code.split('\n')
-
-    #     for upt, idx in zip(bool_lst, line_idx_lst):
-    #         if upt:
-    #             tokens = code_buf[idx].splt()
-
-    #             if len(tokens) > 1:
-    #                 code_buf[idx] = tokens[0] + "! (" + tokens[1:] + ")"
-
-    #     return '\n'.join(code_buf)
-
-    # def find_if_directives(code):
-    #     '''
-    #     Find the #if directives and iterate over all possible combinations
-    #     '''
-    #     lines_idx = []
-    #     for idx, line in enumerate(code.split('\n')):
-    #         if line.lower().startswith(('#ifdef', '#ifdnef', '#if', '#elif')):
-    # ...
-                
 
     def create_ast(self, file_path, code_buf, result):
         repo_name = file_path[len(self.repo_path + self.root_dir) + 2:]
@@ -252,8 +185,8 @@ class CLoopParser(Parser):
         return total_pos, total_neg, exclusions, total_files, num_failed
 
 
-parser = CLoopParser('../repositories_openMP', '../c_loops')
-# parser = CLoopParser('../asd', 'c_loops2')
+# parser = CLoopParser('../repositories_openMP', '../c_loops')
+parser = CLoopParser('../asd', 'c_loops2')
 
 # data = parser.load('/home/talkad/Downloads/thesis/data_gathering_script/c_loops/357r4bd/2d-heat/src/openmp-2dheat_pos_0.pickle')
 # print(f'pragma: {data.omp_pragma}')

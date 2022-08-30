@@ -1,27 +1,18 @@
-files processed:             1   |   failed to parse:              1
+files processed:             0   |   failed to parse:              0
 
 
-files processed:             1   |   failed to parse:              0
+files processed:             7   |   failed to parse:              1
 
 
-files processed:             1   |   failed to parse:              0
+files processed:            10   |   failed to parse:              1
 
 
-files processed:             1   |   failed to parse:              0
+files processed:            16   |   failed to parse:              3
 
 
-files processed:             1   |   failed to parse:              0
+files processed:            18   |   failed to parse:              3
 
 
-files processed:             1   |   failed to parse:              0
-
-
-files processed:             1   |   failed to parse:              0
-
-
-files processed:             1   |   failed to parse:              1
-
-
-files processed:             1   |   failed to parse:              0
+files processed:            87   |   failed to parse:             20
 
 

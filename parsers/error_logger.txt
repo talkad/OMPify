@@ -1,6 +1,99 @@
-Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/123/a.c ->
- /tmp/tmpp7r18g9_.c:4:1: before: for
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../repositories_openMP/silvasur/Another-mandelbrot-viewer/mandelbrot.c ->
+ /tmp/tmps4yg7g48.c:171:1: before: {
 
-Unexpected Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../asd/123/a.c ->
- Command '['mpicc', '-nostdinc', '-w', '-E', '-I/home/talkad/Downloads/thesis/data_gathering_script/parsers/fake_headers/utils', '/tmp/tmprhq9wxgs.c']' returned non-zero exit status 1.
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../repositories_openMP/kielfriedt/Multithreading/Pthreads/Pthread_MatrixMult.c ->
+ /tmp/tmp036kzr_9.c:51:7: before: namespace
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../repositories_openMP/bw-hro/Parallel-Matrix-Multiplication/mpi/source/omp.c ->
+ /tmp/tmpl0yvweae.c:1:13: before: matrixMultiOMP
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../repositories_openMP/bw-hro/Parallel-Matrix-Multiplication/omp/source/omp.c ->
+ /tmp/tmp0tenj0oz.c:1:13: before: matrixMultiOMP
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../repositories_openMP/bw-hro/Parallel-Matrix-Multiplication/pthread/source/omp.c ->
+ /tmp/tmpw10lg6xe.c:1:13: before: matrixMultiOMP
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../repositories_openMP/bw-hro/Parallel-Matrix-Multiplication/seq/source/omp.c ->
+ /tmp/tmpae4cv6x8.c:1:13: before: matrixMultiOMP
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../repositories_openMP/klueska/libgomp-parlib/libgomp/testsuite/libgomp.c/loop-7.c ->
+ /tmp/tmpn3avmdcc.c:101:7: before: volatile
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../repositories_openMP/klueska/libgomp-parlib/libgomp/testsuite/libgomp.c/loop-8.c ->
+ /tmp/tmpt370tn4p.c:5:20: before: (
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../repositories_openMP/klueska/libgomp-parlib/libgomp/testsuite/libgomp.c/nestedfn-4.c ->
+ /tmp/tmpoextezqz.c:13:3: before: {
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../repositories_openMP/klueska/libgomp-parlib/libgomp/testsuite/libgomp.c/nestedfn-6.c ->
+ /tmp/tmpzvmcc6dg.c:9:22: before: {
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../repositories_openMP/klueska/libgomp-parlib/libgomp/testsuite/libgomp.c/pr29947-1.c ->
+ /tmp/tmpwnskf350.c:298:15: before: (
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../repositories_openMP/klueska/libgomp-parlib/libgomp/testsuite/libgomp.c/pr29947-2.c ->
+ /tmp/tmp1d_tcasi.c:298:15: before: (
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../repositories_openMP/klueska/libgomp-parlib/libgomp/testsuite/libgomp.c/pr33880.c ->
+ /tmp/tmp9fp25xcf.c:11:3: before: {
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../repositories_openMP/klueska/libgomp-parlib/libgomp/testsuite/libgomp.c/pr35130.c ->
+ /tmp/tmpklq7ppdj.c:10:3: before: {
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../repositories_openMP/klueska/libgomp-parlib/libgomp/testsuite/libgomp.c/pr36802-2.c ->
+ /tmp/tmp1q1bt_qg.c:20:5: before: else
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../repositories_openMP/klueska/libgomp-parlib/libgomp/testsuite/libgomp.c/pr36802-3.c ->
+ /tmp/tmpfxia0pt_.c:20:5: before: else
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../repositories_openMP/klueska/libgomp-parlib/libgomp/testsuite/libgomp.c/pr39591-2.c ->
+ /tmp/tmp5td6bm0l.c:9:20: before: (
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../repositories_openMP/klueska/libgomp-parlib/libgomp/testsuite/libgomp.c/pr39591-3.c ->
+ /tmp/tmp25mxbbao.c:9:20: before: (
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../repositories_openMP/klueska/libgomp-parlib/libgomp/testsuite/libgomp.c/pr48591.c ->
+ /tmp/tmp53_12r3r.c:10:14: before: f
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../repositories_openMP/stilgar/Radix-Sort/radix_sort_parallel.c ->
+ /tmp/tmpvlqtnevz.c:86:10: String contains invalid escape code
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../repositories_openMP/openwall/john/src/AzureAD_fmt_plug.c ->
+ /home/talkad/Downloads/thesis/data_gathering_script/git_repos/openwall/john/src/loader.h:60:2: before: SINGLE_KEYS_TYPE
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../repositories_openMP/openwall/john/src/BF_std.c ->
+ /tmp/tmp3gl8ct_v.c:102:15: before: CC_CACHE_ALIGN
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../repositories_openMP/openwall/john/src/DES_bs_b.c ->
+ /tmp/tmp869wtk94.c:751:5: before: :
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../repositories_openMP/openwall/john/src/IPB2_fmt_plug.c ->
+ /tmp/tmp5ckcye1j.c:494:10: before: BITS
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../repositories_openMP/openwall/john/src/MD5_std.c ->
+ /tmp/tmposbekmtb.c:405:21: before: void
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../repositories_openMP/openwall/john/src/bitlocker_fmt_plug.c ->
+ /home/talkad/Downloads/thesis/data_gathering_script/git_repos/openwall/john/src/loader.h:60:2: before: SINGLE_KEYS_TYPE
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../repositories_openMP/openwall/john/src/crc32_fmt_plug.c ->
+ /tmp/tmpzftn27zi.c:262:32: before: CRC32_C_ALGORITHM_NAME
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../repositories_openMP/openwall/john/src/hmacMD5_fmt_plug.c ->
+ /tmp/tmptxgtdigq.c:553:27: before: BITS
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../repositories_openMP/openwall/john/src/krb5_tgs_fmt_plug.c ->
+ /home/talkad/Downloads/thesis/data_gathering_script/git_repos/openwall/john/src/loader.h:60:2: before: SINGLE_KEYS_TYPE
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../repositories_openMP/openwall/john/src/lotus5_fmt_plug.c ->
+ /tmp/tmprw4r184y.c:194:1: before: {
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../repositories_openMP/openwall/john/src/mscash1_fmt_plug.c ->
+ /home/talkad/Downloads/thesis/data_gathering_script/git_repos/openwall/john/src/loader.h:60:2: before: SINGLE_KEYS_TYPE
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../repositories_openMP/openwall/john/src/phpassMD5_fmt_plug.c ->
+ /tmp/tmp4ub8_ald.c:332:26: before: BITS
+
+Parser Error: /home/talkad/Downloads/thesis/data_gathering_script/parsers/../repositories_openMP/openwall/john/src/pkzip_fmt_plug.c ->
+ /tmp/tmp47z4nlvm.c:1117:1: before: {
 
