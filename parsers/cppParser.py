@@ -10,11 +10,108 @@ import re
 import tempfile
 from multiprocessing import Process, Manager
 import tempfile
+import clang.cindex as clang
 
+FUNC_NAME = 'my_awesome_function'
 
-# def log(file_name, msg):
-#     with open(file_name, 'a') as f:
-#         f.write(f'{msg}\n')
+class LoopExtractor:
+    '''
+    Implements the for-loop extraction functionality 
+    '''
+
+    def __init__(self):
+        self.loops = []
+        self.omp_pragmas = []
+        self.pragma = ''
+
+    def is_for_pragma(self, line):
+        '''
+        Returns true if the given line of code is pragma
+        '''
+        sub_line = line.lstrip().lower()
+
+        return sub_line.startswith('#pragma ') and ' omp ' in line and ' for' in line
+
+    def update_code(self, code):
+        '''
+        The clang parser ignores the pragmas in code.
+        we will bypass this issue by wrapping the pragma with a unique function call.
+        '''
+        code_buf = []
+        
+        for line in code.split('\n'):
+            if self.is_pragma(line):
+                code_buf.append(f'{FUNC_NAME}(\"{line}\");')
+            else:
+                code_buf.append(line)
+
+        return '\n'.join(code_buf)
+
+    def is_unique_node(self, node):
+        '''
+        Structure of the generated node:
+            CursorKind.UNEXPOSED_EXPR
+                CursorKind.DECL_REF_EXPR
+                    CursorKind.OVERLOADED_DECL_REF  ==  @param{FUNC_NAME}
+                CursorKind.STRING_LITERAL  ==  "#pragma omp for..."
+
+        Returns:
+            The string literal if its our function call, None otherwise
+        '''
+        if node.kind is clang.CursorKind.UNEXPOSED_EXPR:
+            children = node.get_children()
+            
+            for idx, ch in enumerate(children):
+                if idx == 0:
+                    if ch.kind is clang.CursorKind.DECL_REF_EXPR:
+                        
+                        for child in ch.get_children():
+                            if child.kind is clang.CursorKind.OVERLOADED_DECL_REF:
+                                if child.spelling != FUNC_NAME:     # not our function call
+                                    return None
+
+                elif idx == 1:
+                    if ch.kind is clang.CursorKind.STRING_LITERAL:
+                        return ch.spelling
+                else:
+                    return None
+
+    def extract_loops(self, cursor):
+        '''
+        Extract all loops and pragmas from given program
+        '''
+        for ch in cursor.get_children():
+            literal = self.is_unique_node(ch)
+
+            if literal is not None and len(literal) > 2 and self.is_for_pragma(literal[1:][:-1]):
+                self.pragma = literal[1:][:-1]
+
+            elif ch.kind is clang.CursorKind.FOR_STMT:
+                self.omp_pragmas.append(self.pragma)
+                self.loops.append(ch)
+                self.pragma = ''
+                
+            self.extract_loops(ch)
+
+        # for sub in children:
+        #     if type(sub) is FortranStructs.Comment and is_for_pragma(str(sub).lower()):
+        #         self.pragma = str(sub)
+        #     elif (type(sub) is FortranStructs.Block_Label_Do_Construct or type(sub) is FortranStructs.Block_Nonlabel_Do_Construct) \
+        #             and not is_do_while(sub):   # classified as do loop by the parser
+        #         if len(self.pragma) != 0:
+        #             self.omp_pragmas.append(self.pragma)
+        #             self.loops.append(sub)
+        #         else:                           # check for pragma
+        #             pragma = self.get_pragma(sub)
+                    
+        #             if pragma is not None:      # manage to get pragma
+        #                 self.omp_pragmas.append(pragma)
+        #                 self.loops.append(sub)
+
+        #         self.pragma = ''
+        #     elif not self.is_leaf(sub):
+        #         self.extract_loops(sub)
+
 
 
 # class CppLoopParser(Parser):
@@ -200,7 +297,6 @@ import tempfile
 # # (5176, 6829, {'bad_case': 1988, 'empty': 131, 'duplicates': 53288, 'func_calls': 5907}, 21814, 10042)
 
 
-import clang.cindex as clang
 
 
 
@@ -235,18 +331,25 @@ def code_from_ast(cursor):
     return '\n'.join(code)
 
 
-def text(cursor):
+def text(cursor, depth):
     for ch in cursor.get_children():
-        # if ch.kind is clang.CursorKind.OMP_FOR_DIRECTIVE:
-        print(str(ch.kind))
-            # print(f'{ch.kind}: {code_from_ast(ch)}\n')
-        text(ch)
+        print("  " * depth + str(ch.kind))
+        text(ch, depth + 1)
+
 
 index = clang.Index.create()
 tu = index.parse("/home/talkad/Downloads/thesis/data_gathering_script/asd/par_omp_sort.cpp")
 
 node = tu.cursor
-text(node)
+
+extractor = LoopExtractor()
+extractor.extract_loops(node)
+for pragma, loop in zip(extractor.omp_pragmas, extractor.loops):
+    print("pragma: ", pragma)
+    print(code_from_ast(loop))
+
+
+# text(node, 0)
 # print(code_from_ast(node))
 
-# CursorKind.FOR_STMT    ,     CursorKind.OVERLOADED_DECL_REF
+# CursorKind.FOR_STMT    ,     CursorKind.STRING_LITERAL    ,    CursorKind.OVERLOADED_DECL_REF

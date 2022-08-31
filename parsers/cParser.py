@@ -218,4 +218,4 @@ parser = CLoopParser('../repositories_openMP', '../c_loops')
 total = parser.scan_dir()
 print(total)
 
-# (5176, 6829, {'bad_case': 1988, 'empty': 131, 'duplicates': 53288, 'func_calls': 5907}, 21814, 10042)
+# (13238, 36593, {'bad_case': 6385, 'empty': 200, 'duplicates': 127647, 'func_calls': 22421}, 20803, 3861)
