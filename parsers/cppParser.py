@@ -2,11 +2,25 @@ import os
 from parser import Parser
 import pickle
 import tempfile
-from multiprocessing import Process, Manager
+from threading import Thread
 import tempfile
 import clang.cindex as clang
+from functools import reduce
 
 FUNC_NAME = 'my_awesome_function'
+
+
+def remove_whitespaces(line):
+    return reduce(lambda acc,cur: acc + cur if cur not in [' ', '\t'] else acc, line)
+
+def is_omp_pragma(line):
+    '''
+    Returns true if the given line of code is pragma
+    '''
+    sub_line = line.lstrip().lower()
+
+    return sub_line.startswith('#pragma ') and ' omp' in line
+
 
 class LoopExtractor:
     '''
@@ -18,21 +32,13 @@ class LoopExtractor:
         self.omp_pragmas = []
         self.pragma = ''
 
-    def is_for_pragma(self, line):
-        '''
-        Returns true if the given line of code is pragma
-        '''
-        sub_line = line.lstrip().lower()
-
-        return sub_line.startswith('#pragma ') and ' omp ' in line and ' for' in line
-
     def is_unique_node(self, node):
         '''
         Structure of the generated node:
             CursorKind.UNEXPOSED_EXPR
                 CursorKind.DECL_REF_EXPR
                     CursorKind.OVERLOADED_DECL_REF  ==  @param{FUNC_NAME}
-                CursorKind.STRING_LITERAL  ==  "#pragma omp for..."
+                CursorKind.STRING_LITERAL  ==  "#pragma omp ..."
 
         Returns:
             The string literal if its our function call, None otherwise
@@ -62,7 +68,7 @@ class LoopExtractor:
         for ch in cursor.get_children():
             literal = self.is_unique_node(ch)
 
-            if literal is not None and len(literal) > 2 and self.is_for_pragma(literal[1:][:-1]):
+            if literal is not None and len(literal) > 2 and is_omp_pragma(literal[1:][:-1]):
                 self.pragma = literal[1:][:-1]
 
             elif ch.kind is clang.CursorKind.FOR_STMT:
@@ -102,10 +108,10 @@ class LoopExtractor:
 
         return '\n'.join(code)
 
-def print_ast_nodes(self, cursor, depth=0):
-    for ch in cursor.get_children():
-        print("  " * depth + str(ch.kind))
-        self.rint_ast_nodes(ch, depth + 1)
+    def print_ast_nodes(self, cursor, depth=0):
+        for ch in cursor.get_children():
+            print("  " * depth + str(ch.kind))
+            self.print_ast_nodes(ch, depth + 1)
 
 
 
@@ -122,8 +128,32 @@ class CppLoopParser(Parser):
         pass
         # with open(file_path, 'rb') as f:
         #     return pickle.load(f)
+        return
 
-    def update_code(self, code):
+    def is_bad_case(self, node):
+        '''
+        Returns true if the node contains atomic or critical section
+        '''
+        extractor = LoopExtractor()
+
+        children = node.get_children()
+        literal = extractor.is_unique_node(node)
+        if literal is not None:
+            print('aaaa', remove_whitespaces(literal))
+
+        if literal is not None and len(literal) > 2 and is_omp_pragma(literal[1:][:-1]):
+
+            pragma = literal[1:][:-1].lower()
+
+            if "atomic" in pragma or "barri" in pragma or "critical" in pragma:
+                return True
+         
+        return any([self.is_bad_case(ch) for ch in children])
+
+    def is_empty_loop(self, node):
+        return sum(node.get_children()) == 0
+
+    def pragma2func(self, code):
         '''
         The clang parser ignores the pragmas in code.
         we will bypass this issue by wrapping the pragma with a unique function call.
@@ -131,7 +161,7 @@ class CppLoopParser(Parser):
         code_buf = []
         
         for line in code.split('\n'):
-            if self.is_pragma(line):
+            if is_omp_pragma(line):
                 code_buf.append(f'{FUNC_NAME}(\"{line}\");')
             else:
                 code_buf.append(line)
@@ -139,14 +169,15 @@ class CppLoopParser(Parser):
         return '\n'.join(code_buf)
 
     def create_ast(self, file_path, code_buf, result):
+        index = clang.Index.create()
         # try:
         with tempfile.NamedTemporaryFile(suffix='.cpp', mode='w+') as tmp, open(file_path, 'r') as f:    
             code = f.read() 
-            code = self.update_code(code)
+            code = self.pragma2func(code)
             tmp.write(code)
             tmp.seek(0)
-            ast = pycparser.parse_file(tmp.name, use_cpp=True, cpp_path='mpicc', cpp_args = cpp_args)
-            result['ast'] = ast
+            ast = index.parse(tmp.name)
+            result.append(ast.cursor)
 
         # except pycparser.plyparser.ParseError as e:  
         #     print(f'Parser Error: {file_path} ->\n {e}\n')
@@ -156,21 +187,18 @@ class CppLoopParser(Parser):
         #     return   
 
     def parse(self, file_path, code_buf):
-        manager = Manager()
-        return_dict = manager.dict()
-        t = Process(target=self.create_ast, args=(file_path, code_buf, return_dict), daemon=True)
+        future_result = []
+        t = Thread(target=self.create_ast, args=(file_path, code_buf, future_result))
 
         t.start()
-        t.join(60.0)
+        t.join(timeout=60)
 
         if t.is_alive():
-            t.terminate()
             return
-        elif len(return_dict) == 0:
+        elif len(future_result) == 0:
             return
         else:
-            return return_dict['ast']
-
+            return future_result[0]
 
     def parse_file(self, root_dir, file_name, exclusions):
         '''
@@ -199,7 +227,10 @@ class CppLoopParser(Parser):
             extractor.extract_loops(ast)
 
             for idx, (pragma, loop) in enumerate(zip(extractor.omp_pragmas, extractor.loops)):
+                print(pragma, '\n', extractor.ast2code(loop) , '\n')
 
+                print(self.is_bad_case(loop))
+                print('===============\n\n\n')
                 # to be continued
                 # verify_loops.visit(loop)
                 # if verify_loops.found:  # undesired     tokens found
@@ -214,10 +245,6 @@ class CppLoopParser(Parser):
                 # if self.is_empty_loop(loop):
                 #     exclusions['empty'] += 1
                 #     continue
-
-                # func_call_checker.visit(loop)
-                # if func_call_checker.found:
-                #     exclusions['func_calls'] += 1
                                    
                 self.create_directory(save_dir) 
                 self.memory.append(code)
@@ -275,19 +302,19 @@ class CppLoopParser(Parser):
 #         return total_pos, total_neg, exclusions, total_files, num_failed
 
 
-# # parser = CLoopParser('../repositories_openMP', '../c_loops')
-# parser = CLoopParser('../asd', 'c_loops2')
+# parser = CLoopParser('../repositories_openMP', '../c_loops')
+parser = CppLoopParser('../asd', 'c_loops2')
 
-# # data = parser.load('/home/talkad/Downloads/thesis/data_gathering_script/c_loops/357r4bd/2d-heat/src/openmp-2dheat_pos_0.pickle')
-# # print(f'pragma: {data.omp_pragma}')
-# # print('code:\n')
-# # print(data.textual_loop)
+# data = parser.load('/home/talkad/Downloads/thesis/data_gathering_script/c_loops/357r4bd/2d-heat/src/openmp-2dheat_pos_0.pickle')
+# print(f'pragma: {data.omp_pragma}')
+# print('code:\n')
+# print(data.textual_loop)
 
 
-# total = parser.scan_dir()
-# print(total)
+total = parser.scan_dir()
+print(total)
 
-# # (5176, 6829, {'bad_case': 1988, 'empty': 131, 'duplicates': 53288, 'func_calls': 5907}, 21814, 10042)
+# (5176, 6829, {'bad_case': 1988, 'empty': 131, 'duplicates': 53288, 'func_calls': 5907}, 21814, 10042)
 
 
 
@@ -296,21 +323,21 @@ class CppLoopParser(Parser):
 
 
 index = clang.Index.create()
-tu = index.parse("/home/talkad/Downloads/thesis/data_gathering_script/asd/par_omp_sort.cpp")
-node = tu.cursor
+# # tu = index.parse("/home/talkad/Downloads/thesis/data_gathering_script/asd/par_omp_sort.cpp")
+# # node = tu.cursor
 
-with open('file.pickle', 'wb') as f:
-            pickle.dump(ast2code(node), f)
-
-
-# extractor = LoopExtractor()
-# extractor.extract_loops(node)
-# for pragma, loop in zip(extractor.omp_pragmas, extractor.loops):
-#     print("pragma: ", pragma)
-#     print(code_from_ast(loop))
+# # with open('file.pickle', 'wb') as f:
+# #             pickle.dump(ast2code(node), f)
 
 
-# text(node, 0)
-# print(code_from_ast(node))
+# # extractor = LoopExtractor()
+# # extractor.extract_loops(node)
+# # for pragma, loop in zip(extractor.omp_pragmas, extractor.loops):
+# #     print("pragma: ", pragma)
+# #     print(code_from_ast(loop))
 
-# CursorKind.FOR_STMT    ,     CursorKind.STRING_LITERAL    ,    CursorKind.OVERLOADED_DECL_REF
+
+# # text(node, 0)
+# # print(code_from_ast(node))
+
+# # CursorKind.FOR_STMT    ,     CursorKind.STRING_LITERAL    ,    CursorKind.OVERLOADED_DECL_REF

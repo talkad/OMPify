@@ -72,6 +72,7 @@ Array1 = new float [size];
 
 #pragma omp parallel for
 	for (int i=0; i<size; i++){	
+		#pragma omp critical
 		Array[i]  = (rand()/(RAND_MAX +1.0));
 		Array1[i]  = Array[i];
 	}
