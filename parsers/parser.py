@@ -128,6 +128,7 @@ class Parser(ABC):
 
         for idx, (root, dirs, files) in enumerate(os.walk(omp_repo)):
             for file_name in files:
+                print(file_name)
                 ext = os.path.splitext(file_name)[1].lower()
                 
                 if ext in self.file_extensions:

@@ -1,6 +1,7 @@
 import os
 from parser import Parser
 import pickle
+import re
 import tempfile
 from threading import Thread
 import tempfile
@@ -188,6 +189,24 @@ class CppLoopParser(Parser):
 
         return '\n'.join(code_buf)
 
+    def func2pragma(self, code):
+        '''
+        Restore the original code
+        '''
+        code_buf = []
+        RE_FUNC = re.compile(r'my_awesome_function\(\"(.*?)\"\);')
+        
+        for line in code.split('\n'):
+            pragma = re.findall(RE_FUNC, line)
+
+            if len(pragma) == 0:
+                code_buf.append(line)
+            else:
+                code_buf.append(pragma[0])
+
+        return '\n'.join(code_buf)
+
+
     def create_ast(self, file_path, code_buf, result):
         index = clang.Index.create()
         # try:
@@ -248,7 +267,6 @@ class CppLoopParser(Parser):
 
             for idx, (pragma, loop) in enumerate(zip(extractor.omp_pragmas, extractor.loops)):
                 print(pragma, '\n', extractor.ast2code(loop) , '\n')
-                print(type(loop))
 
                 if self.is_bad_case(loop):  # undesired     tokens found
                     exclusions['bad_case'] += 1
@@ -265,7 +283,7 @@ class CppLoopParser(Parser):
                                    
                 self.create_directory(save_dir) 
                 self.memory.append(code)
-                self.save(os.path.join(save_dir, f"{name}{'_neg_' if pragma is None else '_pos_'}{idx}.pickle"), pragma, None, code)
+                self.save(os.path.join(save_dir, f"{name}{'_neg_' if pragma is None else '_pos_'}{idx}.pickle"), pragma, None, self.func2pragma(code))
 
                 if pragma is None:
                     neg += 1
@@ -275,52 +293,8 @@ class CppLoopParser(Parser):
             return pos, neg, True
 
  
-#     def scan_dir(self):
-#         LOGGER = 'cpp_headers.txt'
-
-#         total_files, num_failed = 0, 0
-#         total_pos, total_neg = 0, 0
-#         omp_repo = os.path.join(self.root_dir, self.repo_path)
-#         exclusions = {'bad_case': 0, 'empty': 0, 'duplicates': 0, 'func_calls':0}
-
-#         # iterate over repos
-#         for idx, repo_name in enumerate(os.listdir(omp_repo)):
-            
-#             for root, dirs, files in os.walk(os.path.join(omp_repo, repo_name)):
-#                 for file_name in files:
-#                     file_path = os.path.join(root, file_name)
-#                     ext = os.path.splitext(file_name)[1].lower()
-                    
-#                     if ext in self.file_extensions:
-#                         if ext == '.h' and self.is_cpp_header(file_path):
-#                             log('cpp_header.txt', file_path)
-#                             continue
-
-#                         pos, neg, is_parsed = self.parse_file(root, file_name, exclusions)
-
-#                         if pos is not None:
-#                             total_pos += pos
-#                             total_neg += neg
-
-#                         if not is_parsed:
-#                             num_failed += 1
-
-#                             if ext == '.h':
-#                                 log('cpp_header.txt', file_path)
-
-#                         total_files += 1
-
-#             if idx % (5) == 0:
-#                 log('success_logger.txt', "{:20}{:10}   |   {:20} {:10}\n\n".format("files processed: ", total_files, "failed to parse: ", num_failed))
-#                 print("{:20}{:10}   |   {:20} {:10}".format("files processed: ", total_files, "failed to parse: ", num_failed))
-#                 print("{:20}{:10}   |   {:20} {:10}".format("pos examples: ", total_pos, "neg examples: ", total_neg))
-#                 print(f'exclusions: {exclusions}\n')
-
-#         return total_pos, total_neg, exclusions, total_files, num_failed
-
-
-# parser = CLoopParser('../repositories_openMP', '../c_loops')
-parser = CppLoopParser('../asd', 'c_loops2')
+parser = CppLoopParser('../repositories_openMP', '../cpp_loops')
+# parser = CppLoopParser('../asd', 'c_loops2')
 
 # data = parser.load('/home/talkad/Downloads/thesis/data_gathering_script/c_loops/357r4bd/2d-heat/src/openmp-2dheat_pos_0.pickle')
 # print(f'pragma: {data.omp_pragma}')
