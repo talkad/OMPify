@@ -11,7 +11,18 @@ FUNC_NAME = 'my_awesome_function'
 
 
 def remove_whitespaces(line):
-    return reduce(lambda acc,cur: acc + cur if cur not in [' ', '\t'] else acc, line)
+    flag = True
+
+    while flag:
+        if line.startswith((' ', '\t')):
+            line = line[1:]
+        elif line.startswith('\\t'):
+            line = line[2:]
+        else:
+            flag = False
+
+    return line
+    # return reduce(lambda acc,cur: acc + cur if cur not in [' ', '\t'] else acc, line)
 
 def is_omp_pragma(line):
     '''
@@ -109,6 +120,8 @@ class LoopExtractor:
         return '\n'.join(code)
 
     def print_ast_nodes(self, cursor, depth=0):
+        print("  " * depth + str(cursor.kind))
+
         for ch in cursor.get_children():
             print("  " * depth + str(ch.kind))
             self.print_ast_nodes(ch, depth + 1)
@@ -139,19 +152,26 @@ class CppLoopParser(Parser):
         children = node.get_children()
         literal = extractor.is_unique_node(node)
         if literal is not None:
-            print('aaaa', remove_whitespaces(literal))
+            pragma = remove_whitespaces(literal[1:][:-1])
 
-        if literal is not None and len(literal) > 2 and is_omp_pragma(literal[1:][:-1]):
+            if len(pragma) > 2 and is_omp_pragma(pragma):
 
-            pragma = literal[1:][:-1].lower()
-
-            if "atomic" in pragma or "barri" in pragma or "critical" in pragma:
-                return True
+                if "atomic" in pragma or "barri" in pragma or "critical" in pragma:
+                    return True
          
         return any([self.is_bad_case(ch) for ch in children])
 
     def is_empty_loop(self, node):
-        return sum(node.get_children()) == 0
+        num = 0
+        last_child = None
+
+        for ch in node.get_children():
+            last_child = ch
+
+        for _ in last_child.get_children():
+            num += 1
+
+        return num == 0
 
     def pragma2func(self, code):
         '''
@@ -228,23 +248,20 @@ class CppLoopParser(Parser):
 
             for idx, (pragma, loop) in enumerate(zip(extractor.omp_pragmas, extractor.loops)):
                 print(pragma, '\n', extractor.ast2code(loop) , '\n')
+                print(type(loop))
 
-                print(self.is_bad_case(loop))
-                print('===============\n\n\n')
-                # to be continued
-                # verify_loops.visit(loop)
-                # if verify_loops.found:  # undesired     tokens found
-                #     exclusions['bad_case'] += 1
-                #     continue
+                if self.is_bad_case(loop):  # undesired     tokens found
+                    exclusions['bad_case'] += 1
+                    continue
                 
+                if self.is_empty_loop(loop):
+                    exclusions['empty'] += 1
+                    continue
+
                 code = extractor.ast2code(loop)
                 if code in self.memory:
                     exclusions['duplicates'] += 1
                     continue
-
-                # if self.is_empty_loop(loop):
-                #     exclusions['empty'] += 1
-                #     continue
                                    
                 self.create_directory(save_dir) 
                 self.memory.append(code)

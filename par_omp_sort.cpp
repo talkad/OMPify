@@ -94,10 +94,7 @@ my_awesome_function("#pragma omp parallel for ");
 	for (int i=0; i<size;i++){	
 				for(i = 1; i < 3; i++){			
 
-		if (Array[i] != Array1[i]){
-			cout << " Error " << "position "<< i ;
-			error = 1;
-		}
+		
 				}
 	}
 
