@@ -189,7 +189,7 @@ class FortranLoopParser(Parser):
         t = Thread(target=self.create_ast, args=(file_path, code_buf, future_result))
 
         t.start()
-        t.join(timeout=30)
+        t.join(timeout=60)
 
         if t.is_alive():
             return
