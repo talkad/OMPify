@@ -2825,9 +2825,6 @@ class TranslationUnit(ClangObject):
                 unsaved_array[i].contents = contents
                 unsaved_array[i].length = len(contents)
 
-        print('aaaaaaaaa')
-        print(unsaved_files)
-
         ptr = conf.lib.clang_parseTranslationUnit(index,
                                     fspath(filename) if filename is not None else None,
                                     args_array,
@@ -4147,7 +4144,6 @@ class Config(object):
     @CachedProperty
     def lib(self):
         lib = self.get_cindex_library()
-        print('bbbb', lib)
         register_functions(lib, not Config.compatibility_check)
         Config.loaded = True
         return lib
