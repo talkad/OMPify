@@ -2,13 +2,13 @@ from subprocess import Popen, PIPE
 from datetime import date, timedelta
 from dateutil.relativedelta import relativedelta
 
-month = 30
-max_results = 10**3
-start_date = date(2008, 4, 1)
-end_date = date.today()
-
+SCRIPT_PATH = '/home/talkad/Downloads/thesis/data_gathering_script/git_clone/git_clone.sh'
 
 def load(is_dry=False):
+	month = 30
+	max_results = 10**3
+	start_date = date(2008, 4, 1)
+	end_date = date.today()
 	total_repos = 0
 	repos_per_month = {}
 
@@ -18,7 +18,7 @@ def load(is_dry=False):
 		end = (start_date + delta).strftime("%Y-%m-%d")
 
 		# exectue the "dry" version
-		p = Popen(["./git_clone.sh", "y", start, end], stdin=PIPE, stdout=PIPE, stderr=PIPE)
+		p = Popen([SCRIPT_PATH, "y", start, end], stdin=PIPE, stdout=PIPE, stderr=PIPE)
 		output, err = p.communicate()
 
 		num_results = 0 if len(output) == 0 else len(output.split(b"\ndry-run:"))

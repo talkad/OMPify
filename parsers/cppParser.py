@@ -1,6 +1,6 @@
 import os
-from parser import Parser
-from fake_headers import fake
+from parsers.parser import Parser
+from parsers.fake_headers import fake
 import pickle
 import re
 from threading import Thread
@@ -132,12 +132,10 @@ class LoopExtractor:
         if cursor.location.file is not None and not cursor.location.file.name.endswith(".cpp"):
             return      # ignore includes code
 
-        f.write("  " * depth + str(cursor.kind) + str(cursor.location) + '\n')
+        print("  " * depth + str(cursor.kind) + str(cursor.location) + '\n')
 
         for ch in cursor.get_children():
             self.print_ast_nodes(ch, depth + 1)
-
-f= open('a.txt', 'w')
 
 class CppLoopParser(Parser):
     def __init__(self, repo_path, parsed_path):

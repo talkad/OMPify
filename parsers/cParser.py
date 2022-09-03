@@ -1,11 +1,11 @@
 import os
 import pycparser
-from parser import Parser
+from parsers.parser import Parser
 from pycparser.c_ast import For
 import pickle
-from visitors import *
+from parsers.visitors import *
 from functools import reduce
-from fake_headers import fake
+from parsers.fake_headers import fake
 import re
 import tempfile
 from multiprocessing import Process, Manager
@@ -45,7 +45,7 @@ class CLoopParser(Parser):
     def create_ast(self, file_path, code_buf, result):
         repo_name = file_path[len(self.repo_path + self.root_dir) + 2:]
         repo_name = repo_name[:repo_name.find('/') ]
-        cpp_args = ['-nostdinc', '-w', '-E', r'-I' + os.path.join(self.root_dir, 'fake_headers', 'utils')]
+        cpp_args = ['-nostdinc', '-w', '-E', r'-I' + fake.FAKE_DIR]
 
         _, headers, _ = fake.get_headers(fake.REPOS_DIR, repo_name)
         for header in list(headers)[:150]:

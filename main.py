@@ -2,8 +2,11 @@ import matplotlib.pyplot as plt
 from optparse import OptionParser
 from git_clone import loader, extractor
 from visualization import pragmasCounter
-import parsers
+from parsers import cParser, cppParser, fortranParser
 from parsers.fake_headers import fake
+import numpy as np
+from sklearn.linear_model import Ridge
+
 
 def load_repos():
     loader.load()
@@ -33,17 +36,17 @@ def show_stats():
     ax1.bar(list(omp_usage.keys()), omp_usage.values())
     ax1.set_xticklabels(labels)
 
-    n = 3
+    n = 2
     splitted_list = list(split(list(omp_usage.values()), n))
     start = 0
     for idx in range(n):
         lr = Ridge()
         l = splitted_list[idx]
-        lr.fit(np.array(list(range(start, start + len(l)))).reshape(-1, 1), np.array(l))
+        X = np.array(list(range(start, start + len(l))))
+        lr.fit(X.reshape(-1, 1), np.array(l))
 
-    arr = np.array(list(range(start, start + len(l))))
-    ax1.plot(arr, lr.coef_*arr+lr.intercept_, color='orange')
-    start += len(l)
+        ax1.plot(X, lr.coef_*X+lr.intercept_, color='orange')
+        start += len(l)
 
     ax2 = plt.subplot2grid((2, 5), (1, 0), colspan=2)
     ax2.bar(list(files.keys()), files.values())
@@ -59,11 +62,11 @@ def parse(prog_lang):
 
     for lang in prog_lang[1:][:-1].lower().split('|'):
         if lang == 'c':
-            parser = parsers.cParser.CLoopParser('../repositories_openMP', '../c_loops')
+            parser = cParser.CLoopParser('repositories_openMP', 'c_loops')
         elif lang == 'cpp':
-            parser = parsers.cParser.CppLoopParser('../repositories_openMP', '../cpp_loops')
+            parser = cppParser.CppLoopParser('repositories_openMP', 'cpp_loops')
         elif lang == 'fortran':
-            parser = parsers.cParser.FortranLoopParser('../repositories_openMP', '../fortran_loops')
+            parser = fortranParser.FortranLoopParser('repositories_openMP', 'fortran_loops')
         else: 
             continue
 

@@ -87,7 +87,7 @@ def scan_dir(root_dir):
 			clauses_dist[ext] = (clauses_dist[ext] if ext in clauses_dist else 0) + amount
 			
 		if idx % (10**3) == 0:
-			print(f'num of files: {clauses_dist}')
+			print(f'num of files: {file_dist}')
 
 	return clauses_amount, clauses_dist, file_dist
 
