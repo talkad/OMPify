@@ -42,7 +42,7 @@ def scan_dir(root_dir):
 
 	return result
 
-res = scan_dir("/home/talkad/Downloads/thesis/data_gathering_script/git_repos")
-print(res)
+# res = scan_dir("/home/talkad/Downloads/thesis/data_gathering_script/git_repos")
+# print(res)
 
 # {'.cpp': 151215, '.c': 77741, '.f90': 21818, '.h': 4694, '.cc': 1446, '.f': 11176, '.f95': 652, '.f03': 72, '.cxx': 136}

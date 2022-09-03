@@ -92,8 +92,8 @@ def scan_dir(root_dir):
 	return clauses_amount, clauses_dist, file_dist
 
 
-res = scan_dir("/home/talkad/Downloads/thesis/data_gathering_script/repositories_openMP")
-print(res)
+# res = scan_dir("/home/talkad/Downloads/thesis/data_gathering_script/repositories_openMP")
+# print(res)
 
 
 # ({'nowait': 7652, 'private': 60042, 'firstprivate': 15672, 'lastprivate': 16580, 'shared': 10960, 'reduction': 36193, 'static_schedule': 18481, 'dynamic_schedule': 13102}, 

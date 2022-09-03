@@ -11,6 +11,9 @@
         "errno.h": "c",
         "quakedef.h": "c",
         "iostream": "cpp",
-        "algorithm": "cpp"
+        "algorithm": "cpp",
+        "ostream": "cpp",
+        "random": "cpp",
+        "cassert": "cpp"
     }
 }
