@@ -206,7 +206,7 @@ class CLoopParser(Parser):
         return total_pos, total_neg, exclusions, total_files, num_failed
 
 
-parser = CLoopParser('../repositories_openMP', '../c_loops')
+# parser = CLoopParser('../repositories_openMP', '../c_loops')
 # parser = CLoopParser('../asd', 'c_loops2')
 
 # data = parser.load('/home/talkad/Downloads/thesis/data_gathering_script/c_loops/357r4bd/2d-heat/src/openmp-2dheat_pos_0.pickle')
@@ -215,7 +215,7 @@ parser = CLoopParser('../repositories_openMP', '../c_loops')
 # print(data.textual_loop)
 
 
-total = parser.scan_dir()
-print(total)
+# total = parser.scan_dir()
+# print(total)
 
 # (13238, 36593, {'bad_case': 6385, 'empty': 200, 'duplicates': 127647, 'func_calls': 22421}, 20803, 3861)
