@@ -9,7 +9,7 @@ import clang.cindex as clang
 from functools import reduce
 
 FUNC_NAME = 'my_awesome_function'
-INCLUDES_RE = re.compile("^#include(.+)$", re.MULTILINE)
+# INCLUDES_RE = re.compile("^#include(.+)$", re.MULTILINE)
 LINE_COMMENT_RE = re.compile("//.*?\n" )
 MULTILINE_COMMENT_RE = re.compile("/\*.*?\*/", re.DOTALL)
 

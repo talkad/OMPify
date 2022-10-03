@@ -6,8 +6,6 @@ import pickle
 from parsers.visitors import *
 from functools import reduce
 from parsers.fake_headers import fake
-import re
-import tempfile
 from multiprocessing import Process, Manager
 import tempfile
 
