@@ -216,5 +216,5 @@
     }
   }
 
-
-function("hello world")
+for (int row = 0; row < height; row++)
+  function("hello world");
