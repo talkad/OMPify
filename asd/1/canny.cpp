@@ -203,8 +203,10 @@
 //   }
 // }
 
+    #pragma omp for reduce(+:a)
 
   for (int col = 0; col < width; col++) {
+     #pragma omp for
     for (int row = 0; row < height; row++) {
       int pixel_index = col + (row * width);
       if (suppressed_image[pixel_index] > high_threshold)
@@ -215,6 +217,7 @@
         output_image[pixel_index] = 0; // Not an edge
     }
   }
+
 
 for (int row = 0; row < height; row++)
   function("hello world");

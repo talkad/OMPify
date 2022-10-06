@@ -83,7 +83,7 @@ class CLoopParser(Parser):
 
     def parse_file(self, root_dir, file_name, exclusions):
         '''
-        Parse the given file into ast and extract to loops associated with omp pargma (or without)
+        Parse the given file into ast and extract the loops associated with omp pargma (or without)
         '''
         pos, neg = 0, 0
         file_path = os.path.join(root_dir, file_name)
