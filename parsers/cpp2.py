@@ -63,67 +63,129 @@ class LoopExtractor:
 
         return '', None
 
-    def extract_loops(self, code, is_nested=False):
+    # def extract_loops(self, code, is_nested=False):
+    #     '''
+    #     Extract all loops and pragmas from given program by parentheses balancing
+    #     '''         
+    #     code, pragma = self.skip_lines(code)
+
+    #     idx = 0
+    #     loop = ''
+    #     body = ''
+
+    #     num_paren = 0
+    #     state = State.start
+
+    #     for idx, ch in enumerate(code):
+    #         if state == State.start:
+    #             loop += ch
+
+    #             if ch == '(':
+    #                 state = State.for_stmt
+    #                 num_paren += 1
+
+    #         elif state == State.for_stmt:
+    #             loop += ch
+
+    #             if ch == '(':
+    #                 num_paren += 1
+    #             elif ch == ')':
+    #                 num_paren -= 1
+
+    #             if num_paren == 0:
+    #                 state = State.for_body
+
+    #         elif state == State.for_body or state == State.for_body_found:
+    #             loop += ch
+
+    #             if num_paren > 0:
+    #                 body += ch
+
+    #             if num_paren == 0 and ch == ';': # single line loop (no curly brackets)
+    #                 # print('a\n', loop)
+    #                 self.loops.append(loop)
+    #                 self.omp_pragmas.append(pragma)
+    #                 break
+
+    #             if ch == '{':
+    #                 num_paren += 1
+    #                 state = State.for_body_found
+    #             elif  ch == '}':
+    #                 num_paren -= 1
+
+    #             if num_paren == 0 and state == State.for_body_found:
+    #                 # print('c\n', loop)
+    #                 self.loops.append(loop)
+    #                 self.omp_pragmas.append(pragma)
+    #                 self.extract_loops(body, is_nested=True)
+    #                 break
+
+    #     if not is_nested and len(code) > 0:
+    #         # print('d\n', code[idx + 1:])
+    #         self.extract_loops(code[idx + 1:])
+
+
+    def extract_loops(self, code):
         '''
         Extract all loops and pragmas from given program by parentheses balancing
-        '''         
-        code, pragma = self.skip_lines(code)
-
+        '''      
         idx = 0
-        loop = ''
-        body = ''
 
-        num_paren = 0
-        state = State.start
+        while len(code) > 0: 
+            code, pragma = self.skip_lines(code)
 
-        for idx, ch in enumerate(code):
-            if state == State.start:
-                loop += ch
+            loop = ''
+            body = ''
 
-                if ch == '(':
-                    state = State.for_stmt
-                    num_paren += 1
+            num_paren = 0
+            state = State.start
 
-            elif state == State.for_stmt:
-                loop += ch
+            # extract next loop
+            for ch in code:
+                if state == State.start:
+                    loop += ch
 
-                if ch == '(':
-                    num_paren += 1
-                elif ch == ')':
-                    num_paren -= 1
+                    if ch == '(':
+                        state = State.for_stmt
+                        num_paren += 1
 
-                if num_paren == 0:
-                    state = State.for_body
+                elif state == State.for_stmt:
+                    loop += ch
 
-            elif state == State.for_body or state == State.for_body_found:
-                loop += ch
+                    if ch == '(':
+                        num_paren += 1
+                    elif ch == ')':
+                        num_paren -= 1
 
-                if num_paren > 0:
-                    body += ch
+                    if num_paren == 0:
+                        state = State.for_body
 
-                if num_paren == 0 and ch == ';': # single line loop (no curly brackets)
-                    # print('a\n', loop)
-                    self.loops.append(loop)
-                    self.omp_pragmas.append(pragma)
-                    break
+                elif state == State.for_body or state == State.for_body_found:
+                    loop += ch
 
-                if ch == '{':
-                    num_paren += 1
-                    state = State.for_body_found
-                elif  ch == '}':
-                    num_paren -= 1
+                    if num_paren > 0:
+                        body += ch
 
-                if num_paren == 0 and state == State.for_body_found:
-                    # print('c\n', loop)
-                    self.loops.append(loop)
-                    self.omp_pragmas.append(pragma)
-                    self.extract_loops(body, is_nested=True)
-                    break
+                    if num_paren == 0 and ch == ';': # single line loop (no curly brackets)
+                        self.loops.append(loop)
+                        self.omp_pragmas.append(pragma)
+                        break
 
-        if not is_nested and len(code) > 0:
-            # print('d\n', code[idx + 1:])
-            self.extract_loops(code[idx + 1:])
+                    if ch == '{':
+                        num_paren += 1
+                        state = State.for_body_found
+                    elif  ch == '}':
+                        num_paren -= 1
 
+                    if num_paren == 0 and state == State.for_body_found:
+                        self.loops.append(loop)
+                        self.omp_pragmas.append(pragma)
+                        self.extract_loops(body)
+                        break
+
+                idx += 1
+
+            code = code[idx + 1:]
 
 class CppLoopParser(Parser):
     def __init__(self, repo_path, parsed_path):
@@ -186,6 +248,7 @@ class CppLoopParser(Parser):
         '''
         pos, neg = 0, 0
         file_path = os.path.join(root_dir, file_name)
+        print(file_path)
         save_dir = os.path.join(self.parsed_path, root_dir[self.split_idx: ])
         name = os.path.splitext(file_name)[0]
 
@@ -213,6 +276,7 @@ class CppLoopParser(Parser):
                 func_call_checker.reset()
 
                 if loop is None:
+                    log('fail.txt', f'file: {file_path}\nPragma: {pragmas[idx]}\n{extractor.loops[idx]}\n==========\n')
                     continue
 
                 verify_loops.visit(loop)
@@ -236,6 +300,7 @@ class CppLoopParser(Parser):
                                    
                 self.create_directory(save_dir) 
                 self.memory.append(code)
+                print(code + "\n===========\n")
                 self.save(os.path.join(save_dir, f"{name}{'_neg_' if pragma is None else '_pos_'}{idx}.pickle"), pragma, loop, code)
 
                 if pragma is None:
@@ -284,8 +349,8 @@ class CppLoopParser(Parser):
 
 
 
-parser = CppLoopParser('../repositories_openMP', '../cpp_loops')
-# parser = CppLoopParser('../asd', 'c_loops2')
+# parser = CppLoopParser('../repositories_openMP', '../cpp_loops')
+parser = CppLoopParser('../asd', 'c_loops2')
 
 # data = parser.load('/home/talkad/Downloads/thesis/data_gathering_script/parsers/c_loops2/1/canny_pos_0.pickle')
 # print(f'pragma: {data.omp_pragma}')
