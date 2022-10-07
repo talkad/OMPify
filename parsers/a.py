@@ -7,6 +7,7 @@ import pycparser
 from pycparser.c_parser import CParser
 from pycparser.c_ast import For, Pragma
 from multiprocessing import Process, Manager
+import tempfile
 
 
 failed = 0
@@ -19,6 +20,10 @@ MULTILINE_COMMENT_RE = re.compile("/\*.*?\*/", re.DOTALL)
 def log(file_name, msg):
     with open(file_name, 'a') as f:
         f.write(f'{msg}\n')
+
+def convert(match_obj):
+    num_groups = len(match_obj.groups())
+    return match_obj.group(num_groups)
 
 
 class State(Enum):
@@ -154,10 +159,16 @@ class CppLoopParser(Parser):
 
     def create_ast(self, file_path, code_buf, result):
         try:
-            parser = CParser()
-            loop = 'int main() {\n' + code_buf + '\n}'
-            ast = parser.parse(loop)
-            result['ast'] = ast.ext[0].body.block_items[0]
+
+            cpp_args = ['-nostdinc', '-w', '-E', r'-I/home/talkad/Downloads/thesis/data_gathering_script/parsers/fake_headers/utils_cpp']
+            with tempfile.NamedTemporaryFile(suffix='.c', mode='w+') as tmp:    
+                code_buf = '#include \"_fake_typedefs_cpp.h\"\n\n' + 'int main() {\n' + code_buf + '\n}'
+
+                tmp.write(code_buf)
+                tmp.seek(0)
+                ast = pycparser.parse_file(tmp.name, use_cpp=True, cpp_path='mpicc', cpp_args = cpp_args)
+                # log('e.txt', f'{original_code}  \n->\n{code_buf}\n===============\n')
+                result['ast'] = ast.ext[-1].body.block_items[0]
 
         except pycparser.plyparser.ParseError as e:  
             log('error_logger.txt', f'Parser Error: {file_path} ->\n {e}\n')
@@ -219,10 +230,17 @@ class CppLoopParser(Parser):
                 func_call_checker.reset()
 
                 if loop is None:
-                    global failed
-                    failed += 1
-                    log('fail.txt', f'file: {file_path}\nPragma: {pragmas[idx]}\n{extractor.loops[idx]}\n==========\n')
-                    continue
+                    # attemp to parse again - this time after updating the code
+                    code = re.sub(r"(((\w|<|>)+)::)+(\w+)", convert, extractor.loops[idx])
+                    loop = self.parse(file_path, code)
+
+                    if loop is None:
+                        global failed
+                        failed += 1
+                        log('fail.txt', f'file: {file_path}\nPragma: {pragmas[idx]}\n{extractor.loops[idx]}\n==========\n')
+                        continue
+                    else:
+                        print('nice')
 
                 verify_loops.visit(loop)
                 if verify_loops.found:  # undesired tokens found
@@ -305,6 +323,47 @@ parser = CppLoopParser('../repositories_openMP', '../cpp_loops')
 total = parser.scan_dir()
 print(total)
 
-# aaaaa 21346 101792
-# (4445, 13691, {'bad_case': 845, 'empty': 644, 'duplicates': 60843, 'func_calls': 9127}, 14421, 248)
+
+
+
+
+# with open('fail.txt', 'r') as f:
+#     txt = f.read()
+#     yes, no = 0,0
+#     for code in txt.split('=========='):
+
+
+#         code = '\n'.join(code.split('\n')[4:])
+#         original_code = code
+
+#         code = re.sub(r"(((\w|<|>)+)::)+(\w+)", convert, code)
+
+#         cpp_args = ['-nostdinc', '-w', '-E', r'-I/home/talkad/Downloads/thesis/data_gathering_script/parsers/fake_headers/utils_cpp']
+
+#         try:
+
+#             with tempfile.NamedTemporaryFile(suffix='.c', mode='w+') as tmp:    
+#                 code_buf = '#include \"_fake_typedefs_cpp.h\"\n\n' + 'int main() {\n' + code + '\n}'
+
+#                 tmp.write(code_buf)
+#                 tmp.seek(0)
+#                 ast = pycparser.parse_file(tmp.name, use_cpp=True, cpp_path='mpicc', cpp_args = cpp_args)
+#                 # print(ast.ext[-1].body.block_items[0])
+#                 log('e.txt', f'{original_code}  \n->\n{code_buf}\n===============\n')
+#                 # ast.ext[0].body.block_items[0]
+#                 yes += 1
+
+#         except pycparser.plyparser.ParseError as e:  
+#             log('error_logger.txt', f'Parser Error:  {e}\n\n  {original_code}  \n->\n{code_buf}\n===============\n')
+#             no += 1
+            
+#         except Exception as e:  
+#             no += 1
+#             # log('error_logger.txt', f'Unexpected Error: {file_path} ->\n {e}\n')
+
+#         print(f'yes {yes}  | no {no}')
+        
+
+# # yes 614  | no 2546    1:4
+               
 
