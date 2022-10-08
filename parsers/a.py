@@ -9,13 +9,79 @@ from pycparser.c_ast import For, Pragma
 from multiprocessing import Process, Manager
 import tempfile
 
+    # def extract_loops(self, code):
+    #     '''
+    #     Extract all loops and pragmas from given program by parentheses balancing
+    #     '''      
+    #     idx = 0
+
+    #     while len(code) > 0: 
+    #         code, pragma = self.skip_lines(code)
+
+    #         loop = ''
+    #         body = ''
+
+    #         num_paren = 0
+    #         state = State.start
+
+    #         # extract next loop
+    #         for ch in code:
+    #             if state == State.start:
+    #                 loop += ch
+
+    #                 if ch == '(':
+    #                     state = State.for_stmt
+    #                     num_paren += 1
+
+    #             elif state == State.for_stmt:
+    #                 loop += ch
+
+    #                 if ch == '(':
+    #                     num_paren += 1
+    #                 elif ch == ')':
+    #                     num_paren -= 1
+
+    #                 if num_paren == 0:
+    #                     state = State.for_body
+
+    #             elif state == State.for_body or state == State.for_body_found:
+    #                 loop += ch
+
+    #                 if num_paren > 0:
+    #                     body += ch
+
+    #                 if num_paren == 0 and ch == ';':# and not body.lstrip().startswith('for'): # single line loop (no curly brackets)
+    #                     print('asd')
+    #                     print(f'{body}\n')
+    #                     self.loops.append(loop)
+    #                     print(loop)
+    #                     self.omp_pragmas.append(pragma)
+    #                     break
+
+    #                 if ch == '{':
+    #                     num_paren += 1
+    #                     state = State.for_body_found
+    #                 elif  ch == '}':
+    #                     num_paren -= 1
+
+    #                 if num_paren == 0 and state == State.for_body_found:
+    #                     self.loops.append(loop)
+    #                     print(loop)
+    #                     self.omp_pragmas.append(pragma)
+    #                     self.extract_loops(body)
+    #                     break
+
+    #             idx += 1
+
+    #         code = code[idx + 1:]
 
 failed = 0
 for_loops = 0
 
-LINE_COMMENT_RE = re.compile("//.*?\n" )
+LINE_COMMENT_RE = re.compile("//.*?\n")
 MULTILINE_COMMENT_RE = re.compile("/\*.*?\*/", re.DOTALL)
 
+DIRECTIVES_RE = re.compile("^\s*#(ifdef|ifndef|if|elif|else|endif).*$", re.MULTILINE)
 
 def log(file_name, msg):
     with open(file_name, 'a') as f:
@@ -71,19 +137,30 @@ class LoopExtractor:
 
         return '', None
 
+
     def extract_loops(self, code):
         '''
         Extract all loops and pragmas from given program by parentheses balancing
         '''      
-        idx = 0
+        # idx = 0
 
         while len(code) > 0: 
+            idx = 0
+            # print('0000000000000000000000')
+            # print(code)
             code, pragma = self.skip_lines(code)
+            # print('aaaaaaaaaaaaaaaaaaaaaaaaa')
+            # print(code)
+            # print('bbbbbbbbbbbbbbbbbbbbbbbbb')
+            # if pragma is not None and len(pragma) > 0:
+            #     print('vvvv')
+            #     print('pragma', pragma)
 
             loop = ''
             body = ''
 
             num_paren = 0
+            num_braces = 0
             state = State.start
 
             # extract next loop
@@ -108,23 +185,33 @@ class LoopExtractor:
 
                 elif state == State.for_body or state == State.for_body_found:
                     loop += ch
+                    body += ch
 
-                    if num_paren > 0:
-                        body += ch
+                    if num_braces == 0 and num_paren == 0 and ch == ';': # single line loop (no curly brackets)
+                        # print('a')
+                        # print(loop)
 
-                    if num_paren == 0 and ch == ';': # single line loop (no curly brackets)
                         self.loops.append(loop)
+
                         self.omp_pragmas.append(pragma)
+                        self.extract_loops(body)
                         break
 
-                    if ch == '{':
+                    if ch == '(':
                         num_paren += 1
-                        state = State.for_body_found
-                    elif  ch == '}':
+                    elif ch == ')':
                         num_paren -= 1
 
-                    if num_paren == 0 and state == State.for_body_found:
+                    if ch == '{':
+                        num_braces += 1
+                        state = State.for_body_found
+                    elif  ch == '}':
+                        num_braces -= 1
+
+                    if num_braces == 0 and num_paren == 0 and state == State.for_body_found:
                         self.loops.append(loop)
+                        # print('b')
+                        # print(loop)
                         self.omp_pragmas.append(pragma)
                         self.extract_loops(body)
                         break
@@ -225,13 +312,19 @@ class CppLoopParser(Parser):
             global for_loops
             for_loops += len(loops)
 
+            # print(f'path: {file_path}\n num loops: {len(loops)}\n ============\n')
+
             for idx, (pragma, loop) in enumerate(zip(pragmas, loops)):
+                # print(file_path)
+                # print(f'{pragma} \n {code}\n=========\n')
+
                 verify_loops.reset()
                 func_call_checker.reset()
 
                 if loop is None:
                     # attemp to parse again - this time after updating the code
                     code = re.sub(r"(((\w|<|>)+)::)+(\w+)", convert, extractor.loops[idx])
+                    code = DIRECTIVES_RE.sub('', code)
                     loop = self.parse(file_path, code)
 
                     if loop is None:
@@ -239,8 +332,6 @@ class CppLoopParser(Parser):
                         failed += 1
                         log('fail.txt', f'file: {file_path}\nPragma: {pragmas[idx]}\n{extractor.loops[idx]}\n==========\n')
                         continue
-                    else:
-                        print('nice')
 
                 verify_loops.visit(loop)
                 if verify_loops.found:  # undesired tokens found
@@ -363,7 +454,41 @@ print(total)
 
 #         print(f'yes {yes}  | no {no}')
         
+# aaaaa 17425 101792
+# (4931, 15169, {'bad_case': 1016, 'empty': 710, 'duplicates': 62564, 'func_calls': 10682}, 14421, 248)
 
-# # yes 614  | no 2546    1:4
-               
+
+
+
+
+# int main()
+# {
+# 	scanf("%d%d%d",&l,&m,&n);
+	
+# 	for(int i=0; i<l; ++i)
+# 		for(int j=0; j<m; ++j)
+# 			scanf("%d",&P[i][j]);
+	
+# 	for(int i=0; i<m; ++i)
+# 		for(int j=0; j<n; ++j)
+# 			scanf("%d",&Q[i][j]);
+	
+# 	int chunk=max(l/8,1);
+# 	#pragma omp parallel shared(R,chunk)
+# 	{
+# 		#pragma omp for schedule(dynamic,chunk) nowait
+# 			for(int i=0; i<l; ++i)
+# 				for(int j=0; j<n; ++j)
+# 					for(int k=0; k<m; ++k)
+# 						R[i][j]+=(P[i][k]*Q[k][j]);
+		
+# 	}
+	
+# 	for(int i=0; i<l; ++i)
+# 	{
+# 		for(int j=0; j<n; ++j)
+# 			printf("%d ",R[i][j]);
+# 		printf("\n");
+# 	}
+# }
 
