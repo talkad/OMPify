@@ -2,7 +2,7 @@ import os
 import re
 from functools import reduce
 
-exts = ['.cpp']
+exts = ['.c']
 
 def log(file_name, msg):
     with open(file_name, 'a') as f:
@@ -57,4 +57,5 @@ def scan_dir(root_dir):
 res = scan_dir("/home/talkad/Downloads/thesis/data_gathering_script/repositories_openMP")
 print(res)
 
-# 289580
+# c   222092
+# cpp 289580
