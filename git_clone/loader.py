@@ -16,7 +16,7 @@ def load(start_date=None, end_date=None, is_dry=False):
 	
 	month = 30
 	max_results = 10**3
-	start_date = date(2008, 4, 1) if start_date is None else start_date
+	start_date = date(2012, 1, 1) if start_date is None else start_date
 	end_date = date.today() if end_date is None else end_date
 	total_repos = 0
 	repos_per_month = {}

@@ -8,9 +8,9 @@ Currently our for-loop extractor supports the C, C++ and Fortran programming lan
 
 ## Examples
 
-1. Load repositories from github and extract all the for-loops from C and Cpp programming languages:
+1. Load repositories from github between range of dates and extract all the for-loops from C and C++ programming languages:
 ```
-python main.py --load --parse "(c|cpp)"
+python main.py --load "1-5-2008..10-8-2022" --parse "(c|cpp)"
 ```
 
 2. Show Open-MP trends in github:
@@ -18,5 +18,5 @@ python main.py --load --parse "(c|cpp)"
 python main.py --stats
 ```
 output:
-![image](https://user-images.githubusercontent.com/48416212/188301399-076375b3-b408-4d41-b40a-99d2f6eebf9b.png)
+![image](https://user-images.githubusercontent.com/48416212/194878405-4261c503-328b-46b1-883c-5b8dda06d7a3.png)
 

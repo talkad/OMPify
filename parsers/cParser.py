@@ -44,8 +44,8 @@ class CLoopParser(Parser):
             return False
 
     def create_ast(self, file_path, code_buf, result):
-        with open('../ENV.json', 'r') as f:
-            vars = json.dumps(f.read())
+        with open('ENV.json', 'r') as f:
+            vars = json.loads(f.read())
 
         repo_name = file_path[len(self.repo_path + self.root_dir) + 2:]
         repo_name = repo_name[:repo_name.find('/') ]

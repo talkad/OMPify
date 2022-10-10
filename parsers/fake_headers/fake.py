@@ -5,8 +5,8 @@ import shutil
 from functools import reduce
 
 
-with open('../ENV.json', 'r') as f:
-    vars = json.dumps(f.read())
+with open('ENV.json', 'r') as f:
+    vars = json.loads(f.read())
 
 REPOS_DIR = vars['REPOS_DIR']
 REPOS_OMP_DIR = vars['REPOS_OMP_DIR']

@@ -73,7 +73,7 @@ def main():
     (options, args) = parser.parse_args()
 
     if options.dates is not None:
-        load_repos(options.date, vars['REPOS_DIR'])
+        load_repos(options.dates, vars['REPOS_DIR'])
     
     if options.stats:
         show_stats(vars['REPOS_OMP_DIR'])

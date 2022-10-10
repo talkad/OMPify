@@ -1,8 +1,8 @@
 import os
 import re
 from enum import Enum
-from parser import Parser
-from visitors import *
+from parsers.parser import Parser
+from parsers.visitors import *
 import pycparser
 from pycparser.c_parser import CParser
 from pycparser.c_ast import For, Pragma
@@ -161,8 +161,8 @@ class CppLoopParser(Parser):
             return False
 
     def create_ast(self, file_path, code_buf, result):
-        with open('../ENV.json', 'r') as f:
-            vars = json.dumps(f.read())
+        with open('ENV.json', 'r') as f:
+            vars = json.loads(f.read())
 
         try:
             cpp_args = ['-nostdinc', '-w', '-E', r'-I' + vars['FAKE_DIR_CPP']]

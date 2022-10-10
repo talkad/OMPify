@@ -2,6 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt 
 from sklearn.linear_model import Ridge
 from visualization import pragmasCounter
+from git_clone import loader
 
   
 def split(a, n):
@@ -28,8 +29,7 @@ def show_stats(omp_dir):
     ax1.bar(list(omp_usage.keys()), omp_usage.values())
     ax1.set_xticklabels(labels)
 
-    ax1.set_title('OpenMP use')
-    ax1.set_xlabel('year')
+    ax1.set_title('OpenMP use per month')
     ax1.set_ylabel('repo. num')
 
     n = 2
