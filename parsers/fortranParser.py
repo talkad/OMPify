@@ -283,7 +283,7 @@ class FortranLoopParser(Parser):
             return pos, neg, True
 
 
-parser = FortranLoopParser('../repositories_openMP', '../fortran_loops')
+# parser = FortranLoopParser('../repositories_openMP', '../fortran_loops')
 # parser = FortranLoopParser('../asd', 'fortran_example')
 
 # data = parser.load('/home/talkad/Downloads/thesis/data_gathering_script/parsers/fortran_example/123/a_pos_0.pickle')
@@ -291,8 +291,8 @@ parser = FortranLoopParser('../repositories_openMP', '../fortran_loops')
 # print('code:')
 # print(data.ast_loop)
 
-total = parser.scan_dir()
-print(total)
+# total = parser.scan_dir()
+# print(total)
 
 # pos - 2753 
 # neg - 3331 

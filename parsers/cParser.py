@@ -7,6 +7,7 @@ from parsers.visitors import *
 from functools import reduce
 from parsers.fake_headers import fake
 import re
+import json
 import tempfile
 from multiprocessing import Process, Manager
 import tempfile
@@ -43,13 +44,16 @@ class CLoopParser(Parser):
             return False
 
     def create_ast(self, file_path, code_buf, result):
+        with open('../ENV.json', 'r') as f:
+            vars = json.dumps(f.read())
+
         repo_name = file_path[len(self.repo_path + self.root_dir) + 2:]
         repo_name = repo_name[:repo_name.find('/') ]
-        cpp_args = ['-nostdinc', '-w', '-E', r'-I' + fake.FAKE_DIR]
+        cpp_args = ['-nostdinc', '-w', '-E', r'-I' + vars["FAKE_DIR"]]
 
-        _, headers, _ = fake.get_headers(fake.REPOS_DIR, repo_name)
+        _, headers, _ = fake.get_headers(vars['REPOS_DIR'], repo_name)
         for header in list(headers)[:150]:
-            cpp_args.append(r'-I' + os.path.join(fake.REPOS_DIR, repo_name, header))
+            cpp_args.append(r'-I' + os.path.join(vars['REPOS_DIR'], repo_name, header))
 
         try:
             with tempfile.NamedTemporaryFile(suffix='.c', mode='w+') as tmp, open(file_path, 'r') as f:    

@@ -27,6 +27,20 @@ def scan_dir(root_dir):
 # {'.cpp': 169966, '.c': 70113, '.f90': 15285, '.h': 3246, '.cc': 1193, '.f': 5571, '.f95': 337, '.f03': 36, '.cxx': 132}, 
 # {'.cpp': 14421, '.c': 20174, '.f90': 4367, '.h': 1065, '.cc': 575, '.f': 1528, '.f95': 279, '.f03': 10, '.cxx': 71})
 
-# dist = {'bad_case': 1988, 'empty': 131, 'duplicates': 53288, 'func_calls': 5907}
+
+# def addlabels(x,y):
+#     for i in range(len(x)):
+#         plt.text(i,y[i],y[i])
+
+# dist = {'bad_case': 2755, 'empty': 1692, 'duplicates': 202330}
 # plt.bar(list(dist.keys()), dist.values())
+# addlabels(list(dist.keys()), list(dist.values()))
+# plt.title('Excluded Cases')
+# plt.show() 
+
+
+
+# dist = {'positive': 8095, 'negative': 30294}
+# plt.bar(list(dist.keys()), dist.values(), color=['g', 'r'])
+# plt.title('C++ Data')
 # plt.show() 

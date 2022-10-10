@@ -1,19 +1,50 @@
 import numpy as np 
 import matplotlib.pyplot as plt 
-  
-X = ['Fortran','C', 'C++']
-Ypos = [5075,16942, 14421]
-Zneg = [1099,3861, 248]
+from sklearn.linear_model import Ridge
+from visualization import pragmasCounter
 
-# Ypos = [2753,13238, 6952]
-# Zneg = [3331,36593, 24098]
   
-X_axis = np.arange(len(X))
-  
-plt.bar(X_axis - 0.2, Ypos, 0.4, label = 'pos', color='#66CC00')
-plt.bar(X_axis + 0.2, Zneg, 0.4, label = 'neg', color='#DD0000')
-  
-plt.xticks(X_axis, X)
-plt.title("Files Parsing")
-plt.legend()
-plt.show()
+def split(a, n):
+    k, m = divmod(len(a), n)
+    return (a[i*k+min(i, m):(i+1)*k+min(i+1, m)] for i in range(n))
+
+def show_stats(omp_dir):
+    omp_usage = loader.load(is_dry=True)
+    pragmas, _, files = pragmasCounter.scan_dir(omp_dir)
+
+    labels = []
+    cur = ''
+
+    for label in list(omp_usage.keys()):
+        year = label.split('-')[1]
+
+        if cur != year:
+            labels.append(year)
+            cur = year
+        else:
+            labels.append('')
+
+    ax1 = plt.subplot2grid((2, 5), (0, 0), colspan=5)
+    ax1.bar(list(omp_usage.keys()), omp_usage.values())
+    ax1.set_xticklabels(labels)
+
+    n = 2
+    splitted_list = list(split(list(omp_usage.values()), n))
+    start = 0
+    for idx in range(n):
+        lr = Ridge()
+        l = splitted_list[idx]
+        X = np.array(list(range(start, start + len(l))))
+        lr.fit(X.reshape(-1, 1), np.array(l))
+
+        ax1.plot(X, lr.coef_*X+lr.intercept_, color='orange')
+        start += len(l)
+
+    ax2 = plt.subplot2grid((2, 5), (1, 0), colspan=2)
+    ax2.bar(list(files.keys()), files.values())
+
+    ax3 = plt.subplot2grid((2, 5), (1, 2), colspan=3)
+    ax3.bar(list(pragmas.keys()), pragmas.values())
+    plt.xticks(rotation='-15')
+
+    plt.show()    

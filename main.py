@@ -1,63 +1,42 @@
-import matplotlib.pyplot as plt
 from optparse import OptionParser
 from git_clone import loader, extractor
-from visualization import pragmasCounter
 from parsers import cParser, cppParser, fortranParser
-from parsers.fake_headers import fake
-import numpy as np
-from sklearn.linear_model import Ridge
+from visualization import visualization
+from datetime import datetime
+import json
 
 
-def load_repos():
-    loader.load()
-    extractor.scan_dir(fake.REPOS_DIR)
+def load_repos(dates_str, repos_dir):
+    '''
+    Load github repositories in a given range of dates
+    '''
+    dates_list = dates_str.split('..')
+    
+    if len(dates_list) != 2:
+        print('load failed: wrong date format')
+        return
 
-def split(a, n):
-    k, m = divmod(len(a), n)
-    return (a[i*k+min(i, m):(i+1)*k+min(i+1, m)] for i in range(n))
+    try:
+        dates = list(map(lambda date_str: datetime.strptime(date_str, '%d-%m-%Y').date(), dates_list))
+    except:
+        print('load failed: wrong date format')
+        return
 
-def show_stats():
-    omp_usage = loader.load(is_dry=True)
-    pragmas, _, files = pragmasCounter.scan_dir(fake.REPOS_OMP_DIR)
+    loader.load(start_date=dates[0], end_date=dates[1])
+    extractor.scan_dir(repos_dir)
 
-    labels = []
-    cur = ''
 
-    for label in list(omp_usage.keys()):
-        year = label.split('-')[1]
+def show_stats(omp_dir):
+    '''
+    show omp statistics
+    '''
+    visualization.show_stats(omp_dir)
 
-        if cur != year:
-            labels.append(year)
-            cur = year
-        else:
-            labels.append('')
-
-    ax1 = plt.subplot2grid((2, 5), (0, 0), colspan=5)
-    ax1.bar(list(omp_usage.keys()), omp_usage.values())
-    ax1.set_xticklabels(labels)
-
-    n = 2
-    splitted_list = list(split(list(omp_usage.values()), n))
-    start = 0
-    for idx in range(n):
-        lr = Ridge()
-        l = splitted_list[idx]
-        X = np.array(list(range(start, start + len(l))))
-        lr.fit(X.reshape(-1, 1), np.array(l))
-
-        ax1.plot(X, lr.coef_*X+lr.intercept_, color='orange')
-        start += len(l)
-
-    ax2 = plt.subplot2grid((2, 5), (1, 0), colspan=2)
-    ax2.bar(list(files.keys()), files.values())
-
-    ax3 = plt.subplot2grid((2, 5), (1, 2), colspan=3)
-    ax3.bar(list(pragmas.keys()), pragmas.values())
-    plt.xticks(rotation='-15')
-
-    plt.show()    
 
 def parse(prog_lang):
+    '''
+    parse code into AST
+    '''
     assert prog_lang.startswith('(') and prog_lang.endswith(')')
 
     for lang in prog_lang[1:][:-1].lower().split('|'):
@@ -73,14 +52,17 @@ def parse(prog_lang):
         parser.scan_dir()
 
 
-
 def main():
+    # load environment variables
+    with open('ENV.json', 'r') as f:
+        vars = json.loads(f.read())
+
+    # define UI
     parser = OptionParser(usage="usage: python %prog [options]",
                           version="%prog 1.0")
     parser.add_option("-l", "--load",
-                      action="store_true",
-                      default=False,
-                      help="load omp repositories from github")
+                      dest="dates",
+                      help="load omp repositories from github in range of dates [dd-MM-yyyy]. example -l 1-1-2012..31-12-2022")
     parser.add_option("-s", "--stats",
                       action="store_true",
                       default=False,
@@ -90,11 +72,11 @@ def main():
                       help="parse the given programming languages. example: -p \"(c|cpp)\"")
     (options, args) = parser.parse_args()
 
-    if options.load:
-        load()
+    if options.dates is not None:
+        load_repos(options.date, vars['REPOS_DIR'])
     
     if options.stats:
-        show_stats()
+        show_stats(vars['REPOS_OMP_DIR'])
         
     if options.prog_lang is not None:
         parse(options.prog_lang)

@@ -4,11 +4,20 @@ from dateutil.relativedelta import relativedelta
 
 SCRIPT_PATH = '/home/talkad/Downloads/thesis/data_gathering_script/git_clone/git_clone.sh'
 
-def load(is_dry=False):
+def load(start_date=None, end_date=None, is_dry=False):
+	'''
+	Load repositories created in range of dates from github that include omp directives
+
+	Parameters:
+		start_date - lower bound of dates
+		end_date   - upper bound of dates
+		is_dry     - whether to load the files or not
+	'''
+	
 	month = 30
 	max_results = 10**3
-	start_date = date(2008, 4, 1)
-	end_date = date.today()
+	start_date = date(2008, 4, 1) if start_date is None else start_date
+	end_date = date.today() if end_date is None else end_date
 	total_repos = 0
 	repos_per_month = {}
 
