@@ -1,13 +1,16 @@
 import os
 import re
+import json
 import shutil
 from functools import reduce
 
 
-REPOS_DIR = '/home/talkad/Downloads/thesis/data_gathering_script/git_repos'
-# REPOS_DIR = '/home/talkad/Downloads/thesis/data_gathering_script/asd'
-REPOS_OMP_DIR = '/home/talkad/Downloads/thesis/data_gathering_script/repositories_openMP'
-FAKE_DIR = '/home/talkad/Downloads/thesis/data_gathering_script/parsers/fake_headers/utils'
+with open('../ENV.json', 'r') as f:
+    vars = json.dumps(f.read())
+
+REPOS_DIR = vars['REPOS_DIR']
+REPOS_OMP_DIR = vars['REPOS_OMP_DIR']
+FAKE_DIR = vars['FAKE_DIR']
 FAKE_DEFINES  = '_fake_defines.h'
 FAKE_TYPEDEFS = '_fake_typedefs.h'
 FAKE_INCLUDE  = f'#include \"{FAKE_DEFINES}\"\n#include \"{FAKE_TYPEDEFS}\"\n'

@@ -28,6 +28,10 @@ def show_stats(omp_dir):
     ax1.bar(list(omp_usage.keys()), omp_usage.values())
     ax1.set_xticklabels(labels)
 
+    ax1.set_title('OpenMP use')
+    ax1.set_xlabel('year')
+    ax1.set_ylabel('repo. num')
+
     n = 2
     splitted_list = list(split(list(omp_usage.values()), n))
     start = 0
@@ -42,9 +46,11 @@ def show_stats(omp_dir):
 
     ax2 = plt.subplot2grid((2, 5), (1, 0), colspan=2)
     ax2.bar(list(files.keys()), files.values())
+    ax2.set_title('Amount of Files Loaded')
 
     ax3 = plt.subplot2grid((2, 5), (1, 2), colspan=3)
     ax3.bar(list(pragmas.keys()), pragmas.values())
+    ax3.set_title('Amount of OpenMP Clauses')
     plt.xticks(rotation='-15')
 
     plt.show()    
