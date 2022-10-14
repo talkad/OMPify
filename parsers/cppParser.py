@@ -7,6 +7,7 @@ import pycparser
 from pycparser.c_parser import CParser
 from pycparser.c_ast import For, Pragma
 from multiprocessing import Process, Manager
+import json
 import tempfile
 
 
@@ -235,7 +236,7 @@ class CppLoopParser(Parser):
                 if loop is None:
                     # attemp to parse again - this time after updating the code
                     code = re.sub(r"(((\w|<|>)+)::)+(\w+)", convert, extractor.loops[idx])
-                    code = DIRECTIVES_RE.sub('', code)
+                    # code = DIRECTIVES_RE.sub('', code)
                     loop = self.parse(file_path, code)
 
                     if loop is None:
@@ -263,7 +264,6 @@ class CppLoopParser(Parser):
                                    
                 self.create_directory(save_dir) 
                 self.memory.append(code)
-                print(f'{pragma} \n {code} \n============\n\n')
                 self.save(os.path.join(save_dir, f"{name}{'_neg_' if pragma is None else '_pos_'}{idx}.pickle"), pragma, loop, code)
 
                 if pragma is None:
@@ -322,6 +322,10 @@ class CppLoopParser(Parser):
 # total = parser.scan_dir()
 # print(total)
 
-
+# removing compiler directives
 # aaaaa 39233 284367
 # (8095, 30294, {'bad_case': 2755, 'empty': 1692, 'duplicates': 202330, 'func_calls': 20416}, 14421, 248)
+
+#without...
+# pos examples:             8084   |   neg examples:             30281
+# exclusions: {'bad_case': 2752, 'empty': 1692, 'duplicates': 202302, 'func_calls': 20396}
