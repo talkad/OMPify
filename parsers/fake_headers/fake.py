@@ -4,8 +4,8 @@ import json
 import shutil
 from functools import reduce
 
-
-with open('ENV.json', 'r') as f:
+# remove these ..
+with open('../ENV.json', 'r') as f:
     vars = json.loads(f.read())
 
 REPOS_DIR = vars['REPOS_DIR']
