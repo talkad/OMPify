@@ -44,7 +44,7 @@ class CLoopParser(Parser):
         else:
             return False
 
-    def create_ast(self, file_path, code_buf, result):
+    def create_ast(self, file_path, code_buf, temp_header_path, result):
         with open('../ENV.json', 'r') as f:
             vars = json.loads(f.read())
 
@@ -61,14 +61,10 @@ class CLoopParser(Parser):
             cpp_args.append(r'-I' + os.path.join(vars['REPOS_DIR'], repo_name, header))
 
         try:
-            with tempfile.NamedTemporaryFile(suffix='.c', mode='w+') as tmp_file, 
-                    tempfile.NamedTemporaryFile(suffix='.h', mode='w+') as tmp_header, 
-                    open(file_path, 'r') as f:
-                fake.extract_typedef_directives(file_path, tmp_header.name)
-                
+            with tempfile.NamedTemporaryFile(suffix='.c', mode='w+') as tmp_file, open(file_path, 'r') as f:                
                 code = f.read()
-                tmp_file.write('#include {}\n'.format(tmp_header.name[tmp_header.name.rfind('/') + 1 :]))
-                cpp_args.append(r'-I' + tmp_header.name)
+                tmp_file.write('#include {}\n'.format(temp_header_path[temp_header_path('/') + 1 :]))
+                cpp_args.append(r'-I' + temp_header_path)
 
                 tmp_file.write(code)
                 tmp_file.seek(0)
@@ -87,10 +83,10 @@ class CLoopParser(Parser):
 
             return   
 
-    def parse(self, file_path, code_buf):
+    def parse(self, file_path, code_buf, opt=None):
         manager = Manager()
         return_dict = manager.dict()
-        t = Process(target=self.create_ast, args=(file_path, code_buf, return_dict), daemon=True)
+        t = Process(target=self.create_ast, args=(file_path, code_buf, opt, return_dict), daemon=True)
 
         t.start()
         t.join(60.0)
@@ -107,7 +103,7 @@ class CLoopParser(Parser):
             return return_dict['ast']
 
 
-    def parse_file(self, root_dir, file_name, exclusions):
+    def parse_file(self, root_dir, file_name, exclusions, opt=None):
         '''
         Parse the given file into ast and extract the loops associated with omp pargma (or without)
         '''
@@ -127,7 +123,7 @@ class CLoopParser(Parser):
             except UnicodeDecodeError:
                 return 0, 0, False
 
-            ast = self.parse(file_path, code)
+            ast = self.parse(file_path, code, opt=opt)
 
             if ast is None:                 # file parsing failed
                 return 0, 0, False
@@ -199,40 +195,44 @@ class CLoopParser(Parser):
         # iterate over repos
         for idx, repo_name in enumerate(os.listdir(omp_repo)):
             
-            for root, dirs, files in os.walk(os.path.join(omp_repo, repo_name)):
-                for file_name in files:
-                    file_path = os.path.join(root, file_name)
-                    ext = os.path.splitext(file_name)[1].lower()
-                    
-                    if ext in self.file_extensions:
-                        if ext == '.h' and self.is_cpp_header(file_path):
-                            log('cpp_header.txt', file_path)
-                            continue
-
-                        pos, neg, is_parsed = self.parse_file(root, file_name, exclusions)
-                        
-                        # if not is_parsed:
-                        #     loop_missed += utils.count_for(os.path.join(root, file_name))
-
-                        if pos is not None:
-                            total_pos += pos
-                            total_neg += neg
-
-                        if not is_parsed:
-                            num_failed += 1
-
-                            if ext == '.h':
-                                log('cpp_header.txt', file_path)
-
-                        total_files += 1
-
-            if idx % (5) == 0:
-                log('success_logger.txt', "{:20}{:10}   |   {:20} {:10}\n\n".format("files processed: ", total_files, "failed to parse: ", num_failed))
-                print("{:20}{:10}   |   {:20} {:10}".format("files processed: ", total_files, "failed to parse: ", num_failed))
-                print("{:20}{:10}   |   {:20} {:10}".format("pos examples: ", total_pos, "neg examples: ", total_neg))
-                print(f'exclusions: {exclusions}\n')
+            # create fake header
+            with tempfile.NamedTemporaryFile(suffix='.h', mode='w+') as tmp_header:
+                fake.extract_typedef_directives(repo_name, tmp_header.name)
                 
-                print(f'loop missed {missed}')
+                for root, dirs, files in os.walk(os.path.join(omp_repo, repo_name)):
+                    for file_name in files:
+                        file_path = os.path.join(root, file_name)
+                        ext = os.path.splitext(file_name)[1].lower()
+                        
+                        if ext in self.file_extensions:
+                            if ext == '.h' and self.is_cpp_header(file_path):
+                                log('cpp_header.txt', file_path)
+                                continue
+
+                            pos, neg, is_parsed = self.parse_file(root, file_name, exclusions, opt=tmp_header.name)
+                            
+                            # if not is_parsed:
+                            #     loop_missed += utils.count_for(os.path.join(root, file_name))
+
+                            if pos is not None:
+                                total_pos += pos
+                                total_neg += neg
+
+                            if not is_parsed:
+                                num_failed += 1
+
+                                if ext == '.h':
+                                    log('cpp_header.txt', file_path)
+
+                            total_files += 1
+
+                if idx % (5) == 0:
+                    log('success_logger.txt', "{:20}{:10}   |   {:20} {:10}\n\n".format("files processed: ", total_files, "failed to parse: ", num_failed))
+                    print("{:20}{:10}   |   {:20} {:10}".format("files processed: ", total_files, "failed to parse: ", num_failed))
+                    print("{:20}{:10}   |   {:20} {:10}".format("pos examples: ", total_pos, "neg examples: ", total_neg))
+                    print(f'exclusions: {exclusions}\n')
+                    
+                    # print(f'loop missed {missed}')
 
         return total_pos, total_neg, exclusions, total_files, num_failed
 
