@@ -16,7 +16,6 @@ FAKE_TYPEDEFS = '_fake_typedefs.h'
 FAKE_INCLUDE  = f'#include \"{FAKE_DEFINES}\"\n#include \"{FAKE_TYPEDEFS}\"\n'
 
 
-
 def get_headers(repo_dir, repo_name):
     '''
     For a given repo, return all headers file relative path 
@@ -63,14 +62,17 @@ def join_splited_lines(code_buf, delimiter='\\'):
     return '\n'.join(code)
 
 
-def get_directives(code):
+def get_directives(file_path):
     '''
-    Extract all 'define' and 'typedef' directives from a given code
+    Extract all 'typedef' from given file
     '''
-    defines =  set()
-    func_defines =  []
     typedefs = set()
-    func_names = []
+
+    with open(file_path, 'r') as f:
+        try:
+            code = f.read()
+        except UnicodeDecodeError e:
+            return typedefs
 
     # remove comments
     LINE_COMMENT_RE = re.compile("//.*?\n" )
@@ -78,114 +80,51 @@ def get_directives(code):
     code = LINE_COMMENT_RE.sub("", code)
     code  = MULTILINE_COMMENT_RE.sub("", code)
 
-    # join splitted lines in code
-    code = join_splited_lines(code)
-
-    for directive in re.findall(r'#(\s*)define(\s*)(\w+)(\s)', code):
-        defines.add(directive[2])
-        # defines.add(f' {directive[2]} 1')
-
-    for directive in re.findall(r'#(\s*)define(\s*)(\w+)\((.*?)\)(.*)\n', code):
-        func_defines.append(f'{directive[2]}({directive[3]})')
-        func_names.append(directive[2])
-        # defines.add(f' {directive[2]}({directive[3]}) 1')
-
+    # string matching for 'typedef'
     for directive in re.findall(r'(\s*)typedef(\s*)(.*?);', code):
         typedefs.add(directive[2].split(" ")[-1])
-        # typedefs.add(f' int {directive[4]}')
 
     for directive in re.findall(r'(\s*)typedef(\s*)struct(\s*){(.|\n)+?}(.+?);', code):
         typedefs.add(directive[4])
-        # typedefs.add(f' int {directive[4]}')
 
-    return defines, func_defines, func_names, typedefs
-
+    return typedefs
 
 
-def get_repo_directives(repo_dir, repo_name):
+def get_repo_directives(repo_name):
     '''
-    Extract all 'define' and 'typedef' directives from a given repo
+    Extract all 'typedef' directives from a given repo
 
     Paramenters:
-        repo_name   - the name of the repo all the directives extracted from
+        repo_name - the name of the repo all the directives extracted from
     '''
-
-    headers, _, _ = get_headers(repo_dir, repo_name)
-    define_set =  set()
-    func_defines_set = []
-    func_names_set = []
     typedef_set = set()
 
-    for header in headers:
-        # open file and extract #define and typedef
-        with open(os.path.join(repo_dir, repo_name, header), 'r')  as f:
-            try:
-                code = f.read()
-            except UnicodeDecodeError:
-                continue
-
-            defines, func_defines, func_names, typedefs = get_directives(code)
-
-            define_set |= defines
-            func_defines_set += func_defines
-            func_names_set += func_names
+    for root, dirs, files in os.walk(os.path.join(omp_repo, repo_name)):
+        for file_name in files:
+            file_path = os.path.join(root, file_name)
+            typedefs = get_directives(file_path)
             typedef_set |= typedefs
             
-    return define_set, func_defines_set, func_names_set, typedef_set
+    return  typedef_set
 
 
-def extract_typedef_directives():
+def extract_typedef_directives(repo_name, fake_header_path):
     '''
-    Create fake headers contains typedefs
+    Create fake header that contains typedefs (without duplicates - with respect to the fake_header.h that can be found in utils)
+
+    Parameters:
+        repo_name        - the repo the typedefs will be extracted from
+        fake_header_path - the path to the generated fake header
     '''
-    typedefs_set = set()
-    relevant_repos = os.listdir(REPOS_OMP_DIR)
 
-    if not os.path.exists(FAKE_DIR):
-        os.makedirs(FAKE_DIR)
+    general_typedefs = get_directives('path/to/file/utils')
+    current_typedefs = get_directives(repo_name)
 
-    # iterate over all the relevant repositories
-    for idx, repo_name in enumerate(os.listdir(REPOS_DIR)):
-
-        if repo_name not in relevant_repos:
-            continue
-
-        _, _, _, typedefs = get_repo_directives(REPOS_DIR, repo_name)
-
-        for typedef in typedefs:
-            typedefs_set.add(typedef)
-
-        if idx > 0 and idx % 10**2 == 0:
-            print(f'repos passed: {idx}')
-
-    with open(os.path.join(FAKE_DIR, '_fake_types.h'), 'w+') as typedef_file:
-        for typedef in typedefs_set:
-            if ')' not in typedef and '}' not in typedef:
+    with open(fake_header_path, 'w+') as typedef_file:
+        for typedef in current_typedefs:
+            if ')' not in typedef and '}' not in typedef and
+                not typedef in general_typedefs:
                 typedef_file.write(f'typedef int {typedef};\n')
-
-
-def create_fake_headers(repo_name):
-    '''
-    Create fake headers that contain all defines and typedefs
-    '''
-    if not os.path.exists(FAKE_DIR):
-        os.makedirs(FAKE_DIR)
-
-    with open(os.path.join(FAKE_DIR, FAKE_DEFINES), 'w+') as define_file, open(os.path.join(FAKE_DIR, FAKE_TYPEDEFS), 'w+') as typedef_file:
-        defines, func_defines, func_names, typedefs = get_repo_directives(REPOS_DIR, repo_name)
-        def_func_dict = {k:v for k,v in list(zip(func_names, func_defines))}
-
-        for define in defines:
-            define_file.write(f'#define {define} 1\n')
-
-        for def_func in def_func_dict:
-            if def_func not in defines:
-                define_file.write(f'#define {def_func_dict[def_func]} 1\n')
-
-        for typedef in typedefs:
-            if ')' not in typedef and '}' not in typedef:
-                typedef_file.write(f'typedef int {typedef};\n')
-
 
 
 def extract_includes(file_path):
@@ -204,7 +143,6 @@ def extract_includes(file_path):
             includes.append(directive[3])
 
     return includes
-
 
 
 # def create_fake_header(header):
@@ -249,7 +187,6 @@ def create_empty_header(header, dest_folder):
     dir_path = path[:path.rfind('/')]
 
     try:
-
         if not os.path.exists(dir_path):
             os.makedirs(dir_path)
 
@@ -271,6 +208,3 @@ def create_empty_headers(file_path, dest_folder):
             create_empty_header(header, dest_folder)
 
 
-
-
-    
