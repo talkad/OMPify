@@ -9,9 +9,10 @@ from fake_headers import fake
 from parsing_utils import utils
 import re
 import json
-import tempfile
 from multiprocessing import Process, Manager
 import tempfile
+import shutil
+
 
 missed = 0
 
@@ -50,10 +51,16 @@ class CLoopParser(Parser):
 
         repo_name = file_path[len(self.repo_path + self.root_dir) + 2:]
         repo_name = repo_name[:repo_name.find('/') ]
-        cpp_args = ['-nostdinc', '-w', '-E', r'-I' + vars["FAKE_DIR"], r'-I' + '/home/talkad/Downloads/thesis/data_gathering_script/asd/1']
+        cpp_args = ['-nostdinc', '-w', '-E', r'-I' + vars["FAKE_DIR"]]# , r'-I' + '/home/talkad/Downloads/thesis/data_gathering_script/asd/1']
 
         _, headers, _ = fake.get_headers(vars['REPOS_DIR'], repo_name)
-        print('asdf', headers)
+        # log('headers.txt', str(fake.extract_includes(file_path)))
+
+        # create empty headers
+        dest_folder = 'temp_folder'
+        os.makedirs(dest_folder)
+        fake.create_empty_headers(file_path, dest_folder)
+        cpp_args.append(r'-I' + dest_folder)
 
         for header in list(headers)[:150]:
             cpp_args.append(r'-I' + os.path.join(vars['REPOS_DIR'], repo_name, header))
@@ -68,7 +75,7 @@ class CLoopParser(Parser):
 
         except pycparser.plyparser.ParseError as e:  
             log('error_logger.txt', f'Parser Error: {file_path} ->\n {e}\n')
-            return
+
         except Exception as e:
             log('error_logger.txt', f'Unexpected Error: {file_path} ->\n {e}\n')
 
@@ -76,20 +83,14 @@ class CLoopParser(Parser):
                 print(f'aaaaaaaaaaaaa {utils.count_for(file_path)} -> {file_path}')
                 result['missed'] = utils.count_for(file_path)
 
-            return   
+        finally:
+            shutil.rmtree(dest_folder)
 
     def parse(self, file_path, code_buf):
-        manager = Manager()
-        return_dict = manager.dict()
-        t = Process(target=self.create_ast, args=(file_path, code_buf, return_dict), daemon=True)
+        return_dict = dict()
+        self.create_ast(file_path, code_buf, return_dict)
 
-        t.start()
-        t.join(60.0)
-
-        if t.is_alive():
-            t.terminate()
-            return
-        elif len(return_dict) == 0:
+        if len(return_dict) == 0:
             return
         elif 'missed' in return_dict:
             global missed
@@ -228,16 +229,22 @@ class CLoopParser(Parser):
         return total_pos, total_neg, exclusions, total_files, num_failed
 
 
-# parser = CLoopParser('../repositories_openMP', '../c_loops2')
-parser = CLoopParser('../asd', 'c_loops2')
+parser = CLoopParser('../repositories_openMP', '../c_loops2')
+# parser = CLoopParser('../asd', 'c_loops2')
 
 # data = parser.load('/home/talkad/Downloads/thesis/data_gathering_script/c_loops/357r4bd/2d-heat/src/openmp-2dheat_pos_0.pickle')
 # print(f'pragma: {data.omp_pragma}')
 # print('code:\n')
 # print(data.textual_loop)
 
-parser.scan_dir()
+total = parser.scan_dir()
+
+print(total)
 
 
-
+# original code
 # loop missed 20518!!!!!!!!!!!!
+
+# when creating empty headers
+# loop missed 2182
+# (12142, 31523, {'bad_case': 6214, 'empty': 169, 'duplicates': 125497, 'func_calls': 19606}, 20803, 4179)

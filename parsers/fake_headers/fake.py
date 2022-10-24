@@ -207,37 +207,70 @@ def extract_includes(file_path):
 
 
 
-def create_fake_header(header):
+# def create_fake_header(header):
+#     '''
+#     Creates a header that contains only the fake includes
+#     '''
+#     path = os.path.join(FAKE_DIR, header) # check that
+#     dir_path = path[:path.rfind('/')]
+#     try:
+
+#         if not os.path.exists(dir_path):
+#             os.makedirs(dir_path)
+
+#         with open(path, 'w') as f:
+#             f.write(FAKE_INCLUDE)
+#     except:
+#         return
+
+
+# def create_not_exists_headers(repo_dir, repo_name):
+#     '''
+#     Create fake headers for headers that don't exist in the given repo
+#     '''
+#     paths, _, _ = get_headers(REPOS_DIR, repo_name)
+
+#     for root, dirs, files in os.walk(os.path.join(repo_dir, repo_name)):
+#         for file_name in files:
+#             ext = os.path.splitext(file_name)[1].lower()
+            
+#             if ext in ['.h', '.c']:
+#                 includes = extract_includes(os.path.join(root, file_name))
+#                 for include in includes:
+#                     # if all([False for path in paths if path.endswith('/' + include)]):
+#                     create_fake_header(include)
+
+
+def create_empty_header(header, dest_folder):
     '''
-    Creates a header that contain only the fake includes
+    Create an empty header file inside a folder
     '''
-    path = os.path.join(FAKE_DIR, header) # check that
+    path = os.path.join(dest_folder, header)
     dir_path = path[:path.rfind('/')]
+
     try:
 
         if not os.path.exists(dir_path):
             os.makedirs(dir_path)
 
         with open(path, 'w') as f:
-            f.write(FAKE_INCLUDE)
+            f.write('')
+
     except:
         return
 
 
-def create_not_exists_headers(repo_dir, repo_name):
+def create_empty_headers(file_path, dest_folder):
     '''
-    Create fake headers for headers that don't exist in the given repo
+    Create all the header files mentioned in @file_path src code
     '''
-    paths, _, _ = get_headers(REPOS_DIR, repo_name)
+    headers = extract_includes(file_path)
 
-    for root, dirs, files in os.walk(os.path.join(repo_dir, repo_name)):
-        for file_name in files:
-            ext = os.path.splitext(file_name)[1].lower()
-            
-            if ext in ['.h', '.c']:
-                includes = extract_includes(os.path.join(root, file_name))
-                for include in includes:
-                    # if all([False for path in paths if path.endswith('/' + include)]):
-                    create_fake_header(include)
+    for header in headers:
+        if '..' not in header:
+            create_empty_header(header, dest_folder)
 
 
+
+
+    
