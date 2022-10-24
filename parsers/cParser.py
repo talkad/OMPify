@@ -121,7 +121,7 @@ class CLoopParser(Parser):
                 func_call_checker.reset()
 
                 verify_loops.visit(loop)
-                if verify_loops.found:  # undesired     tokens found
+                if verify_loops.found:  # undesired tokens found
                     exclusions['bad_case'] += 1
                     continue
                 

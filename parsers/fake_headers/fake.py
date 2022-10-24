@@ -71,7 +71,7 @@ def get_directives(file_path):
     with open(file_path, 'r') as f:
         try:
             code = f.read()
-        except UnicodeDecodeError e:
+        except UnicodeDecodeError as e:
             return typedefs
 
     # remove comments
@@ -122,7 +122,7 @@ def extract_typedef_directives(repo_name, fake_header_path):
 
     with open(fake_header_path, 'w+') as typedef_file:
         for typedef in current_typedefs:
-            if ')' not in typedef and '}' not in typedef and
+            if ')' not in typedef and '}' not in typedef and \
                 not typedef in general_typedefs:
                 typedef_file.write(f'typedef int {typedef};\n')
 

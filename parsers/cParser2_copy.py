@@ -51,17 +51,11 @@ class CLoopParser(Parser):
             vars = json.loads(f.read())
 
         repo_name = file_path[len(self.repo_path + self.root_dir) + 2:]
-        repo_name = repo_name[:repo_name.find('/') ]
-        cpp_args = ['-nostdinc', '-w', '-E', r'-I' + vars["FAKE_DIR"]]# , r'-I' + '/home/talkad/Downloads/thesis/data_gathering_script/asd/1']
+        repo_name = repo_name[:repo_name.find('/')]
+        cpp_args = ['-nostdinc', '-w', '-E', r'-I' + vars["FAKE_DIR"]]
 
         _, headers, _ = fake.get_headers(vars['REPOS_DIR'], repo_name)
         # log('headers.txt', str(fake.extract_includes(file_path)))
-
-        # create empty headers
-        dest_folder = 'temp_folder'
-        os.makedirs(dest_folder)
-        fake.create_empty_headers(file_path, dest_folder)
-        cpp_args.append(r'-I' + dest_folder)
 
         for header in list(headers)[:150]:
             cpp_args.append(r'-I' + os.path.join(vars['REPOS_DIR'], repo_name, header))
@@ -83,9 +77,6 @@ class CLoopParser(Parser):
             if str(e).startswith('Command'): # Capture failures caused by missing headers
                 print(f'aaaaaaaaaaaaa {utils.count_for(file_path)} -> {file_path}')
                 result['missed'] = utils.count_for(file_path)
-
-        finally:
-            shutil.rmtree(dest_folder)
 
     def parse(self, file_path, code_buf):
         return_dict = dict()
@@ -133,7 +124,7 @@ class CLoopParser(Parser):
                 func_call_checker.reset()
 
                 verify_loops.visit(loop)
-                if verify_loops.found:  # undesired     tokens found
+                if verify_loops.found:  # undesired tokens found
                     exclusions['bad_case'] += 1
                     continue
                 
