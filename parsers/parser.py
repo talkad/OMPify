@@ -81,7 +81,7 @@ class Parser(ABC):
         return '\n'.join(code)
 
     @abstractmethod
-    def parse(self, file_path, code_buf):
+    def parse(self, file_path, code_buf, opt=None):
         '''
         Create the AST of a given code snippet
 
@@ -96,7 +96,7 @@ class Parser(ABC):
         pass
 
     @abstractmethod
-    def parse_file(self, root_dir, file_name, exclusions):
+    def parse_file(self, root_dir, file_name, exclusions, opt=None):
         '''
         Parse file and save for loops into pickles.
 
@@ -104,6 +104,7 @@ class Parser(ABC):
             root_dir - the path absolute path the directory that contains file_name
             file_name - the name of the file to be parsed
             exclusions - dictionary that contains stats about excluded examples
+            opt - optional argument
         Returns:
             returns a sequence of three values <num_positive_examples>, <num_negative_examples>, <parsing_status>
         '''

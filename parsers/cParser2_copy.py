@@ -1,21 +1,20 @@
 import os
 import pycparser
-from parsers.parser import Parser
+from parser import Parser
 from pycparser.c_ast import For
 import pickle
-from parsers.visitors import *
+from visitors import *
 from functools import reduce
-from parsers.fake_headers import fake
-from parsers.parsing_utils import utils
+from fake_headers import fake
+from parsing_utils import utils
 import re
 import json
-import tempfile
 from multiprocessing import Process, Manager
 import tempfile
+import shutil
 
 
-missed_loops = 0
-missed_pragmas = 0
+missed = 0
 
 
 def log(file_name, msg):
@@ -25,7 +24,7 @@ def log(file_name, msg):
 
 class CLoopParser(Parser):
     def __init__(self, repo_path, parsed_path):
-        super().__init__(repo_path, parsed_path, ['.c'])
+        super().__init__(repo_path, parsed_path, ['.c', '.h'])
 
     def is_empty_loop(self, node):
         '''
@@ -48,14 +47,16 @@ class CLoopParser(Parser):
             return False
 
     def create_ast(self, file_path, code_buf, result):
-        with open('ENV.json', 'r') as f:
+        with open('../ENV.json', 'r') as f:
             vars = json.loads(f.read())
 
         repo_name = file_path[len(self.repo_path + self.root_dir) + 2:]
-        repo_name = repo_name[:repo_name.find('/') ]
+        repo_name = repo_name[:repo_name.find('/')]
         cpp_args = ['-nostdinc', '-w', '-E', r'-I' + vars["FAKE_DIR"]]
 
         _, headers, _ = fake.get_headers(vars['REPOS_DIR'], repo_name)
+        # log('headers.txt', str(fake.extract_includes(file_path)))
+
         for header in list(headers)[:150]:
             cpp_args.append(r'-I' + os.path.join(vars['REPOS_DIR'], repo_name, header))
 
@@ -67,35 +68,27 @@ class CLoopParser(Parser):
                 ast = pycparser.parse_file(tmp.name, use_cpp=True, cpp_path='mpicc', cpp_args = cpp_args)
                 result['ast'] = ast
 
-        # except pycparser.plyparser.ParseError as e:
-        #     log('error_logger.txt', f'Parser Error: {file_path} ->\n {e}\n')
-        #     return
+        except pycparser.plyparser.ParseError as e:  
+            log('error_logger.txt', f'Parser Error: {file_path} ->\n {e}\n')
+
         except Exception as e:
-            log('error_logger.txt', f'Exception: {file_path} ->\n {e}\n')
-            result['missed'] = (utils.count_for(file_path))
-            return
+            log('error_logger.txt', f'Unexpected Error: {file_path} ->\n {e}\n')
+
+            if str(e).startswith('Command'): # Capture failures caused by missing headers
+                print(f'aaaaaaaaaaaaa {utils.count_for(file_path)} -> {file_path}')
+                result['missed'] = utils.count_for(file_path)
 
     def parse(self, file_path, code_buf):
-        manager = Manager()
-        return_dict = manager.dict()
-        t = Process(target=self.create_ast, args=(file_path, code_buf, return_dict), daemon=True)
+        return_dict = dict()
+        self.create_ast(file_path, code_buf, return_dict)
 
-        t.start()
-        t.join(60.0)
-
-        if t.is_alive():
-            t.terminate()
+        if len(return_dict) == 0:
             return
-        # elif len(return_dict) == 0:
-        #     return
         elif 'missed' in return_dict:
-            global missed_loops
-            missed_loops += return_dict['missed'][0]
-            global missed_pragmas
-            missed_pragmas += return_dict['missed'][1]
+            global missed
+            missed += return_dict['missed']
         else:
             return return_dict['ast']
-
 
     def parse_file(self, root_dir, file_name, exclusions):
         '''
@@ -160,11 +153,30 @@ class CLoopParser(Parser):
 
             return pos, neg, True
 
+    def is_cpp_header(self, file_path):
+        code = ''
+        includes = fake.extract_includes(file_path)
+
+        if any([True for include in includes if not include.endswith('.h')]):
+            return True
+
+        try:
+            with open(file_path, 'r') as f:
+                code = f.read()
+        except:
+            return False
+        
+        return any([True for line in code.split('\n') if 'using' in line.lower() and 'namespace' in line.lower()])
+
     def scan_dir(self):
+        LOGGER = 'cpp_headers.txt'
+
         total_files, num_failed = 0, 0
         total_pos, total_neg = 0, 0
         omp_repo = os.path.join(self.root_dir, self.repo_path)
         exclusions = {'bad_case': 0, 'empty': 0, 'duplicates': 0, 'func_calls':0}
+
+        # loop_missed = 0
 
         # iterate over repos
         for idx, repo_name in enumerate(os.listdir(omp_repo)):
@@ -175,14 +187,24 @@ class CLoopParser(Parser):
                     ext = os.path.splitext(file_name)[1].lower()
                     
                     if ext in self.file_extensions:
-                        pos, neg, is_parsed = self.parse_file(root, file_name, exclusions)
+                        if ext == '.h' and self.is_cpp_header(file_path):
+                            log('cpp_header.txt', file_path)
+                            continue
 
-                        if not is_parsed:
-                            num_failed += 1
+                        pos, neg, is_parsed = self.parse_file(root, file_name, exclusions)
+                        
+                        # if not is_parsed:
+                        #     loop_missed += utils.count_for(os.path.join(root, file_name))
 
                         if pos is not None:
                             total_pos += pos
                             total_neg += neg
+
+                        if not is_parsed:
+                            num_failed += 1
+
+                            if ext == '.h':
+                                log('cpp_header.txt', file_path)
 
                         total_files += 1
 
@@ -191,15 +213,13 @@ class CLoopParser(Parser):
                 print("{:20}{:10}   |   {:20} {:10}".format("files processed: ", total_files, "failed to parse: ", num_failed))
                 print("{:20}{:10}   |   {:20} {:10}".format("pos examples: ", total_pos, "neg examples: ", total_neg))
                 print(f'exclusions: {exclusions}\n')
+                
+                print(f'loop missed {missed}')
 
-                print(f'missed loops {missed_loops}, missed pragmas {missed_pragmas}')
-
-        print(f'missed loops {missed_loops}, missed pragmas {missed_pragmas}')
-        print(total_pos, total_neg, exclusions, total_files, num_failed)
         return total_pos, total_neg, exclusions, total_files, num_failed
 
 
-# parser = CLoopParser('../repositories_openMP', '../c_loops')
+parser = CLoopParser('../repositories_openMP', '../c_loops2')
 # parser = CLoopParser('../asd', 'c_loops2')
 
 # data = parser.load('/home/talkad/Downloads/thesis/data_gathering_script/c_loops/357r4bd/2d-heat/src/openmp-2dheat_pos_0.pickle')
@@ -207,13 +227,14 @@ class CLoopParser(Parser):
 # print('code:\n')
 # print(data.textual_loop)
 
+total = parser.scan_dir()
 
-# total = parser.scan_dir()
-# print(total)
+print(total)
 
-# with .h
-# (13238, 36593, {'bad_case': 6385, 'empty': 200, 'duplicates': 127647, 'func_calls': 22421}, 20803, 3861)
 
-# without
-# missed loops 41310, missed pragmas 12084
-# (13207 36480 {'bad_case': 6375, 'empty': 90, 'duplicates': 127070, 'func_calls': 22357} 20174 3474)
+# original code
+# loop missed 20518!!!!!!!!!!!!
+
+# when creating empty headers
+# loop missed 2182- how?
+# (12142, 31523, {'bad_case': 6214, 'empty': 169, 'duplicates': 125497, 'func_calls': 19606}, 20803, 4179)

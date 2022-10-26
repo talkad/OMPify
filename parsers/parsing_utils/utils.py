@@ -38,3 +38,4 @@ def count_for(file_path):
                 pragma_amount += 1
 
     return loop_amount, pragma_amount
+
