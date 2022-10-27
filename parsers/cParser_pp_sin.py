@@ -68,6 +68,7 @@ class CLoopParser(Parser):
         cpp_args.append(r'-I' + dest_folder)
 
         for header in list(headers)[:150]:
+            print(os.path.join(vars['REPOS_DIR'], repo_name, header))
             cpp_args.append(r'-I' + os.path.join(vars['REPOS_DIR'], repo_name, header))
 
         try:
@@ -213,8 +214,8 @@ class CLoopParser(Parser):
         return total_pos, total_neg, exclusions, total_files, num_failed
 
 
-parser = CLoopParser('../repositories_openMP', '../c_loops')
-# parser = CLoopParser('../asd', 'c_loops2')
+# parser = CLoopParser('../repositories_openMP', '../c_loops')
+parser = CLoopParser('../asd', '../c_loops2')
 
 # data = parser.load('/home/talkad/Downloads/thesis/data_gathering_script/c_loops/357r4bd/2d-heat/src/openmp-2dheat_pos_0.pickle')
 # print(f'pragma: {data.omp_pragma}')
@@ -224,6 +225,3 @@ parser = CLoopParser('../repositories_openMP', '../c_loops')
 
 total = parser.scan_dir()
 print(total)
-
-# missed loops 43864, missed pragmas type 13114, missed pragmas header 275
-# 12024 30632 {'bad_case': 6203, 'empty': 77, 'duplicates': 125026, 'func_calls': 18881} 19784 3577

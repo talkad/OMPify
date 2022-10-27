@@ -50,12 +50,8 @@ def scan_dir(root_dir):
 			
 			if ext in extentions:
 				with open(f'{root}/{file_name}', 'r') as f:
-					try:
-						code = f.read()
-					except UnicodeDecodeError as e:
-						continue
+					for line in f:
 
-					for line in code.split('\n'):
 						if is_for_pragma(line, 'c' if ext not in fortran_extentions else 'f'):
 							copy = True
 							result[ext] = (result[ext] if ext in result else 0) + 1
@@ -72,4 +68,4 @@ def scan_dir(root_dir):
 # res = scan_dir(vars['REPOS_DIR'])
 # print(res)
 
-# {'.cpp': 151215, '.c': 77741, '.f90': 21818, '.h': 4694, '.cc': 1446, '.f': 11176, '.f95': 652, '.f03': 72, '.cxx': 136}
+# {'.cpp': 12381, '.c': 19784, '.f90': 4352, '.h': 933, '.cc': 513, '.f': 1528, '.f95': 279, '.f03': 10, '.cxx': 69}

@@ -31,7 +31,7 @@ def scan_file(root, filename):
 			l = line.lower()
 			
 			if is_for(l):
-				log('loops.txt', l)
+				# log('loops.txt', l)
 				loop_amount += 1
 
 	return loop_amount
@@ -54,8 +54,8 @@ def scan_dir(root_dir):
 	return total
 
 
-res = scan_dir("/home/talkad/Downloads/thesis/data_gathering_script/repositories_openMP")
-print(res)
+# res = scan_dir("/home/talkad/Downloads/thesis/data_gathering_script/repositories_openMP")
+# print(res)
 
-# c   222092
+# c   222092  ->  216258
 # cpp 289580
