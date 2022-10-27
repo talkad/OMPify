@@ -86,6 +86,9 @@ def update_code_pipline(code):
 
 
 def handle_error(err, code):
+    err_pattern = {'*': r'(\w+)\W*$',
+                    '=': r'^(\w+)'}
+
     match = re.search(r'.*:(\d+):(\d+): before: (.*)', err)
     code_buf = code.split('\n')
 
@@ -93,13 +96,15 @@ def handle_error(err, code):
         return
     
     line, pos, param = int(match.group(1)), int(match.group(2)), match.group(3)
+    sub_line = code_buf[line-1][: pos-1]
 
-    if param[-1] == '*':
-        match = re.search(r'(\w+)\W*$', code_buf[line-1][: pos-1])
+    if param[-1] in err_pattern:
+        match = re.search(err_pattern[param[-1]], sub_line)
 
         if match is not None:
             log('typedefs.h', f'typedef int {match.group(1)};')
             return match.group(1)
+
         
 
 
@@ -145,7 +150,7 @@ class CLoopParser(Parser):
         fake.create_empty_headers(file_path, dest_folder)
         cpp_args.append(r'-I' + dest_folder)
 
-        for header in list(headers)[:150]:
+        for header in list(headers)[:100]:
             cpp_args.append(r'-I' + os.path.join(vars['REPOS_DIR'], repo_name, header))
 
         try:
