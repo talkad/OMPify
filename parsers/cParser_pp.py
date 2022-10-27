@@ -19,10 +19,88 @@ missed_loops = 0
 missed_pragmas_header = 0
 missed_pragmas_type = 0
 
+redundant_ompts = re.compile("<ompts:testdescription>.*<\/ompts:testdescription>|<ompts:ompversion>.*<\/ompts:ompversion>|<ompts:directive>.*<\/ompts:directive>|<ompts:dependences>.*<\/ompts:dependences>|<ompts:.*?>|<\/ompts:.*>")
+
+
 
 def log(file_name, msg):
     with open(file_name, 'a') as f:
         f.write(f'{msg}\n')
+
+
+def remove_namespace(code):
+    code_buf = []
+
+    for line in code.split('\n'):
+        l = line.lower().split()
+
+        if len(l) > 2 and l[0] == 'using' and l[1] == 'namespace':
+            continue
+
+        code_buf.append(line)
+
+    return '\n'.join(code_buf)
+
+
+def remove_paren(code):
+    flag = False
+    num_paren = 0
+    idx = 0
+
+    for letter in code:
+        if flag and num_paren == 0:
+            return code[idx: ]
+
+        if letter == '(':
+            flag = True
+            num_paren += 1
+        elif letter == ')':
+            num_paren -= 1
+
+        idx += 1
+
+    return ''
+
+
+def remove_attribute(code):
+    splitted_code = code.split('__attribute__')
+    
+    if len(splitted_code) == 1:
+        return code
+
+    updated_code = list(map(lambda code: remove_paren(code), splitted_code[1:]))
+
+    return ''.join(list(splitted_code[0]) + updated_code)
+
+
+def remove_ompt(code):
+    return redundant_ompts.sub("", code)
+
+
+def update_code_pipline(code):
+    code = remove_namespace(code)
+    code = remove_attribute(code)
+    code = remove_ompt(code)
+
+    return code
+
+
+def handle_error(err, code):
+    match = re.search(r'.*:(\d+):(\d+): before: (.*)', err)
+    code_buf = code.split('\n')
+
+    if match is None:
+        return
+    
+    line, pos, param = int(match.group(1)), int(match.group(2)), match.group(3)
+
+    if param[-1] == '*':
+        match = re.search(r'(\w+)\W*$', code_buf[line-1][: pos-1])
+
+        if match is not None:
+            log('typedefs.h', f'typedef int {match.group(1)};')
+            return match.group(1)
+        
 
 
 class CLoopParser(Parser):
@@ -73,6 +151,7 @@ class CLoopParser(Parser):
         try:
             with tempfile.NamedTemporaryFile(suffix='.c', mode='w+') as tmp, open(file_path, 'r') as f:    
                 code = f.read() 
+                code = update_code_pipline(code)    # remove unparsable code
                 tmp.write(code)
                 tmp.seek(0)
                 ast = pycparser.parse_file(tmp.name, use_cpp=True, cpp_path='mpicc', cpp_args = cpp_args)
@@ -81,6 +160,9 @@ class CLoopParser(Parser):
         except pycparser.plyparser.ParseError as e:  
             log('error_logger.txt', f'Parser Error: {file_path} ->\n {e}\n')
             result['missed_type'] = utils.count_for(file_path)
+            typedef = handle_error(str(e), code)
+            log('error_type.txt', f'{file_path} ->\n {e} -> {typedef}\n')
+
 
         except Exception as e:
             log('error_logger.txt', f'Unexpected Error: {file_path} ->\n {e}\n')
@@ -213,8 +295,8 @@ class CLoopParser(Parser):
         return total_pos, total_neg, exclusions, total_files, num_failed
 
 
-parser = CLoopParser('../repositories_openMP', '../c_loops')
-# parser = CLoopParser('../asd', 'c_loops2')
+# parser = CLoopParser('../repositories_openMP', '../c_loops')
+parser = CLoopParser('../asd', 'c_loops2')
 
 # data = parser.load('/home/talkad/Downloads/thesis/data_gathering_script/c_loops/357r4bd/2d-heat/src/openmp-2dheat_pos_0.pickle')
 # print(f'pragma: {data.omp_pragma}')
