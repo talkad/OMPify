@@ -19,8 +19,6 @@ def is_for(line):
 	return sub_line.startswith('for') and sub_line[3:].lstrip().startswith('(')
 
 
-
-
 def scan_file(root, filename):
 	loop_amount = 0
 
@@ -59,3 +57,4 @@ def scan_dir(root_dir):
 
 # c   222092  ->  216258
 # cpp 289580
+
