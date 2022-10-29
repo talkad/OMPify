@@ -11,9 +11,6 @@ with open('../ENV.json', 'r') as f:
 REPOS_DIR = vars['REPOS_DIR']
 REPOS_OMP_DIR = vars['REPOS_OMP_DIR']
 FAKE_DIR = vars['FAKE_DIR']
-FAKE_DEFINES  = '_fake_defines.h'
-FAKE_TYPEDEFS = '_fake_typedefs.h'
-FAKE_INCLUDE  = f'#include \"{FAKE_DEFINES}\"\n#include \"{FAKE_TYPEDEFS}\"\n'
 
 
 def get_headers(repo_dir, repo_name):
@@ -108,25 +105,6 @@ def get_repo_directives(repo_name):
     return  typedef_set
 
 
-def extract_typedef_directives(repo_name, fake_header_path):
-    '''
-    Create fake header that contains typedefs (without duplicates - with respect to the fake_header.h that can be found in utils)
-
-    Parameters:
-        repo_name        - the repo the typedefs will be extracted from
-        fake_header_path - the path to the generated fake header
-    '''
-
-    general_typedefs = get_directives('path/to/file/utils')
-    current_typedefs = get_directives(repo_name)
-
-    with open(fake_header_path, 'w+') as typedef_file:
-        for typedef in current_typedefs:
-            if ')' not in typedef and '}' not in typedef and \
-                not typedef in general_typedefs:
-                typedef_file.write(f'typedef int {typedef};\n')
-
-
 def extract_includes(file_path):
     '''
     Extract all #include directive from given file
@@ -143,40 +121,6 @@ def extract_includes(file_path):
             includes.append(directive[3])
 
     return includes
-
-
-# def create_fake_header(header):
-#     '''
-#     Creates a header that contains only the fake includes
-#     '''
-#     path = os.path.join(FAKE_DIR, header) # check that
-#     dir_path = path[:path.rfind('/')]
-#     try:
-
-#         if not os.path.exists(dir_path):
-#             os.makedirs(dir_path)
-
-#         with open(path, 'w') as f:
-#             f.write(FAKE_INCLUDE)
-#     except:
-#         return
-
-
-# def create_not_exists_headers(repo_dir, repo_name):
-#     '''
-#     Create fake headers for headers that don't exist in the given repo
-#     '''
-#     paths, _, _ = get_headers(REPOS_DIR, repo_name)
-
-#     for root, dirs, files in os.walk(os.path.join(repo_dir, repo_name)):
-#         for file_name in files:
-#             ext = os.path.splitext(file_name)[1].lower()
-            
-#             if ext in ['.h', '.c']:
-#                 includes = extract_includes(os.path.join(root, file_name))
-#                 for include in includes:
-#                     # if all([False for path in paths if path.endswith('/' + include)]):
-#                     create_fake_header(include)
 
 
 def create_empty_header(header, dest_folder):
@@ -208,3 +152,13 @@ def create_empty_headers(file_path, dest_folder):
             create_empty_header(header, dest_folder)
 
 
+# def dups():
+#     typedefs = get_directives('/home/talkad/Downloads/thesis/data_gathering_script/new_typedef.h')
+#     original = get_directives('/home/talkad/Downloads/thesis/data_gathering_script/_fake_typedefs.h')
+
+#     with open('new_typedef2.h', 'w') as f:
+#         for typedef in typedefs:
+#             if typedef not in original:
+#                 f.write(f'typedef int {typedef};\n')
+
+# dups()
