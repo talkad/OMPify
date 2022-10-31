@@ -6,11 +6,16 @@ import itertools
 redundant_ompts = re.compile("<ompts:testdescription>.*<\/ompts:testdescription>|<ompts:description>.*<\/ompts:description>|<ompts:version>.*<\/ompts:version>|<ompts:ompversion>.*<\/ompts:ompversion>|<ompts:directive>.*<\/ompts:directive>|<ompts:dependences>.*<\/ompts:dependences>|<ompts:.*?>|<\/ompts:.*>")
 redundant_directives = re.compile("MAYBE_INLINE|TM_CALLABLE|__block|RESTRICT|__targetConst__|__targetHost__| __ |CC_CACHE_ALIGN")
 redundant_includes = re.compile("^\W*#\W*include\W* <\.\..*|^\W*#\W*include\W* \"\.\..*", re.MULTILINE)
-
 redundant_defines = re.compile("^\W*#\W*define\W* INIT().*", re.MULTILINE)
+redundant_comments = re.compile("\/\/.*|\/\*.*\*\/")
 
 if_directive = re.compile("^\W*#\W*if\W(.*)|^\W*#\W*elif\W(.*)", re.MULTILINE)
 ifdef_directive = re.compile("^\W*#\W*ifdef\W(.*)|^\W*#\W*ifndef\W(.*)", re.MULTILINE)
+
+
+def log(file_name, msg):
+    with open(file_name, 'a') as f:
+        f.write(f'{msg}\n')
 
 
 def is_for(line):
@@ -21,13 +26,16 @@ def is_for(line):
 	return sub_line.startswith('for') and sub_line[3:].lstrip().startswith('(')
 
 
-def is_for_pragma(line):
+def is_for_pragma(line, lang='c'):
 	'''
 	Return true if the given line is for-pragma
 	'''
 	sub_line = line.lstrip() # remove redundant white spaces
 
-	return (sub_line.startswith('#pragma ') and ' omp ' in line and ' for' in line)
+    if lang == 'c':
+	    return (sub_line.startswith('#pragma ') and ' omp ' in line and ' for' in line)
+    
+    return sub_line.startswith('!$omp ') and ' do' in line and ' end' not in line
 
 
 def count_for(file_path):
@@ -110,7 +118,7 @@ def remove_ompt(code):
     code = redundant_includes.sub("", code)
     code = redundant_directives.sub(" ", code)
     code = redundant_defines.sub("\n#define INIT()\n", code)
-    
+
     return redundant_ompts.sub("", code)
 
 
@@ -131,8 +139,19 @@ def is_if_directive(line):
 	Returns true if the line is compiler-directive condition
     There are 19879 if-directives
 	'''
-	sub_line = line.lstrip().lower()
-	return sub_line.startswith("#if") or sub_line.startswith("#elif") or sub_line.startswith("#ifdef") or sub_line.startswith("#ifndef")
+	sub_line = line.strip().lower()
+	return (sub_line.startswith("#if") or sub_line.startswith("#elif") or sub_line.startswith("#ifdef") or sub_line.startswith("#ifndef")) \
+            and not sub_line.endswith("\\")
+
+
+def remove_comment(line):
+    '''
+    Given a line of code, return a line without a comment (if exists)
+
+    Precondition:
+        line is compiler-condition ("#if"...)
+    '''
+    return redundant_comments.sub("", line)
 
 
 def update_if_directive(line, stat):
@@ -146,17 +165,17 @@ def update_if_directive(line, stat):
 
     if match is not None:
         if '#elif' in line:
-            return f'#elif !({match.group(2)})'
+            return f'#elif !({remove_comment(match.group(2))})'
         else:
-            return f'#if !({match.group(1)})'
+            return f'#if !({remove_comment(match.group(1))})'
 
     match = re.search(ifdef_directive, line)
 
     if match is not None:
         if '#ifdef' in line:
-            return f'#ifndef {match.group(1)}'
+            return f'#ifndef {remove_comment(match.group(1))}'
         else:
-            return f'#ifdef {match.group(2)}'
+            return f'#ifdef {remove_comment(match.group(2))}'
 
     return line
 
@@ -188,46 +207,25 @@ def get_if_permutations(code):
     return code_permutations
 
 
-    
-
 # code = """
-# #define AA 5
+# #include <stdio.h>
+# #include <omp.h>
 
-# #ifdef BB
+# #include "../utilities/check.h" 
 
-# #if (AA==1)
+# #include "../utilities/utilities.h"
 
-# int main(){
-#     int sum = 0;
-#     for(int i=0; i<10;++i)
-#         sum += i;
+# // enable tests
+# #if FULL      0
+# #ifdef FULL_ZERO 1  /* use zero ptrs */
+# #define FULL_S    0  /* need struct support */
+# #elif OFFSET    0     // asdasddsa
+# #define OFFSET_S  0  /* need struct support */
 
-#     printf(sum);
-# }
-# #elif (AA==2)
-
-# int main(){
-#     int sum = 0;
-#     #pragma omp for
-#     for(int i=0; i<10;++i)
-#         sum += i;
-
-#     printf(sum);
-# }
-# #else 
-# int main(){
-#     int sum = 0;
-#     for(int i=0; i<10;++i)
-#     {
-
-#     }
-
-#     printf(sum);
-# }
-
-
-# #endif
+# #define N (992)
 
 # """
 
-# get_if_permutations(code)
+# permutations = get_if_permutations(code)
+# for permutation in permutations:
+#     print(f'{permutation}\n==========\n')

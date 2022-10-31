@@ -2,6 +2,7 @@ import os
 import re
 from enum import Enum
 from parsers.parser import Parser
+from parsers.parsing_utils import utils
 from parsers.visitors import *
 import pycparser
 from pycparser.c_parser import CParser
@@ -13,14 +14,13 @@ import tempfile
 
 LINE_COMMENT_RE = re.compile("//.*?\n")
 MULTILINE_COMMENT_RE = re.compile("/\*.*?\*/", re.DOTALL)
-
 DIRECTIVES_RE = re.compile("^\s*#(ifdef|ifndef|if|elif|else|endif).*$", re.MULTILINE)
 
-def log(file_name, msg):
-    with open(file_name, 'a') as f:
-        f.write(f'{msg}\n')
 
 def convert(match_obj):
+    '''
+    regular expression costum conversion
+    '''
     num_groups = len(match_obj.groups())
     return match_obj.group(num_groups)
 
@@ -43,17 +43,6 @@ class LoopExtractor:
         self.loops = []
         self.omp_pragmas = []
 
-    def is_for_pragma(self, line):
-        '''
-        Returns true if the given line is an OMP pragma
-
-        Parameters:
-            line (str) - a single line from source coded 
-        '''
-        sub_line = line.lstrip() # remove redundant white spaces
-
-        return sub_line.startswith('#pragma ') and ' omp' in line and ' for' in line
-
     def skip_lines(self, code):
         '''
         skip lines that are not part of a for loop
@@ -62,14 +51,13 @@ class LoopExtractor:
         code_lines = code.split('\n')
 
         for idx, line in enumerate(code_lines):
-            if self.is_for_pragma(line):
+            if utils.is_for_pragma(line):
                 pragma =  line
             elif line.lstrip().startswith('for'):
                 code = '\n'.join(code_lines[idx:])
                 return code, pragma
 
         return '', None
-
 
     def extract_loops(self, code):
         '''
@@ -137,6 +125,7 @@ class LoopExtractor:
 
             code = code[idx + 1:]
 
+
 class CppLoopParser(Parser):
     def __init__(self, repo_path, parsed_path):
         super().__init__(repo_path, parsed_path, ['.cpp'])
@@ -177,11 +166,9 @@ class CppLoopParser(Parser):
                 result['ast'] = ast.ext[-1].body.block_items[0]
 
         except pycparser.plyparser.ParseError as e:  
-            log('error_logger.txt', f'Parser Error: {file_path} ->\n {e}\n')
-            return
+            utils.log('error_logger.txt', f'Parser Error: {file_path} ->\n {e}\n')
         except Exception as e:  
-            # log('error_logger.txt', f'Unexpected Error: {file_path} ->\n {e}\n')
-            return   
+            utils.log('error_logger.txt', f'Unexpected Error: {file_path} ->\n {e}\n')
 
     def parse(self, file_path, code_buf):
         manager = Manager()
@@ -193,10 +180,7 @@ class CppLoopParser(Parser):
 
         if t.is_alive():
             t.terminate()
-            return
-        elif len(return_dict) == 0:
-            return
-        else:
+        elif 'ast' in return_dict:
             return return_dict['ast']
 
 
@@ -240,7 +224,7 @@ class CppLoopParser(Parser):
                     loop = self.parse(file_path, code)
 
                     if loop is None:
-                        log('fail.txt', f'file: {file_path}\nPragma: {pragmas[idx]}\n{extractor.loops[idx]}\n==========\n')
+                        # log('fail.txt', f'file: {file_path}\nPragma: {pragmas[idx]}\n{extractor.loops[idx]}\n==========\n')
                         continue
 
                 verify_loops.visit(loop)
@@ -273,40 +257,40 @@ class CppLoopParser(Parser):
 
             return pos, neg, True
 
-    def scan_dir(self):
+    # def scan_dir(self):
 
-        total_files, num_failed = 0, 0
-        total_pos, total_neg = 0, 0
-        omp_repo = os.path.join(self.root_dir, self.repo_path)
-        exclusions = {'bad_case': 0, 'empty': 0, 'duplicates': 0, 'func_calls':0}
+    #     total_files, num_failed = 0, 0
+    #     total_pos, total_neg = 0, 0
+    #     omp_repo = os.path.join(self.root_dir, self.repo_path)
+    #     exclusions = {'bad_case': 0, 'empty': 0, 'duplicates': 0, 'func_calls':0}
 
-        # iterate over repos
-        for idx, repo_name in enumerate(os.listdir(omp_repo)):
+    #     # iterate over repos
+    #     for idx, repo_name in enumerate(os.listdir(omp_repo)):
             
-            for root, dirs, files in os.walk(os.path.join(omp_repo, repo_name)):
-                for file_name in files:
-                    file_path = os.path.join(root, file_name)
-                    ext = os.path.splitext(file_name)[1].lower()
+    #         for root, dirs, files in os.walk(os.path.join(omp_repo, repo_name)):
+    #             for file_name in files:
+    #                 file_path = os.path.join(root, file_name)
+    #                 ext = os.path.splitext(file_name)[1].lower()
                     
-                    if ext in self.file_extensions:
-                        pos, neg, is_parsed = self.parse_file(root, file_name, exclusions)
+    #                 if ext in self.file_extensions:
+    #                     pos, neg, is_parsed = self.parse_file(root, file_name, exclusions)
 
-                        if pos is not None:
-                            total_pos += pos
-                            total_neg += neg
+    #                     if pos is not None:
+    #                         total_pos += pos
+    #                         total_neg += neg
 
-                        if not is_parsed:
-                            num_failed += 1
+    #                     if not is_parsed:
+    #                         num_failed += 1
 
-                        total_files += 1
+    #                     total_files += 1
 
-            if idx % (5) == 0:
-                log('success_logger.txt', "{:20}{:10}   |   {:20} {:10}\n\n".format("files processed: ", total_files, "failed to parse: ", num_failed))
-                print("{:20}{:10}   |   {:20} {:10}".format("files processed: ", total_files, "failed to parse: ", num_failed))
-                print("{:20}{:10}   |   {:20} {:10}".format("pos examples: ", total_pos, "neg examples: ", total_neg))
-                print(f'exclusions: {exclusions}\n')
+    #         if idx % (5) == 0:
+    #             log('success_logger.txt', "{:20}{:10}   |   {:20} {:10}\n\n".format("files processed: ", total_files, "failed to parse: ", num_failed))
+    #             print("{:20}{:10}   |   {:20} {:10}".format("files processed: ", total_files, "failed to parse: ", num_failed))
+    #             print("{:20}{:10}   |   {:20} {:10}".format("pos examples: ", total_pos, "neg examples: ", total_neg))
+    #             print(f'exclusions: {exclusions}\n')
 
-        return total_pos, total_neg, exclusions, total_files, num_failed
+    #     return total_pos, total_neg, exclusions, total_files, num_failed
 
 
 

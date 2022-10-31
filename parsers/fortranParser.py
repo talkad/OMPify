@@ -6,18 +6,8 @@ import fparser.two.Fortran2003 as FortranStructs
 from fparser.two.utils import NoMatchError
 from functools import reduce
 from threading import Thread
+import parsers.utils
 
-
-def is_for_pragma(line):
-    '''
-    Returns true if the given line is an OMP pragma
-
-    Parameters:
-        line (str) - a single line from source coded 
-    '''
-    sub_line = line.lstrip() # remove redundant white spaces
-
-    return sub_line.startswith('!$omp ') and ' do' in line and ' end' not in line
 
 def remove_empty_lines(code_buf):
     return reduce(lambda acc, cur: f'{acc}\n{cur}' if len(cur.lstrip()) > 0 else acc, code_buf.split('\n'))
@@ -114,7 +104,7 @@ class LoopExtractor:
 
         try:
             for sub in prog.children:
-                if type(sub) is FortranStructs.Comment and is_for_pragma(str(sub).lower()): 
+                if type(sub) is FortranStructs.Comment and utils.is_for_pragma(str(sub).lower(), 'f'): 
                     return str(sub).lower()
                 elif not self.is_leaf(sub):
                     self.get_pragma(sub)
@@ -145,7 +135,7 @@ class LoopExtractor:
             return 
 
         for sub in children:
-            if type(sub) is FortranStructs.Comment and is_for_pragma(str(sub).lower()):
+            if type(sub) is FortranStructs.Comment and utils.is_for_pragma(str(sub).lower(), 'f'):
                 self.pragma = str(sub)
             elif (type(sub) is FortranStructs.Block_Label_Do_Construct or type(sub) is FortranStructs.Block_Nonlabel_Do_Construct) \
                     and not is_do_while(sub):   # classified as do loop by the parser

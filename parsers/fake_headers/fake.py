@@ -4,8 +4,8 @@ import json
 import shutil
 from functools import reduce
 
-# remove these ..
-with open('../ENV.json', 'r') as f:
+
+with open('ENV.json', 'r') as f:
     vars = json.loads(f.read())
 
 REPOS_DIR = vars['REPOS_DIR']
@@ -150,15 +150,3 @@ def create_empty_headers(file_path, dest_folder):
     for header in headers:
         if '..' not in header:
             create_empty_header(header, dest_folder)
-
-
-# def dups():
-#     typedefs = get_directives('/home/talkad/Downloads/thesis/data_gathering_script/new_typedef.h')
-#     original = get_directives('/home/talkad/Downloads/thesis/data_gathering_script/_fake_typedefs.h')
-
-#     with open('new_typedef2.h', 'w') as f:
-#         for typedef in typedefs:
-#             if typedef not in original:
-#                 f.write(f'typedef int {typedef};\n')
-
-# dups()
