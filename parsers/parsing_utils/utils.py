@@ -4,10 +4,13 @@ import itertools
 
 
 redundant_ompts = re.compile("<ompts:testdescription>.*<\/ompts:testdescription>|<ompts:description>.*<\/ompts:description>|<ompts:version>.*<\/ompts:version>|<ompts:ompversion>.*<\/ompts:ompversion>|<ompts:directive>.*<\/ompts:directive>|<ompts:dependences>.*<\/ompts:dependences>|<ompts:.*?>|<\/ompts:.*>")
-redundant_directives = re.compile("MAYBE_INLINE|TM_CALLABLE|__block|RESTRICT|__targetConst__|__targetHost__")
+redundant_directives = re.compile("MAYBE_INLINE|TM_CALLABLE|__block|RESTRICT|__targetConst__|__targetHost__| __ |CC_CACHE_ALIGN")
+redundant_includes = re.compile("^\W*#\W*include\W* <\.\..*|^\W*#\W*include\W* \"\.\..*", re.MULTILINE)
 
-if_directive = re.compile("^\W*#\W*if\W(.*)|^\W*#\W*elif\W(.*)")
-ifdef_directive = re.compile("^\W*#\W*ifdef\W(.*)|^\W*#\W*ifndef\W(.*)")
+redundant_defines = re.compile("^\W*#\W*define\W* INIT().*", re.MULTILINE)
+
+if_directive = re.compile("^\W*#\W*if\W(.*)|^\W*#\W*elif\W(.*)", re.MULTILINE)
+ifdef_directive = re.compile("^\W*#\W*ifdef\W(.*)|^\W*#\W*ifndef\W(.*)", re.MULTILINE)
 
 
 def is_for(line):
@@ -91,13 +94,12 @@ def remove_paren(code):
 
 
 def remove_attribute(code):
-    splitted_code = code.split('__attribute__')
-    
+    splitted_code = re.split('__attribute__|__attribute', code)
+
     if len(splitted_code) == 1:
         return code
 
     updated_code = list(map(lambda code: remove_paren(code), splitted_code[1:]))
-
     return ''.join(list(splitted_code[0]) + updated_code)
 
 
@@ -105,17 +107,21 @@ def remove_ompt(code):
     '''
     Remove redundant compiler directives
     '''
-    code = redundant_directives.sub("", code)
+    code = redundant_includes.sub("", code)
+    code = redundant_directives.sub(" ", code)
+    code = redundant_defines.sub("\n#define INIT()\n", code)
+    
     return redundant_ompts.sub("", code)
 
 
 def update_code_pipline(code):
     FAKE_TYPEDEFS = '_fake_typedefs.h'
-    
+    FAKE_DEFINES = '_fake_defines.h'
+
     code = remove_redundants(code)
     code = remove_attribute(code)
     code = remove_ompt(code)
-    code = FAKE_INCLUDE  = f'#include \"{FAKE_TYPEDEFS}\"\n{code}'
+    code = f'#include \"{FAKE_TYPEDEFS}\"\n#include \"{FAKE_DEFINES}\"\n{code}'
 
     return code
 
@@ -183,7 +189,6 @@ def get_if_permutations(code):
 
 
     
-
 
 # code = """
 # #define AA 5

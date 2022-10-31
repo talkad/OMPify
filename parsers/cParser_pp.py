@@ -20,78 +20,10 @@ missed_loops = 0
 missed_pragmas_header = 0
 missed_pragmas_type = 0
 
-redundant_ompts = re.compile("<ompts:testdescription>.*<\/ompts:testdescription>|<ompts:description>.*<\/ompts:description>|<ompts:version>.*<\/ompts:version>|<ompts:ompversion>.*<\/ompts:ompversion>|<ompts:directive>.*<\/ompts:directive>|<ompts:dependences>.*<\/ompts:dependences>|<ompts:.*?>|<\/ompts:.*>")
-redundant_directives = re.compile("MAYBE_INLINE|TM_CALLABLE|__block|RESTRICT|__targetConst__|__targetHost__")
-
 
 def log(file_name, msg):
     with open(file_name, 'a') as f:
         f.write(f'{msg}\n')
-
-
-def remove_redundants(code):
-    '''
-    remove lines containing namespace or #error
-    '''
-    code_buf = []
-
-    for line in code.split('\n'):
-        l = line.lower().split()
-
-        if (len(l) > 2 and l[0] == 'using' and l[1] == 'namespace') or \
-        line.lstrip().startswith('#error'):
-            continue
-
-        code_buf.append(line)
-
-    return '\n'.join(code_buf)
-
-
-def remove_paren(code):
-    flag = False
-    num_paren = 0
-    idx = 0
-
-    for letter in code:
-        if flag and num_paren == 0:
-            return code[idx: ]
-
-        if letter == '(':
-            flag = True
-            num_paren += 1
-        elif letter == ')':
-            num_paren -= 1
-
-        idx += 1
-
-    return ''
-
-
-def remove_attribute(code):
-    splitted_code = code.split('__attribute__')
-    
-    if len(splitted_code) == 1:
-        return code
-
-    updated_code = list(map(lambda code: remove_paren(code), splitted_code[1:]))
-
-    return ''.join(list(splitted_code[0]) + updated_code)
-
-
-def remove_ompt(code):
-    code = redundant_directives.sub("", code)
-    return redundant_ompts.sub("", code)
-
-
-def update_code_pipline(code):
-    FAKE_TYPEDEFS = '_fake_typedefs.h'
-    
-    code = remove_redundants(code)
-    code = remove_attribute(code)
-    code = remove_ompt(code)
-    code = FAKE_INCLUDE  = f'#include \"{FAKE_TYPEDEFS}\"\n{code}'
-
-    return code
 
 
 def handle_error(err, code):
@@ -115,7 +47,7 @@ def handle_error(err, code):
         match = re.search(err_pattern[param], sub_line)
 
         if match is not None:
-            log('typedefs.h', f'typedef int {match.group(1)};')
+            # log('typedefs.h', f'typedef int {match.group(1)};')
             return match.group(1)
     # else:
         # code_segment = "\n".join(code_buf[line-2:line+1])
@@ -158,7 +90,6 @@ class CLoopParser(Parser):
         cpp_args = ['-nostdinc', '-w', '-E', r'-I' + vars["FAKE_DIR"]]
 
         _, headers, _ = fake.get_headers(vars['REPOS_DIR'], repo_name)
-        # log('headers.txt', str(fake.extract_includes(file_path)))
 
         # create empty headers
         os.makedirs(dest_folder)
@@ -171,7 +102,7 @@ class CLoopParser(Parser):
         try:
             with tempfile.NamedTemporaryFile(suffix='.c', mode='w+') as tmp, open(file_path, 'r') as f:    
                 code = f.read() 
-                code = update_code_pipline(code)    # remove unparsable code
+                code = utils.update_code_pipline(code)    # remove unparsable code
                 tmp.write(code)
                 tmp.seek(0)
                 ast = pycparser.parse_file(tmp.name, use_cpp=True, cpp_path='mpicc', cpp_args = cpp_args)
@@ -195,7 +126,7 @@ class CLoopParser(Parser):
     def parse(self, file_path, code_buf):
         # return_dict = dict()
         # self.create_ast(file_path, code_buf, return_dict)
-        log('files.txt', file_path)
+        # log('files.txt', file_path)
         manager = Manager()
         return_dict = manager.dict()
         t = Process(target=self.create_ast, args=(file_path, code_buf, return_dict), daemon=True)
@@ -343,8 +274,8 @@ print(total)
 # 12076 30709 {'bad_case': 6760, 'empty': 80, 'duplicates': 130848, 'func_calls': 18925} 19784 2378
 
 # fake headers
-# missed loops 30812, missed pragmas type 7321, missed pragmas header 278
-# 12574 32519 {'bad_case': 6914, 'empty': 89, 'duplicates': 135084, 'func_calls': 19930} 19784 2038
+# missed loops 28513, missed pragmas type 6595, missed pragmas header 396
+# 12851 33516 {'bad_case': 6988, 'empty': 91, 'duplicates': 135450, 'func_calls': 20660} 19784 1797
 
-# missed loops 28842, missed pragmas type 6758, missed pragmas header 309
-# 12776 33279 {'bad_case': 6982, 'empty': 90, 'duplicates': 135693, 'func_calls': 20522} 19784 1848
+# missed loops 23646, missed pragmas type 5806, missed pragmas header 78
+# 13411 35579 {'bad_case': 7119, 'empty': 94, 'duplicates': 136077, 'func_calls': 22131} 19784 1386

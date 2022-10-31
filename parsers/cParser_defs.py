@@ -41,7 +41,7 @@ def handle_error(err, code):
     param = param.strip()
 
     code_segment = "\n".join(code_buf[line-2:line+1])
-    # log('more_errors.txt', f'{err}\n{code_segment}\n =========================\n')
+    log('more_errors2.txt', f'{err}\n{code_segment}\n =========================\n')
 
     if param in err_pattern:
         match = re.search(err_pattern[param], sub_line)
@@ -124,7 +124,7 @@ class CLoopParser(Parser):
     def parse(self, file_path, code_buf):
         # return_dict = dict()
         # self.create_ast(file_path, code_buf, return_dict)
-        # log('files.txt', file_path)
+        log('files2.txt', file_path)
         manager = Manager()
         return_dict = manager.dict()
         t = Process(target=self.create_ast, args=(file_path, code_buf, return_dict), daemon=True)
@@ -173,10 +173,6 @@ class CLoopParser(Parser):
             asts = list(map(lambda code_permutation: self.parse(file_path, code_permutation), utils.get_if_permutations(code)))
 
             for ast in asts:
-                # generator = pycparser.c_generator.CGenerator()
-                # code = "\n".join(generator.visit(ast).split('\n')[-15:])
-
-                print(f'{code}\n===================\n')
                 if ast is None:                 # file parsing failed
                     continue
 
@@ -247,7 +243,7 @@ class CLoopParser(Parser):
                         total_files += 1
 
             if idx % (5) == 0:
-                # log('success_logger.txt', "{:20}{:10}   |   {:20} {:10}\n\n".format("files processed: ", total_files, "failed to parse: ", num_failed))
+                log('success_logger2.txt', "{:20}{:10}   |   {:20} {:10}\n\n".format("files processed: ", total_files, "failed to parse: ", num_failed))
                 print("{:20}{:10}   |   {:20} {:10}".format("files processed: ", total_files, "failed to parse: ", num_failed))
                 print("{:20}{:10}   |   {:20} {:10}".format("pos examples: ", total_pos, "neg examples: ", total_neg))
                 print(f'exclusions: {exclusions}\n')
@@ -259,8 +255,8 @@ class CLoopParser(Parser):
         return total_pos, total_neg, exclusions, total_files, num_failed
 
 
-# parser = CLoopParser('../repositories_openMP', '../c_loops')
-parser = CLoopParser('../asd', 'c_loops2')
+parser = CLoopParser('../repositories_openMP', '../c_loops2')
+# parser = CLoopParser('../asd', 'c_loops2')
 
 # data = parser.load('/home/talkad/Downloads/thesis/data_gathering_script/c_loops/357r4bd/2d-heat/src/openmp-2dheat_pos_0.pickle')
 # print(f'pragma: {data.omp_pragma}')
@@ -270,17 +266,3 @@ parser = CLoopParser('../asd', 'c_loops2')
 
 total = parser.scan_dir()
 print(total)
-
-# missed loops 43864, missed pragmas type 13114, missed pragmas header 275
-# 12024 30632 {'bad_case': 6203, 'empty': 77, 'duplicates': 125026, 'func_calls': 18881} 19784 3577
-
-# __attribute__, =, *
-# missed loops 37410, missed pragmas type 8415, missed pragmas header 280
-# 12076 30709 {'bad_case': 6760, 'empty': 80, 'duplicates': 130848, 'func_calls': 18925} 19784 2378
-
-# fake headers
-# missed loops 30812, missed pragmas type 7321, missed pragmas header 278
-# 12574 32519 {'bad_case': 6914, 'empty': 89, 'duplicates': 135084, 'func_calls': 19930} 19784 2038
-
-# missed loops 28842, missed pragmas type 6758, missed pragmas header 309
-# 12776 33279 {'bad_case': 6982, 'empty': 90, 'duplicates': 135693, 'func_calls': 20522} 19784 1848
