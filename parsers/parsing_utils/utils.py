@@ -27,14 +27,14 @@ def is_for(line):
 
 
 def is_for_pragma(line, lang='c'):
-	'''
-	Return true if the given line is for-pragma
-	'''
-	sub_line = line.lstrip() # remove redundant white spaces
+    '''
+    Return true if the given line is for-pragma
+    '''
+    sub_line = line.lstrip() # remove redundant white spaces
 
     if lang == 'c':
-	    return (sub_line.startswith('#pragma ') and ' omp ' in line and ' for' in line)
-    
+        return sub_line.startswith('#pragma ') and ' omp ' in line and ' for' in line
+
     return sub_line.startswith('!$omp ') and ' do' in line and ' end' not in line
 
 
@@ -60,7 +60,6 @@ def count_for(file_path):
                 pragma_amount += 1
 
     return loop_amount, pragma_amount
-
 
 
 def remove_redundants(code):
@@ -194,7 +193,7 @@ def get_if_permutations(code):
         return [code]
 
     if_idx = list(filter(lambda idx: is_if_directive(code_buf[idx]), range(len(code_buf))))[:limit]
-    bool_permutations = [list(i) for i in itertools.product([False, True], repeat=min(if_amount, limit))]
+    bool_permutations = [list(i) for i in itertools.product([True, False], repeat=min(if_amount, limit))]
     
     for permutation in bool_permutations:
         code_buf_copy = copy.deepcopy(code_buf)
@@ -206,26 +205,3 @@ def get_if_permutations(code):
     
     return code_permutations
 
-
-# code = """
-# #include <stdio.h>
-# #include <omp.h>
-
-# #include "../utilities/check.h" 
-
-# #include "../utilities/utilities.h"
-
-# // enable tests
-# #if FULL      0
-# #ifdef FULL_ZERO 1  /* use zero ptrs */
-# #define FULL_S    0  /* need struct support */
-# #elif OFFSET    0     // asdasddsa
-# #define OFFSET_S  0  /* need struct support */
-
-# #define N (992)
-
-# """
-
-# permutations = get_if_permutations(code)
-# for permutation in permutations:
-#     print(f'{permutation}\n==========\n')

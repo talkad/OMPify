@@ -6,7 +6,7 @@ import fparser.two.Fortran2003 as FortranStructs
 from fparser.two.utils import NoMatchError
 from functools import reduce
 from threading import Thread
-import parsers.utils
+from parsers.parsing_utils import utils
 
 
 def remove_empty_lines(code_buf):

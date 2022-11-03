@@ -105,12 +105,13 @@ class CLoopParser(Parser):
                 result['ast'] = ast
 
         except pycparser.plyparser.ParseError as e:  
-            utils.log('error_logger.txt', f'Parser Error: {file_path} ->\n {e}\n')
+            # utils.log('error_logger.txt', f'Parser Error: {file_path} ->\n {e}\n')
             # result['missed_type'] = utils.count_for(file_path)
             handle_error(str(e), code)
 
         except Exception as e:
-            utils.log('error_logger.txt', f'Unexpected Error: {file_path} ->\n {e}\n')
+            pass
+            # utils.log('error_logger.txt', f'Unexpected Error: {file_path} ->\n {e}\n')
             # result['missed_header'] = utils.count_for(file_path)
 
             # if str(e).startswith('Command'): # Capture failures caused by missing headers
@@ -167,7 +168,7 @@ class CLoopParser(Parser):
             code = utils.update_code_pipline(code)    # remove unparsable code
             asts = list(map(lambda code_permutation: self.parse(file_path, code_permutation), utils.get_if_permutations(code)))
 
-            for ast in asts:
+            for copy_idx, ast in enumerate(asts):
                 if ast is None:                 # file parsing failed
                     return 0, 0, False
 
@@ -202,7 +203,7 @@ class CLoopParser(Parser):
                     # print(f'\n{code}\n==============\n\n')                   
                     self.create_directory(save_dir) 
                     self.memory.append(code)
-                    self.save(os.path.join(save_dir, f"{name}{'_neg_' if pragma is None else '_pos_'}{idx}.pickle"), pragma, loop, code)
+                    self.save(os.path.join(save_dir, f"{name}{'_neg_' if pragma is None else '_pos_'}{idx}_{copy_idx}.pickle"), pragma, loop, code)
 
                     if pragma is None:
                         neg += 1
@@ -238,19 +239,19 @@ class CLoopParser(Parser):
     #                     total_files += 1
 
     #         if idx % (5) == 0:
-    #             log('success_logger.txt', "{:20}{:10}   |   {:20} {:10}\n\n".format("files processed: ", total_files, "failed to parse: ", num_failed))
+    #             utils.log('success_logger.txt', "{:20}{:10}   |   {:20} {:10}\n\n".format("files processed: ", total_files, "failed to parse: ", num_failed))
     #             print("{:20}{:10}   |   {:20} {:10}".format("files processed: ", total_files, "failed to parse: ", num_failed))
     #             print("{:20}{:10}   |   {:20} {:10}".format("pos examples: ", total_pos, "neg examples: ", total_neg))
     #             print(f'exclusions: {exclusions}\n')
 
-    #             print(f'missed loops {missed_loops}, missed pragmas type {missed_pragmas_type}, missed pragmas header {missed_pragmas_header}')
+    #             # print(f'missed loops {missed_loops}, missed pragmas type {missed_pragmas_type}, missed pragmas header {missed_pragmas_header}')
 
-    #     print(f'missed loops {missed_loops}, missed pragmas type {missed_pragmas_type}, missed pragmas header {missed_pragmas_header}')
+    #     # print(f'missed loops {missed_loops}, missed pragmas type {missed_pragmas_type}, missed pragmas header {missed_pragmas_header}')
     #     print(total_pos, total_neg, exclusions, total_files, num_failed)
     #     return total_pos, total_neg, exclusions, total_files, num_failed
 
 
-parser = CLoopParser('../repositories_openMP', '../c_loops')
+# parser = CLoopParser('../repositories_openMP', '../c_loops')
 # parser = CLoopParser('../asd', 'c_loops2')
 
 # data = parser.load('/home/talkad/Downloads/thesis/data_gathering_script/c_loops/357r4bd/2d-heat/src/openmp-2dheat_pos_0.pickle')
@@ -259,8 +260,8 @@ parser = CLoopParser('../repositories_openMP', '../c_loops')
 # print(data.textual_loop)
 
 
-total = parser.scan_dir()
-print(total)
+# total = parser.scan_dir()
+# print(total)
 
 # missed loops 43864, missed pragmas type 13114, missed pragmas header 275
 # 12024 30632 {'bad_case': 6203, 'empty': 77, 'duplicates': 125026, 'func_calls': 18881} 19784 3577
@@ -272,3 +273,6 @@ print(total)
 # fake headers
 # missed loops 20678, missed pragmas type 5302, missed pragmas header 76
 # 13581 36060 {'bad_case': 7161, 'empty': 92, 'duplicates': 138525, 'func_calls': 22459} 19784 1249
+
+# pos examples:            13893   |   neg examples:             37521
+# exclusions: {'bad_case': 1261656, 'empty': 2779, 'duplicates': 25767368, 'func_calls': 23763}
