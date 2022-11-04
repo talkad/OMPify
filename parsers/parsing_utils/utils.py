@@ -183,7 +183,7 @@ def get_if_permutations(code):
     '''
     for a given code segment return all possible permutations for conditions 
     '''
-    limit = 6 # 2**6 = 64 permutations
+    limit = 7 # 2**7 = 128 permutations
 
     code_permutations = []
     code_buf = code.split('\n')

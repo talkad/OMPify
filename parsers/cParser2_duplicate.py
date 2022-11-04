@@ -1,21 +1,24 @@
 import os
 import re
 from enum import Enum
-from parsers.parser import Parser
-from parsers.parsing_utils import utils
-from parsers.visitors import *
+from parser import Parser
+from parsing_utils import utils
+from visitors import *
 import pycparser
 from pycparser.c_parser import CParser
 from pycparser.c_ast import For, Pragma
 from multiprocessing import Process, Manager
-from parsers.fake_headers import fake
+from fake_headers import fake
 import json
 import tempfile
+import shutil
 
+
+dest_folder = 'a_folder'
 
 LINE_COMMENT_RE = re.compile("//.*?\n")
 MULTILINE_COMMENT_RE = re.compile("/\*.*?\*/", re.DOTALL)
-DIRECTIVES_RE = re.compile("^\s*#(ifdef|ifndef|if|elif|else|endif).*$", re.MULTILINE)
+DIRECTIVES_RE = re.compile("^\W*#(ifdef|ifndef|if|elif|else|endif).*$", re.MULTILINE)
 
 
 def convert(match_obj):
@@ -129,7 +132,7 @@ class LoopExtractor:
 
 class CppLoopParser(Parser):
     def __init__(self, repo_path, parsed_path):
-        super().__init__(repo_path, parsed_path, ['.cpp'])
+        super().__init__(repo_path, parsed_path, ['.c'])
 
     def is_empty_loop(self, node):
         '''
@@ -152,23 +155,24 @@ class CppLoopParser(Parser):
             return False
 
     def create_ast(self, file_path, code_buf, result):
-        with open('ENV.json', 'r') as f:
+        with open('../ENV.json', 'r') as f:
             vars = json.loads(f.read())
 
-        cpp_args = ['-nostdinc', '-w', '-E', r'-I' + vars["FAKE_DIR_CPP"]]
+        cpp_args = ['-nostdinc', '-w', '-E', r'-I' + vars["FAKE_DIR"]]
 
         try:
             with tempfile.NamedTemporaryFile(suffix='.c', mode='w+') as tmp:    
-                code_buf = '#include \"_fake_typedefs_cpp.h\"\n\n' + 'int main() {\n' + code_buf + '\n}'
+                code_buf = '#include \"_fake_typedefs.h\"\n\n' + 'int main() {\n' + code_buf + '\n}'
                 tmp.write(code_buf)
                 tmp.seek(0)
                 ast = pycparser.parse_file(tmp.name, use_cpp=True, cpp_path='mpicc', cpp_args = cpp_args)
                 result['ast'] = ast.ext[-1].body.block_items[0]
 
-        except pycparser.plyparser.ParseError as e:  
-            utils.log('error_logger.txt', f'Parser Error: {file_path} ->\n {e}\n')
+        # except pycparser.plyparser.ParseError as e:  
+        #     utils.log('error_logger.txt', f'Parser Error: {file_path} ->\n {e}\n')
         except Exception as e:  
-            utils.log('error_logger.txt', f'Unexpected Error: {file_path} ->\n {e}\n')
+            pass
+            # utils.log('error_logger.txt', f'Unexpected Error: {file_path} ->\n {e}\n')
 
     def parse(self, file_path, code_buf):
         manager = Manager()
@@ -235,6 +239,9 @@ class CppLoopParser(Parser):
                 generator = pycparser.c_generator.CGenerator()
                 code = generator.visit(loop)
                 if code in self.memory:
+                    if pragma is not None:
+                        exclusions['duplicates_pragma'] += 1
+
                     exclusions['duplicates'] += 1
                     continue
 
@@ -246,9 +253,9 @@ class CppLoopParser(Parser):
                 if func_call_checker.found:
                     exclusions['func_calls'] += 1
                                    
-                self.create_directory(save_dir) 
+                # self.create_directory(save_dir) 
                 self.memory.append(code)
-                self.save(os.path.join(save_dir, f"{name}{'_neg_' if pragma is None else '_pos_'}{idx}.pickle"), pragma, loop, code)
+                # self.save(os.path.join(save_dir, f"{name}{'_neg_' if pragma is None else '_pos_'}{idx}.pickle"), pragma, loop, code)
 
                 if pragma is None:
                     neg += 1
@@ -257,45 +264,45 @@ class CppLoopParser(Parser):
 
             return pos, neg, True
 
-    # def scan_dir(self):
+    def scan_dir(self):
 
-    #     total_files, num_failed = 0, 0
-    #     total_pos, total_neg = 0, 0
-    #     omp_repo = os.path.join(self.root_dir, self.repo_path)
-    #     exclusions = {'bad_case': 0, 'empty': 0, 'duplicates': 0, 'func_calls':0}
+        total_files, num_failed = 0, 0
+        total_pos, total_neg = 0, 0
+        omp_repo = os.path.join(self.root_dir, self.repo_path)
+        exclusions = {'bad_case': 0, 'empty': 0, 'duplicates': 0, 'duplicates_pragma': 0, 'func_calls':0}
 
-    #     # iterate over repos
-    #     for idx, repo_name in enumerate(os.listdir(omp_repo)):
+        # iterate over repos
+        for idx, repo_name in enumerate(os.listdir(omp_repo)):
             
-    #         for root, dirs, files in os.walk(os.path.join(omp_repo, repo_name)):
-    #             for file_name in files:
-    #                 file_path = os.path.join(root, file_name)
-    #                 ext = os.path.splitext(file_name)[1].lower()
+            for root, dirs, files in os.walk(os.path.join(omp_repo, repo_name)):
+                for file_name in files:
+                    file_path = os.path.join(root, file_name)
+                    ext = os.path.splitext(file_name)[1].lower()
                     
-    #                 if ext in self.file_extensions:
-    #                     pos, neg, is_parsed = self.parse_file(root, file_name, exclusions)
+                    if ext in self.file_extensions:
+                        pos, neg, is_parsed = self.parse_file(root, file_name, exclusions)
 
-    #                     if pos is not None:
-    #                         total_pos += pos
-    #                         total_neg += neg
+                        if pos is not None:
+                            total_pos += pos
+                            total_neg += neg
 
-    #                     if not is_parsed:
-    #                         num_failed += 1
+                        if not is_parsed:
+                            num_failed += 1
 
-    #                     total_files += 1
+                        total_files += 1
 
-    #         if idx % (5) == 0:
-    #             log('success_logger.txt', "{:20}{:10}   |   {:20} {:10}\n\n".format("files processed: ", total_files, "failed to parse: ", num_failed))
-    #             print("{:20}{:10}   |   {:20} {:10}".format("files processed: ", total_files, "failed to parse: ", num_failed))
-    #             print("{:20}{:10}   |   {:20} {:10}".format("pos examples: ", total_pos, "neg examples: ", total_neg))
-    #             print(f'exclusions: {exclusions}\n')
+            if idx % (5) == 0:
+                # log('success_logger.txt', "{:20}{:10}   |   {:20} {:10}\n\n".format("files processed: ", total_files, "failed to parse: ", num_failed))
+                print("{:20}{:10}   |   {:20} {:10}".format("files processed: ", total_files, "failed to parse: ", num_failed))
+                print("{:20}{:10}   |   {:20} {:10}".format("pos examples: ", total_pos, "neg examples: ", total_neg))
+                print(f'exclusions: {exclusions}\n')
 
-    #     return total_pos, total_neg, exclusions, total_files, num_failed
-
-
+        return total_pos, total_neg, exclusions, total_files, num_failed
 
 
-# parser = CppLoopParser('../repositories_openMP', '../cpp_loops')
+
+
+parser = CppLoopParser('../repositories_openMP', '../cpp_loops')
 # parser = CppLoopParser('../asd', 'c_loops2')
 
 # data = parser.load('/home/talkad/Downloads/thesis/data_gathering_script/cpp_loops/0scari/Parralel-programmin-pratice/p5/ompbase_neg_0.pickle')
@@ -303,13 +310,8 @@ class CppLoopParser(Parser):
 # print('code:\n')
 # print(data.textual_loop)
 
-# total = parser.scan_dir()
-# print(total)
+total = parser.scan_dir()
+print(total)
 
-# removing compiler directives
-# aaaaa 39233 284367
-# (8095, 30294, {'bad_case': 2755, 'empty': 1692, 'duplicates': 202330, 'func_calls': 20416}, 14421, 248)
 
-#without...
-# pos examples:             8084   |   neg examples:             30281
-# exclusions: {'bad_case': 2752, 'empty': 1692, 'duplicates': 202302, 'func_calls': 20396}
+# (13668, 40891, {'bad_case': 5898, 'empty': 99, 'duplicates': 142783, 'duplicates_pragma': 45878, 'func_calls': 26379}, 19784, 0)
