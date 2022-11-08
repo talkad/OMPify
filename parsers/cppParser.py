@@ -166,9 +166,11 @@ class CppLoopParser(Parser):
                 result['ast'] = ast.ext[-1].body.block_items[0]
 
         except pycparser.plyparser.ParseError as e:  
-            utils.log('error_logger.txt', f'Parser Error: {file_path} ->\n {e}\n')
+            # utils.log('error_logger.txt', f'Parser Error: {file_path} ->\n {e}\n')
+            pass
         except Exception as e:  
-            utils.log('error_logger.txt', f'Unexpected Error: {file_path} ->\n {e}\n')
+            # utils.log('error_logger.txt', f'Unexpected Error: {file_path} ->\n {e}\n')
+            pass
 
     def parse(self, file_path, code_buf):
         manager = Manager()

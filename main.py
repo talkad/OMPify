@@ -1,6 +1,6 @@
 from optparse import OptionParser
 from git_clone import loader, extractor
-from parsers import cParser, cppParser, fortranParser
+from parsers import cParser2, cppParser, fortranParser
 from visualization import visualization
 from datetime import datetime
 import json
@@ -41,7 +41,7 @@ def parse(prog_lang):
 
     for lang in prog_lang[1:][:-1].lower().split('|'):
         if lang == 'c':
-            parser = cParser.CLoopParser('repositories_openMP', 'c_loops')
+            parser = cParser2.CLoopParser('repositories_openMP', 'c_loops')
         elif lang == 'cpp':
             parser = cppParser.CppLoopParser('repositories_openMP', 'cpp_loops')
         elif lang == 'fortran':

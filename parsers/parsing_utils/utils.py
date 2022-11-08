@@ -7,7 +7,7 @@ redundant_ompts = re.compile("<ompts:testdescription>.*<\/ompts:testdescription>
 redundant_directives = re.compile("MAYBE_INLINE|TM_CALLABLE|__block|RESTRICT|__targetConst__|__targetHost__| __ |CC_CACHE_ALIGN")
 redundant_includes = re.compile("^\W*#\W*include\W* <\.\..*|^\W*#\W*include\W* \"\.\..*", re.MULTILINE)
 redundant_defines = re.compile("^\W*#\W*define\W* INIT().*", re.MULTILINE)
-redundant_comments = re.compile("\/\/.*|\/\*.*\*\/")
+redundant_comments = re.compile("\/\/.*|\/\*.*\*\/", re.MULTILINE|re.DOTALL)
 
 if_directive = re.compile("^\W*#\W*if\W(.*)|^\W*#\W*elif\W(.*)", re.MULTILINE)
 ifdef_directive = re.compile("^\W*#\W*ifdef\W(.*)|^\W*#\W*ifndef\W(.*)", re.MULTILINE)
@@ -49,6 +49,8 @@ def count_for(file_path):
             code = f.read()
         except UnicodeDecodeError:
             return 0
+
+        code = redundant_comments.sub("\n", code)
 
         for line in code.split('\n'):
             l = line.lower()
@@ -183,7 +185,7 @@ def get_if_permutations(code):
     '''
     for a given code segment return all possible permutations for conditions 
     '''
-    limit = 7 # 2**7 = 128 permutations
+    limit = 10 # 2**10 = 1024 permutations
 
     code_permutations = []
     code_buf = code.split('\n')

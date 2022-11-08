@@ -99,11 +99,11 @@ class CLoopParser(Parser):
                 result['ast'] = ast
 
         except pycparser.plyparser.ParseError as e:  
-            # utils.log('error_logger.txt', f'Parser Error: {file_path} ->\n {e}\n')
+            utils.log('error_logger.txt', f'Parser Error: {file_path} ->\n {e}\n')
             handle_error(file_path, str(e), code)
 
         except Exception as e:
-            # utils.log('error_logger.txt', f'Unexpected Error: {file_path} ->\n {e}\n')
+            utils.log('error_logger.txt', f'Unexpected Error: {file_path} ->\n {e}\n')
             pass
 
         finally:
@@ -129,7 +129,11 @@ class CLoopParser(Parser):
         Parse the given file into ast and extract the loops associated with omp pargma (or without)
         '''
         pos, neg = 0, 0
+        error = 'missing pragmas'
         file_path = os.path.join(root_dir, file_name)
+        utils.log("files.txt", f'{file_path}')
+        _, pragma_amount = utils.count_for(file_path)
+        prgma_found = 0
         save_dir = os.path.join(self.parsed_path, root_dir[self.split_idx: ])
         name = os.path.splitext(file_name)[0]
 
@@ -142,6 +146,7 @@ class CLoopParser(Parser):
             try:
                 code = f.read()
             except UnicodeDecodeError:
+                utils.log("fail_pragma.txt", f'{file_path}\nUnicodeDecodeError\nfound {prgma_found} | there are {pragma_amount}\n===================')
                 return 0, 0, False
 
             code = utils.update_code_pipline(code)    # remove unparsable code
@@ -149,9 +154,12 @@ class CLoopParser(Parser):
 
             for copy_idx, ast in enumerate(asts):
                 if ast is None:                 # file parsing failed
-                    return 0, 0, False
+                    error = 'failed to parse'
+                    continue
+                    # return 0, 0, False
 
                 pfv.visit(ast)
+                prgma_found += len(pfv.pragmas)
                 pragmas = pfv.pragmas + len(pfv.neg_nodes) * [None]
                 nodes = pfv.pos_nodes + pfv.neg_nodes
 
@@ -159,13 +167,19 @@ class CLoopParser(Parser):
                     verify_loops.reset()
                     func_call_checker.reset()
 
+                    generator = pycparser.c_generator.CGenerator()
+                    code = generator.visit(loop)
+                    if code in self.memory and copy_idx > 0 and pragma is not None:
+                        prgma_found -= 1
+                        continue
+
                     verify_loops.visit(loop)
                     if verify_loops.found:  # undesired tokens found
                         exclusions['bad_case'] += 1
                         continue
                     
-                    generator = pycparser.c_generator.CGenerator()
-                    code = generator.visit(loop)
+                    # generator = pycparser.c_generator.CGenerator()
+                    # code = generator.visit(loop)
                     if code in self.memory:
                         exclusions['duplicates'] += 1
                         continue
@@ -187,9 +201,11 @@ class CLoopParser(Parser):
                     else:
                         pos += 1
 
+            if prgma_found < pragma_amount:
+                utils.log("fail_pragma.txt", f'{file_path}\n{error}\nfound {prgma_found} | there are {pragma_amount}\n===================')
+
             return pos, neg, True
 
+        
+
  
-# files processed:         19778   |   failed to parse:           1664
-# pos examples:            13893   |   neg examples:             37521
-# exclusions: {'bad_case': 1261656, 'empty': 2779, 'duplicates': 25767368, 'func_calls': 23763}
