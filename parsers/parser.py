@@ -1,17 +1,29 @@
 from abc import ABC, abstractmethod
+from pycparser import c_ast
 import os
+import json
 import pickle
- 
+from typing import Union
+
+
+class ASTs:
+    '''
+    Define a class that later will be dumped into pickle file
+    '''
+    def __init__(self, ast_loop, inner_functions):
+        self.ast_loop = ast_loop 
+        self.inner_functions = inner_functions
+
+
 class OmpLoop:
     '''
     Define a class that later will be dumped into pickle file
     '''
-    def __init__(self, omp_pragma, ast_loop, textual_loop):
-        self.omp_pragma = omp_pragma         # omp pragma associated with the given loop
-        self.ast_loop = ast_loop             # ast format representing AST structure of loop
-        self.textual_loop = textual_loop     # textual representation of code
-
-
+    def __init__(self, omp_pragma: Union[str, c_ast.Pragma], ast_loop: Union[None, c_ast.For], inner_functions: list, textual_loop: str):
+        self.omp_pragma = omp_pragma            # omp pragma associated with the given loop
+        self.ast_loop = ast_loop                # ast format representing AST structure of loop
+        self.textual_loop = textual_loop        # textual representation of code
+        self.inner_functions = inner_functions  # function AST struct. which called inside the given loop (type list[c_ast.FuncDef])
 
 
 class Parser(ABC):
@@ -20,6 +32,8 @@ class Parser(ABC):
     '''
 
     def __init__(self, repo_path, parsed_path, file_extensions):
+        self.data_indexer = 0
+        self.id2path = {}
         self.root_dir = os.getcwd()
         self.repo_path = repo_path
         self.parsed_path = parsed_path
@@ -34,21 +48,49 @@ class Parser(ABC):
         if not os.path.exists(dirs):
             os.makedirs(dirs)
 
-    def save(self, file_path, pragma, ast_loop, textual_loop):
+    def save(self, file_path: os.path, omp_loop: OmpLoop):
         '''
-        Save OmpLoop structure into file_path
-        '''
-        parsed_loop = OmpLoop(pragma, ast_loop, textual_loop)
+        Save OmpLoop structure into file_path:
+            textual file containing the code
+            pickle file containing the ast loop and the relevant func. declerations
+            pickle file contatining the pragma only if exists
 
-        with open(file_path, 'wb') as f:
-            pickle.dump(parsed_loop, f)
+        save unique_id for each example
+        '''
+        self.id2path[self.data_indexer] = file_path
+        self.data_indexer += 1
+
+        with open(os.path.join(file_path, 'ast.pickle'), 'wb') as f:
+            asts = ASTs(omp_loop.ast_loop, omp_loop.inner_functions)
+            pickle.dump(asts, f)
+
+        with open(os.path.join(file_path, f'code{self.file_extensions[0]}'), 'w') as f:
+            f.write(omp_loop.textual_loop)
+
+        if omp_loop.omp_pragma is not None:
+            with open(os.path.join(file_path, 'pragma.pickle'), 'wb') as f:
+                pickle.dump(omp_loop.omp_pragma, f)
+
 
     def load(self, file_path):
         '''
         Load OmpLoop structure from file_path
         '''
-        with open(file_path, 'rb') as f:
-            return pickle.load(f)
+        omp_pragma = None
+
+        with open(os.path.join(file_path, 'ast.pickle'), 'rb') as f:
+            asts = pickle.load(f)
+
+        with open(os.path.join(file_path, f'code.{self.file_extensions[0]}'), 'r') as f:
+            code = f.read()
+
+        try:
+            with open(os.path.join(file_path, 'pragma.pickle'), 'rb') as f:
+                omp_pragma = pickle.load(f)
+        except FileNotFoundError:
+            pass
+
+        return OmpLoop(omp_pragma, asts.ast_loop, asts.inner_functions, code)
 
     
     def join_splited_lines(self, code_buf, delimiter='\\'):
@@ -92,7 +134,6 @@ class Parser(ABC):
         Returns:
             Return the AST of a given code. None on failure
         '''
-
         pass
 
     @abstractmethod
@@ -146,6 +187,11 @@ class Parser(ABC):
                 print("{:20}{:10}   |   {:20} {:10}".format("files processed: ", total_files, "failed to parse: ", num_failed))
                 print("{:20}{:10}   |   {:20} {:10}".format("pos examples: ", total_pos, "neg examples: ", total_neg))
                 print(f'exclusions: {exclusions}\n')
+
+
+        # write ids into json
+        with open("sample.json", "w") as f:
+            json.dump(self.id2path, f)
 
         print("{:20}{:10}   |   {:20} {:10}".format("files processed: ", total_files, "failed to parse: ", num_failed))
         print("{:20}{:10}   |   {:20} {:10}".format("pos examples: ", total_pos, "neg examples: ", total_neg))

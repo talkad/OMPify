@@ -1,6 +1,7 @@
 import os
 import pycparser
 from parsers.parser import Parser
+from parsers.parser import OmpLoop
 from pycparser.c_ast import For
 import pickle
 from parsers.visitors import *
@@ -14,6 +15,7 @@ import tempfile
 import shutil
 
 
+
 dest_folder = 'temp_folder'
 
 
@@ -22,7 +24,7 @@ def handle_error(file_path, err, code):
     Extracts from a given error message the undefined type
     '''
     err_pattern = {'*': r'(\w+)\W*$',
-                    '=': r'^\W*(\w+)'}
+                   '=': r'^\W*(\w+)'}
 
     match = re.search(r'.*:(\d+):(\d+): before: (.*)', err)
     code_buf = code.split('\n')
@@ -41,11 +43,7 @@ def handle_error(file_path, err, code):
         match = re.search(err_pattern[param], sub_line)
 
         if match is not None:
-            # log('typedefs.h', f'typedef int {match.group(1)};')
             return match.group(1)
-    # else:
-        # code_segment = "\n".join(code_buf[line-2:line+1])
-        # log('more_errors.txt', f'{err}\n{code_segment}')
 
         
 class CLoopParser(Parser):
@@ -128,12 +126,15 @@ class CLoopParser(Parser):
         '''
         Parse the given file into ast and extract the loops associated with omp pargma (or without)
         '''
+        indexer = 0
         pos, neg = 0, 0
+        pragma_found = 0
+        count_no_pragma = 0
         error = 'missing pragmas'
+
         file_path = os.path.join(root_dir, file_name)
-        utils.log("files.txt", f'{file_path}')
+        log('files.txt', file_path)
         _, pragma_amount = utils.count_for(file_path)
-        prgma_found = 0
         save_dir = os.path.join(self.parsed_path, root_dir[self.split_idx: ])
         name = os.path.splitext(file_name)[0]
 
@@ -142,11 +143,10 @@ class CLoopParser(Parser):
         func_call_checker = FuncCallChecker()
 
         with open(file_path, 'r+') as f:
-            
             try:
                 code = f.read()
             except UnicodeDecodeError:
-                utils.log("fail_pragma.txt", f'{file_path}\nUnicodeDecodeError\nfound {prgma_found} | there are {pragma_amount}\n===================')
+                utils.log("fail_pragma.txt", f'{file_path}\nUnicodeDecodeError\nfound {pragma_found} | there are {pragma_amount}\n===================')
                 return 0, 0, False
 
             code = utils.update_code_pipline(code)    # remove unparsable code
@@ -156,10 +156,9 @@ class CLoopParser(Parser):
                 if ast is None:                 # file parsing failed
                     error = 'failed to parse'
                     continue
-                    # return 0, 0, False
 
                 pfv.visit(ast)
-                prgma_found += len(pfv.pragmas)
+                pragma_found += len(pfv.pragmas)
                 pragmas = pfv.pragmas + len(pfv.neg_nodes) * [None]
                 nodes = pfv.pos_nodes + pfv.neg_nodes
 
@@ -167,19 +166,25 @@ class CLoopParser(Parser):
                     verify_loops.reset()
                     func_call_checker.reset()
 
+                    # create unbiased dataset
+                    # if count_no_pragma > pragma_amount:
+                    #     continue
+
+                    # if pragma is None:
+                    #     count_no_pragma += 1
+
                     generator = pycparser.c_generator.CGenerator()
                     code = generator.visit(loop)
+
                     if code in self.memory and copy_idx > 0 and pragma is not None:
-                        prgma_found -= 1
+                        pragma_found -= 1
                         continue
 
                     verify_loops.visit(loop)
                     if verify_loops.found:  # undesired tokens found
                         exclusions['bad_case'] += 1
                         continue
-                    
-                    # generator = pycparser.c_generator.CGenerator()
-                    # code = generator.visit(loop)
+
                     if code in self.memory:
                         exclusions['duplicates'] += 1
                         continue
@@ -192,20 +197,30 @@ class CLoopParser(Parser):
                     if func_call_checker.found:
                         exclusions['func_calls'] += 1
                 
-                    self.create_directory(save_dir) 
+                    saving_path = os.path.join(save_dir, name, str(indexer))
+                    self.create_directory(saving_path) 
                     self.memory.append(code)
-                    self.save(os.path.join(save_dir, f"{name}{'_neg_' if pragma is None else '_pos_'}{idx}_{copy_idx}.pickle"), pragma, loop, code)
+
+                    self.save(saving_path, OmpLoop(pragma, loop, [], code))
+                    indexer += 1
 
                     if pragma is None:
                         neg += 1
                     else:
                         pos += 1
 
-            if prgma_found < pragma_amount:
-                utils.log("fail_pragma.txt", f'{file_path}\n{error}\nfound {prgma_found} | there are {pragma_amount}\n===================')
+            if pragma_found < pragma_amount:
+                utils.log("fail_pragma.txt", f'{file_path}\n{error}\nfound {pragma_found} | there are {pragma_amount}\n===================')
 
             return pos, neg, True
 
         
 
+# files processed:         19778   |   failed to parse:           1664
+# pos examples:            13893   |   neg examples:             37521
+# exclusions: {'bad_case': 1261656, 'empty': 2779, 'duplicates': 25767368, 'func_calls': 23763}
+
+
+# files processed:         19784   |   failed to parse:              0
+# pos examples:            14493   |   neg examples:             39590
  
