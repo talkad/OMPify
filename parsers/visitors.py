@@ -1,8 +1,10 @@
 from pycparser import parse_file, c_ast, c_generator
 
 
-#  Traverse the whole code and attempts to find an omp for pragma omp that afterwards there is a for loop
 class PragmaForVisitor(c_ast.NodeVisitor):
+    '''
+    Traverse the whole code and attempts to find an omp for pragma omp that afterwards there is a for loop
+    '''
     def __init__(self):
         self.pos_nodes = []
         self.neg_nodes = []
@@ -34,10 +36,10 @@ class PragmaForVisitor(c_ast.NodeVisitor):
         for c in node:
             self.visit(c)
 
-# Travels the node of a outer for-loop that has an openmp directive, and it if finds an atomic or critical inside - returns true!
+
 class ForLoopChecker(c_ast.NodeVisitor):
     """
-    Class that travels the node of a for loop that has an openmp directive to find an atomic
+    Travels the node of a outer for-loop that has an openmp directive, and it if finds an atomic or critical inside - returns true!
     """
     def __init__(self):
         self.found = False
@@ -52,17 +54,43 @@ class ForLoopChecker(c_ast.NodeVisitor):
             self.generic_visit(node)
 
 
-# Travels the node and define whether it contains func call in it
 class FuncCallChecker(c_ast.NodeVisitor):
     """
-    Class that travels the node of a for loop that has an openmp directive to find an atomic
+    Travels the node and define whether it contains func call in it
     """
     def __init__(self):
         self.found = False
+        self.func_calls = []
 
     def reset(self):
         self.found = False
 
     def visit_FuncCall(self, node):
         self.found = True
+        self.func_calls.append(node)
+
+
+class DepthVisitor(c_ast.NodeVisitor):
+    '''
+    Find the depth of AST
+    '''
+    def __init__(self):
+        self.curr_len = 0
+
+    def generic_visit(self, node):
+        self.curr_len += 1
+
+        for c in node:
+            self.visit(c)
+
+
+class FuncDefVisitor(c_ast.NodeVisitor):
+    '''
+    find all func. decl in node
+    '''
+    def __init__(self):
+        self.func_def = []
+
+    def visit_FuncDef(self, node):
+        self.func_def.append(node)
 
