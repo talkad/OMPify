@@ -3,6 +3,7 @@ from git_clone import loader, extractor
 from parsers import cParser, cppParser, fortranParser
 from visualization import visualization
 from datetime import datetime
+import os
 import json
 
 
@@ -33,19 +34,21 @@ def show_stats(omp_dir):
     visualization.show_stats(omp_dir)
 
 
-def parse(prog_lang):
+def parse(omp_dir, prog_lang):
     '''
     parse code into AST
     '''
     assert prog_lang.startswith('(') and prog_lang.endswith(')')
 
+    save_dir = '../../../LIGHTBITS_SHARE'
+
     for lang in prog_lang[1:][:-1].lower().split('|'):
         if lang == 'c':
-            parser = cParser.CLoopParser('repositories_openMP', '../../../LIGHTBITS_SHARE/c_loops')
+            parser = cParser.CLoopParser(omp_dir, os.path.join(save_dir, 'c_loops'))
         elif lang == 'cpp':
-            parser = cppParser.CppLoopParser('repositories_openMP', '../../../LIGHTBITS_SHARE/cpp_loops')
+            parser = cppParser.CppLoopParser(omp_dir, os.path.join(save_dir, 'cpp_loops'))
         elif lang == 'fortran':
-            parser = fortranParser.FortranLoopParser('repositories_openMP', '../../../LIGHTBITS_SHARE/fortran_loops')
+            parser = fortranParser.FortranLoopParser(omp_dir, os.path.join(save_dir, 'fortran_loops'))
         else: 
             continue
 
@@ -79,7 +82,7 @@ def main():
         show_stats(vars['REPOS_OMP_DIR'])
         
     if options.prog_lang is not None:
-        parse(options.prog_lang)
+        parse(vars['REPOS_OMP_DIR'], options.prog_lang)
 
 
 if __name__ == '__main__':

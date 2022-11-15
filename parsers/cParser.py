@@ -1,6 +1,6 @@
 import os
 import pycparser
-from parsers.parser import Parser
+from parsers.parser import *
 from parsers.parser import OmpLoop
 from pycparser.c_ast import For
 import pickle
@@ -74,7 +74,7 @@ class CLoopParser(Parser):
     def create_ast(self, file_path, code, result):
         with open('ENV.json', 'r') as f:
             vars = json.loads(f.read())
-
+        
         repo_name = file_path[len(self.repo_path + self.root_dir) + 2:]
         repo_name = repo_name[:repo_name.find('/') ]
         cpp_args = ['-nostdinc', '-w', '-E', r'-I' + vars["FAKE_DIR"]]
@@ -88,7 +88,7 @@ class CLoopParser(Parser):
 
         for header in list(headers)[:50]:
             cpp_args.append(r'-I' + os.path.join(vars['REPOS_DIR'], repo_name, header))
-
+        
         try:
             with tempfile.NamedTemporaryFile(suffix='.c', mode='w+') as tmp:    
                 tmp.write(code)
@@ -117,10 +117,19 @@ class CLoopParser(Parser):
 
         if t.is_alive():
             t.terminate()
-            shutil.rmtree(dest_folder)
-            return
+            try:
+                shutil.rmtree(dest_folder)
+            except:
+                return
         elif 'ast' in return_dict:
             return return_dict['ast']
+
+    def extract_func_defs(self, func_calls, func_defs):
+        '''
+        Return a list of all func defs appearing in func calls
+        '''
+        func_names = list(map(lambda func_call: func_call.name.name, func_calls))
+        return [func_def for func_def in func_defs if func_def.decl.name in func_names]
 
     def parse_file(self, root_dir, file_name, exclusions):
         '''
@@ -141,6 +150,7 @@ class CLoopParser(Parser):
         pfv = PragmaForVisitor()
         verify_loops = ForLoopChecker()
         func_call_checker = FuncCallChecker()
+        func_defs_extractor = FuncDefVisitor()
 
         with open(file_path, 'r+') as f:
             try:
@@ -148,7 +158,7 @@ class CLoopParser(Parser):
             except UnicodeDecodeError:
                 utils.log("fail_pragma.txt", f'{file_path}\nUnicodeDecodeError\nfound {pragma_found} | there are {pragma_amount}\n===================')
                 return 0, 0, False
-
+            
             code = utils.update_code_pipline(code)    # remove unparsable code
             asts = list(map(lambda code_permutation: self.parse(file_path, code_permutation), utils.get_if_permutations(code)))
 
@@ -161,6 +171,7 @@ class CLoopParser(Parser):
                 pragma_found += len(pfv.pragmas)
                 pragmas = pfv.pragmas + len(pfv.neg_nodes) * [None]
                 nodes = pfv.pos_nodes + pfv.neg_nodes
+                func_defs_extractor.visit(ast)
 
                 for idx, (pragma, loop) in enumerate(zip(pragmas, nodes)):
                     verify_loops.reset()
@@ -175,6 +186,8 @@ class CLoopParser(Parser):
 
                     generator = pycparser.c_generator.CGenerator()
                     code = generator.visit(loop)
+
+                    print(code)
 
                     if code in self.memory and copy_idx > 0 and pragma is not None:
                         pragma_found -= 1
@@ -201,7 +214,8 @@ class CLoopParser(Parser):
                     self.create_directory(saving_path) 
                     self.memory.append(code)
 
-                    self.save(saving_path, OmpLoop(pragma, loop, [], code))
+                    relevant_func_defs = self.extract_func_defs(func_call_checker.func_calls, func_defs_extractor.func_def)
+                    self.save(saving_path, OmpLoop(pragma, loop, relevant_func_defs, code))
                     indexer += 1
 
                     if pragma is None:

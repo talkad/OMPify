@@ -1,4 +1,5 @@
 import re
+import os
 import copy
 import itertools
 
@@ -7,7 +8,8 @@ redundant_ompts = re.compile("<ompts:testdescription>.*<\/ompts:testdescription>
 redundant_directives = re.compile("MAYBE_INLINE|TM_CALLABLE|__block|RESTRICT|__targetConst__|__targetHost__| __ |CC_CACHE_ALIGN")
 redundant_includes = re.compile("^\W*#\W*include\W* <\.\..*|^\W*#\W*include\W* \"\.\..*", re.MULTILINE)
 redundant_defines = re.compile("^\W*#\W*define\W* INIT().*", re.MULTILINE)
-redundant_comments = re.compile("\/\/.*|\/\*.*\*\/", re.MULTILINE|re.DOTALL)
+redundant_line_comments = re.compile("\/\/.*")
+redundant_multiline_comments = re.compile("\/\*.*\*\/", re.MULTILINE|re.DOTALL)
 
 if_directive = re.compile("^\W*#\W*if\W(.*)|^\W*#\W*elif\W(.*)", re.MULTILINE)
 ifdef_directive = re.compile("^\W*#\W*ifdef\W(.*)|^\W*#\W*ifndef\W(.*)", re.MULTILINE)
@@ -50,7 +52,8 @@ def count_for(file_path):
         except UnicodeDecodeError:
             return 0
 
-        code = redundant_comments.sub("\n", code)
+        code = redundant_line_comments.sub("\n", code)
+        code = redundant_multiline_comments.sub("\n", code)
 
         for line in code.split('\n'):
             l = line.lower()
@@ -152,7 +155,8 @@ def remove_comment(line):
     Precondition:
         line is compiler-condition ("#if"...)
     '''
-    return redundant_comments.sub("", line)
+    code = redundant_line_comments.sub("\n", code)
+    return redundant_multiline_comments.sub("\n", code)
 
 
 def update_if_directive(line, stat):
@@ -207,3 +211,35 @@ def get_if_permutations(code):
     
     return code_permutations
 
+
+
+
+
+
+
+
+
+
+
+# def scan_dir(root_dir):
+# 	total = 0
+	
+# 	for idx, (root, dirs, files) in enumerate(os.walk(root_dir)):
+# 		for file_name in files:
+# 			ext = os.path.splitext(file_name)[1].lower()
+			
+# 			if ext in ['.cpp']:
+# 				amount, _ = count_for(os.path.join(root, file_name))
+# 				total += amount
+			
+# 		if idx % (10**3) == 0:
+# 			print(f'total: {total}')
+
+# 	return total
+
+
+# res = scan_dir("/home/talkad/Downloads/thesis/data_gathering_script/repositories_openMP")
+# print(res)
+
+# # c -> 132141
+# # cpp -> 222788

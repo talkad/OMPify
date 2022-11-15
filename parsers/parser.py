@@ -6,6 +6,11 @@ import pickle
 from typing import Union
 
 
+def log(file_name, msg):
+    with open(file_name, 'a') as f:
+        f.write(f'{msg}\n')
+
+
 class ASTs:
     '''
     Define a class that later will be dumped into pickle file

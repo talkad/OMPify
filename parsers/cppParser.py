@@ -1,7 +1,7 @@
 import os
 import re
 from enum import Enum
-from parsers.parser import Parser
+from parsers.parser import *
 from parsers.parsing_utils import utils
 from parsers.visitors import *
 import pycparser
@@ -258,41 +258,6 @@ class CppLoopParser(Parser):
                     pos += 1
 
             return pos, neg, True
-
-    # def scan_dir(self):
-
-    #     total_files, num_failed = 0, 0
-    #     total_pos, total_neg = 0, 0
-    #     omp_repo = os.path.join(self.root_dir, self.repo_path)
-    #     exclusions = {'bad_case': 0, 'empty': 0, 'duplicates': 0, 'func_calls':0}
-
-    #     # iterate over repos
-    #     for idx, repo_name in enumerate(os.listdir(omp_repo)):
-            
-    #         for root, dirs, files in os.walk(os.path.join(omp_repo, repo_name)):
-    #             for file_name in files:
-    #                 file_path = os.path.join(root, file_name)
-    #                 ext = os.path.splitext(file_name)[1].lower()
-                    
-    #                 if ext in self.file_extensions:
-    #                     pos, neg, is_parsed = self.parse_file(root, file_name, exclusions)
-
-    #                     if pos is not None:
-    #                         total_pos += pos
-    #                         total_neg += neg
-
-    #                     if not is_parsed:
-    #                         num_failed += 1
-
-    #                     total_files += 1
-
-    #         if idx % (5) == 0:
-    #             log('success_logger.txt', "{:20}{:10}   |   {:20} {:10}\n\n".format("files processed: ", total_files, "failed to parse: ", num_failed))
-    #             print("{:20}{:10}   |   {:20} {:10}".format("files processed: ", total_files, "failed to parse: ", num_failed))
-    #             print("{:20}{:10}   |   {:20} {:10}".format("pos examples: ", total_pos, "neg examples: ", total_neg))
-    #             print(f'exclusions: {exclusions}\n')
-
-    #     return total_pos, total_neg, exclusions, total_files, num_failed
 
 
 
