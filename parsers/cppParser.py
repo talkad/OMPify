@@ -191,6 +191,7 @@ class CppLoopParser(Parser):
         Extract for loops from code and parse them into AST
         '''
         pos, neg = 0, 0
+        indexer = 0
         file_path = os.path.join(root_dir, file_name)
         save_dir = os.path.join(self.parsed_path, root_dir[self.split_idx: ])
         name = os.path.splitext(file_name)[0]
@@ -247,10 +248,12 @@ class CppLoopParser(Parser):
                 func_call_checker.visit(loop)
                 if func_call_checker.found:
                     exclusions['func_calls'] += 1
-                                   
-                self.create_directory(save_dir) 
+
+                saving_path = os.path.join(save_dir, name, str(indexer))
+                self.create_directory(saving_path) 
                 self.memory.append(code)
-                self.save(os.path.join(save_dir, f"{name}{'_neg_' if pragma is None else '_pos_'}{idx}.pickle"), pragma, loop, code)
+                self.save(saving_path, OmpLoop(pragma, loop, [], code))
+                indexer += 1
 
                 if pragma is None:
                     neg += 1

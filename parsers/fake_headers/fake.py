@@ -21,7 +21,6 @@ def get_headers(repo_dir, repo_name):
     root_dirs = set()
     path_length = len(repo_dir) + len (repo_name) + 2              # remove two '/'
     omp_repo = os.path.join(repo_dir, repo_name)
-    print(omp_repo)
 
     for idx, (root, dirs, files) in enumerate(os.walk(omp_repo)):
         for file_name in files:

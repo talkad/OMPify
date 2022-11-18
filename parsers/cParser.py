@@ -15,7 +15,6 @@ import tempfile
 import shutil
 
 
-
 dest_folder = 'temp_folder'
 
 
@@ -74,13 +73,15 @@ class CLoopParser(Parser):
     def create_ast(self, file_path, code, result):
         with open('ENV.json', 'r') as f:
             vars = json.loads(f.read())
-        
-        repo_name = file_path[len(self.repo_path + self.root_dir) + 2:]
+
+        repo_name = file_path[len(self.repo_path) + 2:]
         repo_name = repo_name[:repo_name.find('/') ]
         cpp_args = ['-nostdinc', '-w', '-E', r'-I' + vars["FAKE_DIR"]]
-
         _, headers, _ = fake.get_headers(vars['REPOS_DIR'], repo_name)
 
+        if os.path.exists(dest_folder):
+            shutil.rmtree(dest_folder)
+            
         # create empty headers
         os.makedirs(dest_folder)
         fake.create_empty_headers(file_path, dest_folder)
@@ -97,11 +98,11 @@ class CLoopParser(Parser):
                 result['ast'] = ast
 
         except pycparser.plyparser.ParseError as e:  
-            utils.log('error_logger.txt', f'Parser Error: {file_path} ->\n {e}\n')
+            # utils.log('error_logger.txt', f'Parser Error: {file_path} ->\n {e}\n')
             handle_error(file_path, str(e), code)
 
         except Exception as e:
-            utils.log('error_logger.txt', f'Unexpected Error: {file_path} ->\n {e}\n')
+            # utils.log('error_logger.txt', f'Unexpected Error: {file_path} ->\n {e}\n')
             pass
 
         finally:
@@ -128,7 +129,13 @@ class CLoopParser(Parser):
         '''
         Return a list of all func defs appearing in func calls
         '''
-        func_names = list(map(lambda func_call: func_call.name.name, func_calls))
+
+        def extract_func_name(func_call):
+            try:
+                return func_call.name.name
+            except:
+                return ""
+        func_names = list(map(lambda func_call: extract_func_name(func_call), func_calls))
         return [func_def for func_def in func_defs if func_def.decl.name in func_names]
 
     def parse_file(self, root_dir, file_name, exclusions):
@@ -187,8 +194,6 @@ class CLoopParser(Parser):
                     generator = pycparser.c_generator.CGenerator()
                     code = generator.visit(loop)
 
-                    print(code)
-
                     if code in self.memory and copy_idx > 0 and pragma is not None:
                         pragma_found -= 1
                         continue
@@ -227,7 +232,6 @@ class CLoopParser(Parser):
                 utils.log("fail_pragma.txt", f'{file_path}\n{error}\nfound {pragma_found} | there are {pragma_amount}\n===================')
 
             return pos, neg, True
-
         
 
 # files processed:         19778   |   failed to parse:           1664

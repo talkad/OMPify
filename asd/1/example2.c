@@ -13,9 +13,7 @@ int main() {
 
     int i, sum = 0;
 
-    #pragma omp parallel for
     for(i = 0; i < 10; i++){
         do_some(i);
-        do_some2(i);
     }
 }

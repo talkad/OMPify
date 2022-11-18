@@ -209,6 +209,7 @@ class FortranLoopParser(Parser):
         Parse the given file into ast and extract to loops associated with omp pargma (or without)
         '''
         pos, neg = 0, 0
+        indexer = 0
         file_path = os.path.join(root_dir, file_name)
         save_dir = os.path.join(self.parsed_path, root_dir[self.split_idx: ])
         name = os.path.splitext(file_name)[0]
@@ -260,15 +261,18 @@ class FortranLoopParser(Parser):
                 if ast_loop is None:
                     continue
 
-                self.memory.append(textual_loop)
-
+                saving_path = os.path.join(save_dir, name, str(indexer))
+                self.create_directory(saving_path) 
+                self.memory.append(code)
                 # the fparser doesn't define __new__ function for its ast
+                self.save(saving_path, OmpLoop(None if pragma == '' else pragma, None, [], textual_loop))
+                indexer += 1
+                
                 if pragma == '':
                     neg += 1
-                    self.save(os.path.join(save_dir, f'{name}_neg_{idx}.pickle'), None, None, textual_loop)
                 else:
                     pos += 1
-                    self.save(os.path.join(save_dir, f'{name}_pos_{idx}.pickle'), pragma, None, textual_loop)
+
 
             return pos, neg, True
 

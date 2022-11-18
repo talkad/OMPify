@@ -86,7 +86,7 @@ class Parser(ABC):
         with open(os.path.join(file_path, 'ast.pickle'), 'rb') as f:
             asts = pickle.load(f)
 
-        with open(os.path.join(file_path, f'code.{self.file_extensions[0]}'), 'r') as f:
+        with open(os.path.join(file_path, f'code{self.file_extensions[0]}'), 'r') as f:
             code = f.read()
 
         try:
@@ -176,7 +176,7 @@ class Parser(ABC):
         for idx, (root, dirs, files) in enumerate(os.walk(omp_repo)):
             for file_name in files:
                 ext = os.path.splitext(file_name)[1].lower()
-                
+
                 if ext in self.file_extensions:
                     pos, neg, is_parsed = self.parse_file(root, file_name, exclusions)
 
@@ -196,7 +196,7 @@ class Parser(ABC):
 
         # write ids into json
         with open("sample.json", "w") as f:
-            json.dump(self.id2path, f)
+            json.dump(self.id2path, f, sort_keys=True, indent=4, separators=(',', ': '))
 
         print("{:20}{:10}   |   {:20} {:10}".format("files processed: ", total_files, "failed to parse: ", num_failed))
         print("{:20}{:10}   |   {:20} {:10}".format("pos examples: ", total_pos, "neg examples: ", total_neg))

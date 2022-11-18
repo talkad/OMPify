@@ -155,8 +155,7 @@ def remove_comment(line):
     Precondition:
         line is compiler-condition ("#if"...)
     '''
-    code = redundant_line_comments.sub("\n", code)
-    return redundant_multiline_comments.sub("\n", code)
+    return redundant_line_comments.sub("", line)
 
 
 def update_if_directive(line, stat):
@@ -189,7 +188,7 @@ def get_if_permutations(code):
     '''
     for a given code segment return all possible permutations for conditions 
     '''
-    limit = 8 # 2**8 = 256 permutations
+    limit = 7 # 2**7 = 128 permutations
 
     code_permutations = []
     code_buf = code.split('\n')
