@@ -81,7 +81,7 @@ class CLoopParser(Parser):
 
         if os.path.exists(dest_folder):
             shutil.rmtree(dest_folder)
-            
+
         # create empty headers
         os.makedirs(dest_folder)
         fake.create_empty_headers(file_path, dest_folder)
@@ -240,5 +240,5 @@ class CLoopParser(Parser):
 
 
 # files processed:         19784   |   failed to parse:              0
-# pos examples:            14493   |   neg examples:             39590
+# pos examples:            14488   |   neg examples:             39586
  
