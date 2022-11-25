@@ -72,7 +72,7 @@ def main():
                       help="show statistical usage of openMP")                     
     parser.add_option("-p", "--parse",
                       dest="prog_lang",
-                      help="parse the given programming languages. example: -p \"(c|cpp)\"")
+                      help="parse the given programming languages. example: -p (c|cpp)")
     (options, args) = parser.parse_args()
 
     if options.dates is not None:

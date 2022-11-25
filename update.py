@@ -41,7 +41,7 @@ def count_for(file_path):
     return loop_amount, pragma_amount
 
 
-with open('/home/talkad/Downloads/thesis/data_gathering_script/fail_pragma2.txt', 'r') as f:
+with open('/home/talkad/Downloads/thesis/data_gathering_script/fail_pragma.txt', 'r') as f:
     logs = f.read()
 
 errs = logs.split('===================')
@@ -81,6 +81,6 @@ print(total)
 print(f'files failed {fail}: pragmas {unparsed_pragmas} ')
 print(f'missed pragmas {missed_pragma}')
 
-# 1153
-# files failed 950: pragmas 2716 
-# missed pragmas 543
+# 1033
+# files failed 946: pragmas 2688 
+# missed pragmas 254

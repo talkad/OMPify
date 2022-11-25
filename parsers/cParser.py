@@ -156,6 +156,7 @@ class CLoopParser(Parser):
 
         pfv = PragmaForVisitor()
         verify_loops = ForLoopChecker()
+        omp_in_loop = OmpChecker()
         func_call_checker = FuncCallChecker()
         func_defs_extractor = FuncDefVisitor()
 
@@ -182,14 +183,8 @@ class CLoopParser(Parser):
 
                 for idx, (pragma, loop) in enumerate(zip(pragmas, nodes)):
                     verify_loops.reset()
+                    omp_in_loop.reset()
                     func_call_checker.reset()
-
-                    # create unbiased dataset
-                    # if count_no_pragma > pragma_amount:
-                    #     continue
-
-                    # if pragma is None:
-                    #     count_no_pragma += 1
 
                     generator = pycparser.c_generator.CGenerator()
                     code = generator.visit(loop)
@@ -199,7 +194,8 @@ class CLoopParser(Parser):
                         continue
 
                     verify_loops.visit(loop)
-                    if verify_loops.found:  # undesired tokens found
+                    omp_in_loop.visit(loop)
+                    if verify_loops.found or (pragma is None and omp_in_loop.found):  # undesired tokens found
                         exclusions['bad_case'] += 1
                         continue
 

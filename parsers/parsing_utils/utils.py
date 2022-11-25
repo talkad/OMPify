@@ -211,34 +211,3 @@ def get_if_permutations(code):
     return code_permutations
 
 
-
-
-
-
-
-
-
-
-
-# def scan_dir(root_dir):
-# 	total = 0
-	
-# 	for idx, (root, dirs, files) in enumerate(os.walk(root_dir)):
-# 		for file_name in files:
-# 			ext = os.path.splitext(file_name)[1].lower()
-			
-# 			if ext in ['.cpp']:
-# 				amount, _ = count_for(os.path.join(root, file_name))
-# 				total += amount
-			
-# 		if idx % (10**3) == 0:
-# 			print(f'total: {total}')
-
-# 	return total
-
-
-# res = scan_dir("/home/talkad/Downloads/thesis/data_gathering_script/repositories_openMP")
-# print(res)
-
-# # c -> 132141
-# # cpp -> 222788

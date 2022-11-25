@@ -12,7 +12,7 @@ class DB_Reducer:
             2.1. if for a given file num_pos > num_neg, we will keep extra negative examples from the next file
     '''
 
-    def __init__(self):
+    def __init__(self, file_path):
         self.num_pos = 0
         self.num_neg = 0
         self.parser = CLoopParser('', '')
@@ -56,12 +56,12 @@ class DB_Reducer:
                 pos_examples.append(example)
 
         neg_examples = [example for example in examples if example not in pos_examples]
-        num_pos = len(pos_examples)+2 if self.is_extra else len(pos_examples)
+        num_pos = len(pos_examples)+20 if self.is_extra else len(pos_examples)
         neg_examples = random.sample(neg_examples, k=min(num_pos, len(neg_examples)))
         self.is_extra = True if len(pos_examples)*2 > len(examples) else False
 
-        self.pos_examples += len(pos_examples)
-        self.neg_examples += len(neg_examples)
+        self.num_pos += len(pos_examples)
+        self.num_neg += len(neg_examples)
 
         return pos_examples + neg_examples
     
@@ -73,17 +73,21 @@ class DB_Reducer:
         idx = 0
 
         for file_path, examples in all_files.items():
-            reduced_examples = self.reduce_file(reduce_file, examples)
+            reduced_examples = self.reduce_file(file_path, examples)
 
             for example in reduced_examples:
                 self.updated_db[str(idx)] = os.path.join(file_path, example)
                 idx += 1
 
         with open("updated_db.json", "w") as f:
-            json.dump(self.updated_db, f, sort_keys=True, indent=4, separators=(',', ': '))
+            json.dump(self.updated_db, f, indent=4, separators=(',', ': '))
 
-        
-        
+
+
+reducer = DB_Reducer('/home/talkad/Downloads/thesis/data_gathering_script/sample.json')
+reducer.reduce_files()
+
+print(f'neg {reducer.num_neg}\npos {reducer.num_pos}')
         
 
 
