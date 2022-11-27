@@ -236,5 +236,6 @@ class CLoopParser(Parser):
 
 
 # files processed:         19784   |   failed to parse:              0
-# pos examples:            14488   |   neg examples:             39586
+# pos examples:            14906   |   neg examples:             17193
+# exclusions: {'bad_case': 6940161, 'empty': 68653, 'duplicates': 27074398, 'func_calls': 15829}
  

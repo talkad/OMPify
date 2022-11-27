@@ -20,12 +20,16 @@ def log(file_name, msg):
         f.write(f'{msg}\n')
 
 
-def is_for(line):
-	'''
+def is_for(line, lang='c'):
+    '''
 	Return true if the given line is the beggining of for-loop
 	'''
-	sub_line = line.lstrip() # remove redundant white spaces
-	return sub_line.startswith('for') and sub_line[3:].lstrip().startswith('(')
+    sub_line = line.lstrip() # remove redundant white spaces
+
+    if lang == 'c':
+        return sub_line.startswith('for') and sub_line[3:].lstrip().startswith('(')
+
+    return sub_line.startswith('do ')
 
 
 def is_for_pragma(line, lang='c'):
@@ -40,7 +44,7 @@ def is_for_pragma(line, lang='c'):
     return sub_line.startswith('!$omp ') and ' do' in line and ' end' not in line
 
 
-def count_for(file_path):
+def count_for(file_path, lang='c'):
     '''
     Returns the amout of for-loops and pragmas exist in a given file
     '''
@@ -58,10 +62,10 @@ def count_for(file_path):
         for line in code.split('\n'):
             l = line.lower()
 			
-            if is_for(l):
+            if is_for(l, lang=lang):
                 loop_amount += 1
 
-            if is_for_pragma(l):
+            if is_for_pragma(l, lang=lang):
                 pragma_amount += 1
 
     return loop_amount, pragma_amount
@@ -211,3 +215,31 @@ def get_if_permutations(code):
     return code_permutations
 
 
+
+
+
+
+def scan_dir(root_dir):
+    neg, pos = 0, 0
+	
+    for idx, (root, dirs, files) in enumerate(os.walk(root_dir)):
+        for file_name in files:
+            ext = os.path.splitext(file_name)[1].lower()
+			
+            if ext in ['.f90', '.f']:
+                amount_loops, amount_pragma = count_for(os.path.join(root, file_name), lang='f')
+                pos += amount_pragma
+                neg += (amount_loops - amount_pragma)
+			
+        if idx % (10**3) == 0:
+            print(f'total: {idx}')
+
+    return neg, pos
+
+
+res = scan_dir("/home/talkad/Downloads/thesis/data_gathering_script/repositories_openMP")
+print(res)
+
+# c -> (82253, 49888)
+# cpp -> (98132, 124656)
+# fortran -> (46279, 20833)

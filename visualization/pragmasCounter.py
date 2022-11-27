@@ -95,11 +95,6 @@ def scan_dir(root_dir):
 # res = scan_dir("/home/talkad/Downloads/thesis/data_gathering_script/repositories_openMP")
 # print(res)
 
-
-# ({'nowait': 7652, 'private': 60042, 'firstprivate': 15672, 'lastprivate': 16580, 'shared': 10960, 'reduction': 36193, 'static_schedule': 18481, 'dynamic_schedule': 13102}, 
-# {'.cpp': 169966, '.c': 70113, '.f90': 15285, '.h': 3246, '.cc': 1193, '.f': 5571, '.f95': 337, '.f03': 36, '.cxx': 132}, 
-# {'.cpp': 14421, '.c': 20174, '.f90': 4367, '.h': 1065, '.cc': 575, '.f': 1528, '.f95': 279, '.f03': 10, '.cxx': 71})
-
 # ({'nowait': 7613, 'private': 52202, 'firstprivate': 14363, 'lastprivate': 12741, 'shared': 10291, 'reduction': 36116, 'static_schedule': 17544, 'dynamic_schedule': 13034}, 
 # {'.cpp': 149337, '.c': 69979, '.f90': 15269, '.h': 3219, '.cc': 1193, '.f': 5571, '.f95': 337, '.f03': 36, '.cxx': 131},
 # {'.cpp': 12389, '.c': 19784, '.f90': 4352, '.h': 933, '.cc': 513, '.f': 1528, '.f95': 279, '.f03': 10, '.cxx': 69})
