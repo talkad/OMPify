@@ -60,7 +60,7 @@ class LoopExtractor:
 
         return '', None
 
-    def extract_loops(self, code):
+    def extract_loops(self, code, inner=False):
         '''
         Extract all loops and pragmas from given program by parentheses balancing
         '''      
@@ -100,9 +100,11 @@ class LoopExtractor:
                     body += ch
 
                     if num_braces == 0 and num_paren == 0 and ch == ';': # single line loop (no curly brackets)
-                        self.loops.append(loop)
-                        self.omp_pragmas.append(pragma)
-                        self.extract_loops(body)
+                        if pragma is not None or not inner:
+                            self.loops.append(loop)
+                            self.omp_pragmas.append(pragma)
+
+                        self.extract_loops(body, inner=True)
                         break
 
                     if ch == '(':
@@ -117,9 +119,11 @@ class LoopExtractor:
                         num_braces -= 1
 
                     if num_braces == 0 and num_paren == 0 and state == State.for_body_found:
-                        self.loops.append(loop)
-                        self.omp_pragmas.append(pragma)
-                        self.extract_loops(body)
+                        if pragma is not None or not inner:
+                            self.loops.append(loop)
+                            self.omp_pragmas.append(pragma)
+
+                        self.extract_loops(body, inner=True)
                         break
 
                 idx += 1
@@ -198,6 +202,7 @@ class CppLoopParser(Parser):
 
         extractor = LoopExtractor()
         verify_loops = ForLoopChecker()
+        omp_in_loop = OmpChecker()
         func_call_checker = FuncCallChecker()
 
         with open(file_path, 'r+') as f:
@@ -218,6 +223,7 @@ class CppLoopParser(Parser):
             for idx, (pragma, loop) in enumerate(zip(pragmas, loops)):
 
                 verify_loops.reset()
+                omp_in_loop.reset()
                 func_call_checker.reset()
 
                 if loop is None:
@@ -231,7 +237,8 @@ class CppLoopParser(Parser):
                         continue
 
                 verify_loops.visit(loop)
-                if verify_loops.found:  # undesired tokens found
+                omp_in_loop.visit(loop)
+                if verify_loops.found or (pragma is None and omp_in_loop.found):  # undesired tokens found
                     exclusions['bad_case'] += 1
                     continue
                 
@@ -265,21 +272,7 @@ class CppLoopParser(Parser):
 
 
 
-# parser = CppLoopParser('../repositories_openMP', '../cpp_loops')
-# parser = CppLoopParser('../asd', 'c_loops2')
 
-# data = parser.load('/home/talkad/Downloads/thesis/data_gathering_script/cpp_loops/0scari/Parralel-programmin-pratice/p5/ompbase_neg_0.pickle')
-# print(f'pragma: {data.omp_pragma}')
-# print('code:\n')
-# print(data.textual_loop)
-
-# total = parser.scan_dir()
-# print(total)
-
-# removing compiler directives
-# aaaaa 39233 284367
-# (8095, 30294, {'bad_case': 2755, 'empty': 1692, 'duplicates': 202330, 'func_calls': 20416}, 14421, 248)
-
-#without...
-# pos examples:             8084   |   neg examples:             30281
-# exclusions: {'bad_case': 2752, 'empty': 1692, 'duplicates': 202302, 'func_calls': 20396}
+# files processed:         12389   |   failed to parse:              0
+# pos examples:             8241   |   neg examples:             14323
+# exclusions: {'bad_case': 11502, 'empty': 1607, 'duplicates': 143479, 'func_calls': 12576}

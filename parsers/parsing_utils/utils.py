@@ -237,8 +237,8 @@ def scan_dir(root_dir):
     return neg, pos
 
 
-res = scan_dir("/home/talkad/Downloads/thesis/data_gathering_script/repositories_openMP")
-print(res)
+# res = scan_dir("/home/talkad/Downloads/thesis/data_gathering_script/repositories_openMP")
+# print(res)
 
 # c -> (82253, 49888)
 # cpp -> (98132, 124656)

@@ -1,5 +1,5 @@
 import os
-from parsers.parser import Parser
+from parsers.parser import Parser, OmpLoop
 from fparser.two.parser import ParserFactory
 from fparser.common.readfortran import FortranStringReader
 import fparser.two.Fortran2003 as FortranStructs
@@ -263,7 +263,8 @@ class FortranLoopParser(Parser):
 
                 saving_path = os.path.join(save_dir, name, str(indexer))
                 self.create_directory(saving_path) 
-                self.memory.append(code)
+                self.memory.append(textual_loop)
+
                 # the fparser doesn't define __new__ function for its ast
                 self.save(saving_path, OmpLoop(None if pragma == '' else pragma, None, [], textual_loop))
                 indexer += 1
@@ -277,18 +278,6 @@ class FortranLoopParser(Parser):
             return pos, neg, True
 
 
-# parser = FortranLoopParser('../repositories_openMP', '../fortran_loops')
-# parser = FortranLoopParser('../asd', 'fortran_example')
-
-# data = parser.load('/home/talkad/Downloads/thesis/data_gathering_script/parsers/fortran_example/123/a_pos_0.pickle')
-# print(f'pragma: {data.omp_pragma}\n')
-# print('code:')
-# print(data.ast_loop)
-
-# total = parser.scan_dir()
-# print(total)
-
-# pos - 2753 
-# neg - 3331 
-
-# (2753, 3331, {'bad_case': 682, 'empty': 1045, 'duplicates': 15622}, 6174, 1099)
+# files processed:          6159   |   failed to parse:           1079
+# pos examples:             2747   |   neg examples:              3370
+# exclusions: {'bad_case': 682, 'empty': 1045, 'duplicates': 15623, 'func_calls': 0}

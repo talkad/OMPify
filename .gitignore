@@ -7,6 +7,7 @@
 **/fortran_loops
 **/PCX
 git_clone.sh
+git_metadata.sh
 **/utils
 **/utils_cpp
 **/.vscode
