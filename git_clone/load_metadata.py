@@ -1,40 +1,31 @@
 from subprocess import Popen, PIPE
 from datetime import date, timedelta, datetime
 from dateutil.relativedelta import relativedelta
-from bs4 import BeautifulSoup
-from selenium import webdriver
-import requests
+import github
+from time import sleep
 import pickle
-import time
+
 
 SCRIPT_PATH = '/home/talkad/Downloads/thesis/data_gathering_script/git_clone/git_metadata.sh'
-
+gh = github.Github("<gh_token>")
 
 def get_user_info(username):
 	'''
 	Get user info from github
 	'''
-	browser = webdriver.Firefox()
+	try:
+		gh_user = gh.search_users(username)[0]
+	except: # rate limit exception
+		sleep(60)
+		return get_user_info(username)
 
-	url = f'https://github.com/{username}'
-	sada = browser.get(url)
-	time.sleep(3)
-	source = browser.page_source
-	soup = BeautifulSoup(source, 'html.parser')
-
-	organization = soup.find_all('li',class_='vcard-detail pt-1 hide-sm hide-md')
-	print(organization)
-
-	organization = soup.find_all('li',class_='vcard-detail pt-1')
-	print(organization)
-
-	# print(github_html)
+	return gh_user.company, gh_user.location, gh_user.email
 
 def extract_metadata(metadata):
 	'''
-	Extract 'PushedAt', 'Topics' and 'Username'
+	Extract 'PushedAt', 'Topics', 'Username' and 'Language'
 	'''
-	username, update_key, topic_key = b'Owner:github.User{Login:', b'UpdatedAt:', b'Topics:'
+	username_key, update_key, topic_key, lang_key = b'Owner:github.User{Login:', b'UpdatedAt:', b'Topics:', b'Language:'
 
 	update_date = metadata[metadata.find(update_key) + len(update_key):]
 	keywords = metadata[metadata.find(topic_key) + len(topic_key):]
@@ -48,10 +39,13 @@ def extract_metadata(metadata):
 	keywords = keywords[:keywords.find(b',')].decode('utf-8')
 	keywords = list(map(lambda keyword: keyword.lower()[1:-1], keywords[1:-1].split(' ')))
 
-	username = metadata[metadata.find(username) + len(username) + 1:]
+	username = metadata[metadata.find(username_key) + len(username_key) + 1:]
 	username = username[:username.find(b'\"')].decode('utf-8')
 
-	return username, update_date, keywords
+	lang = metadata[metadata.find(lang_key) + len(lang_key) + 1:]
+	lang = lang[:lang.find(b'\"')].decode('utf-8')
+
+	return username, update_date, keywords, lang
 
 
 def load(start_date=None, end_date=None):
@@ -62,7 +56,6 @@ def load(start_date=None, end_date=None):
 		start_date - lower bound of dates
 		end_date   - upper bound of dates
 	'''
-	# iii = 0
 	month = 30
 	max_results = 10**3
 	start_date = date(2012, 1, 1) if start_date is None else start_date
@@ -84,16 +77,12 @@ def load(start_date=None, end_date=None):
 
 			for metadata in output.split(b"github.Repository{"):
 				if len(metadata) != 0:
-					username, update_date, keywords = extract_metadata(metadata)
-					data += [{'username': username, 'update_date': update_date, 'keywords': keywords}]
+					username, update_date, keywords, lang = extract_metadata(metadata)
+					data += [{'username': username, 'update_date': update_date, 'keywords': keywords, 'lang':lang}]
 			
 			month = 30
 			start_date += delta
 
-			# if iii > 5:
-			# 	break
-
-			# iii += 1
 		else:
 			month = month // 2
 
@@ -102,9 +91,29 @@ def load(start_date=None, end_date=None):
             pickle.dump(data, f)
 
 
-# load()
+def get_info(metadata_path):
+	'''
+	Iterate over all users and save their email, company and location
+	'''
+	data = []
+
+	with open(metadata_path, 'rb') as f:
+		repo_lst = pickle.load(f)
+		# print(len(repo_lst))
+
+		for repo in repo_lst:
+			company, location, email = get_user_info(repo['username'])
+			data += [{'username': repo['username'], 'company': company, 'location': location, 'email': email}]
+
+	with open('metadata_user.pickle', 'wb') as f:
+		pickle.dump(data, f)
+
+
+
+load()
 # with open('metadata.pickle', 'rb') as f:
 # 	lst = pickle.load(f)
 # 	for l in lst:
 # 		print(l)
-get_user_info('stilgar')
+
+# get_info('metadata.pickle')
