@@ -8,6 +8,7 @@ def visualize_keywords(metadata_path):
     '''
     plot pi graph of all keywords
 
+    {'mpi': 487, 'openmp': 1585, 'cuda': 341, 'cpp': 272, 'parallel-computing': 322, 'c': 325, 'parallel-programming': 237, 'hpc': 115, 'openmp-parallelization': 111, 'openmpi': 105, 'parallel': 142}
     {'c-plus-plus': 81, 'mpi': 487, 'openmp': 1585, 'cuda': 341, 'opencl': 81, 'cpp': 272, 'gpu': 74, 'parallel-computing': 322, 'fortran': 57, 'c': 325, 'parallel-programming': 237, 'hpc': 115, 'pthreads': 88, 'openmp-parallelization': 111, 'openmpi': 105, 'multithreading': 95, 'parallel': 142, 'python': 59, 'simd': 51, 'high-performance-computing': 65}
     '''
     keywords = []
