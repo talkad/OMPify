@@ -18,7 +18,7 @@ def clauses_counter(line, clauses_dict):
 		clauses_dict is initiated with all possible clauses
 	'''
 	
-	for clause in clauses[: -2]:
+	for clause in clauses[: -1]:
 		if clause in line:
 			clauses_dict[clause] += 1
 
@@ -33,7 +33,6 @@ def clauses_counter(line, clauses_dict):
 
 
 def is_target(code, pragma):
-	# amount = 0
 
 	if 'target' in pragma:
 		return 1
@@ -80,19 +79,39 @@ def scan_dir(root_dir, lang='c'):
 	return clauses_amount
 
 
-res = scan_dir('/home/talkad/Downloads/thesis/data_gathering_script/sample_fortran.json', lang='fortran')
+def scan_json(json_path, lang='c'):	
+	clauses_amount = {clause: 0 for clause in clauses}
+	
+	with open(scan_json, 'r') as f:
+		database = json.load(f)
 
-print(res)
+	for pragmas in database.values():
+		for paragma in pragmas:
+
+			if not pragma.startswith('#pragma'):
+				continue
+				
+			clauses_counter(pragma, clauses_amount)			
+
+	return clauses_amount
+
+
+# res = scan_dir('/home/talkad/Downloads/thesis/data_gathering_script/sample_fortran.json', lang='fortran')
+
+# print(res)
 
 
 # cpp
 # 8241 14323
 # {'nowait': 310, 'private': 1190, 'firstprivate': 133, 'lastprivate': 60, 'shared': 796, 'reduction': 1120, 'static_schedule': 944, 'dynamic_schedule': 536, 'target': 505, 'reduction_private': 169}
 
+
 # c
 # 14906 17193
 # {'nowait': 752, 'private': 5568, 'firstprivate': 930, 'lastprivate': 147, 'shared': 1663, 'reduction': 2147, 'static_schedule': 1891, 'dynamic_schedule': 866, 'target': 212, 'reduction_private': 879}
 
+
 # fortran
 # 2749 3368
 # {'nowait': 8, 'private': 1136, 'firstprivate': 33, 'lastprivate': 60, 'shared': 285, 'reduction': 327, 'static_schedule': 190, 'dynamic_schedule': 43, 'target': 73, 'reduction_private': 161}
+
