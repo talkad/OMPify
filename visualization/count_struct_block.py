@@ -1,13 +1,10 @@
-'''
-Purpose of this class
-1. count the number of total code lines
-2. count the number of lines in parallel struct block
-3. identify each parallel struct block 
-'''
-
-## remove empty lines
-
 import os
+import re
+import json
+
+redundant_line_comments = re.compile("\/\/.*")
+redundant_multiline_comments = re.compile("\/\*.*?\*\/", re.MULTILINE|re.DOTALL)
+
 
 def paren_matcher(fid, code, open_paren='{', closing_paren='}'):
     '''
@@ -34,18 +31,16 @@ def paren_matcher(fid, code, open_paren='{', closing_paren='}'):
     return -1
 
 
-def get_omp_version(line):
-    '''
-        For a given pragma, determine the version of OpenMP it is related
-    '''
-    if 'simd' in line:
-        return 3
-    elif 'offload' in line:
-        return 5
-    elif 'task' in line:
-        return 3
+def count_pragmas(code):
+    counter = 0
 
-    return -1
+    for line in code.split('\n'):
+        l = line.lstrip().lower()
+
+        if l.startswith('#pragma') and 'omp' in l:
+            counter += 1
+
+    return counter
 
 
 def is_next_char_paren(code):
@@ -54,75 +49,92 @@ def is_next_char_paren(code):
 
 def is_single_line_for(code):
     idx = paren_matcher(0, code, open_paren='(', closing_paren=')')
-    return is_next_char_paren(code[idx:])
-
-
-def inspect_file_versions(file_path):
-    '''
-    Return for a fiven file all openMP verions used
-    '''    
-    versions = []
-   
-    with open(file_path, 'r') as f:
-        code = f.read()
-
-        code = redundant_line_comments.sub("\n", code)
-        code = redundant_multiline_comments.sub("\n", code)
-        code = code.lower()
-        idx = code.find('#pragma')
-
-        while idx != -1:
-            code = code[idx:]
-            version = get_omp_version(code[:code.find('\n')])
-            
-            if version != -1:
-                versions.append(version)
-
-            idx = code.find('#pragma')
-            
-    return versions
+    return not is_next_char_paren(code[idx + 1:])
 
 
 def inspect_file_LOC(file_path):
     '''
     Return for a fiven file all openMP verions used
     '''    
-    loc = 0
    
     with open(file_path, 'r') as f:
         code = f.read()
+        loc = count_pragmas(code)
 
         code = redundant_line_comments.sub("\n", code)
         code = redundant_multiline_comments.sub("\n", code)
+        code = '\n'.join(filter(lambda line: len(line.lstrip()) > 0, code.split('\n')))
         code = code.lower()
+        
+        total_lines = code.count('\n')+1
         idx = code.find('#pragma')
 
         while idx != -1:
             code = code[idx:]
-            end_idx = paren_matcher(0, code)
-            # need to include single line strctures
+            pragma = code[: code.find('\n')]
+            pragma = pragma[:pragma.find('{')] if '{' in pragma else pragma
 
-            loc += code[:end_idx].count('\n')
-            
-            if version != -1:
-                versions.append(version)
-                
-            idx = code[end_idx:].find('#pragma')
-            
-    return versions
+            if 'omp' in pragma and 'parallel' in pragma:
+                if is_next_char_paren(code[len(pragma):]):
+                    paren_idx = paren_matcher(0, code)
+                    if paren_idx != -1:
+                        loc += code[:paren_idx].count('\n')
+                        code = code[paren_idx + 1:]
+                    else:
+                        return (total_lines, loc)
+                elif 'for' in pragma and is_single_line_for(code[len(pragma): ]):
+                    loc += 2
+                    code = code[len(pragma):]
+                elif 'for' in pragma:
+                    paren_idx = paren_matcher(0, code)
+                    if paren_idx != -1:
+                        loc += code[:paren_idx].count('\n')
+                        code = code[paren_idx + 1:]
+                    else:
+                        return (total_lines, loc)
+                else:
+                    code = code[len(pragma):]
+            else:
+                code = code[len(pragma):]
 
+            idx = code.find('#pragma')
+
+    return (total_lines, loc)
 
 
 def scan_repos(omp_repo):
+    repo2lines = {}
 
-    for repo_name in os.listdir(omp_repo):
-        for idx, (root, dirs, files) in enumerate(os.walk(os.path.join(omp_repo, repo_name))):
-            pass
-    #     for file_name in files:
-    #         ext = os.path.splitext(file_name)[1].lower()
+    for user_name in os.listdir(omp_repo):
+        for repo_name in os.listdir(os.path.join(omp_repo, user_name)):
+            repo2lines[f'{user_name}/{repo_name}'] = {}
 
+            for idx, (root, dirs, files) in enumerate(os.walk(os.path.join(omp_repo, user_name, repo_name))):
+                for file in files:
+                    ext = file[file.rfind('.')+1:]
+
+                    if ext in ['c', 'cpp']:
+                        repo2lines[f'{user_name}/{repo_name}'][file] = inspect_file_LOC(os.path.join(root, file))
+    
+    with open("repo2lines.json", "w") as f:
+        json.dump(repo2lines, f, sort_keys=True, indent=4, separators=(',', ': '))
+
+
+def loc_stats():
+    total_lines = 0
+    prl_lines = 0
+
+    with open("repo2lines.json", "r") as f:
+        repo2lines = json.load(f)
+
+    for repo in repo2lines:
+        for file in repo2lines[repo]:
+
+            total_lines += repo2lines[repo][file][0]
+            prl_lines += repo2lines[repo][file][1]
+
+    return total_lines, prl_lines
 
 # scan_repos('/home/talkad/Downloads/thesis/data_gathering_script/repositories_openMP')
-
-
-print(paren_matcher(0, '  {}   {          aaa{aa}a    }'))
+# print(inspect_file_LOC('/home/talkad/Downloads/thesis/data_gathering_script/a.c'))
+print(loc_stats()) # (4335645, 1150409) 37.6%

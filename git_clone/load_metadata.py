@@ -25,7 +25,12 @@ def extract_metadata(metadata):
 	'''
 	Extract 'PushedAt', 'Topics', 'Username' and 'Language'
 	'''
-	username_key, update_key, topic_key, lang_key = b'Owner:github.User{Login:', b'UpdatedAt:', b'Topics:', b'Language:'
+	username_key, update_key, topic_key, lang_key, fullname_key, create_key = b'Owner:github.User{Login:', b'UpdatedAt:', b'Topics:', b'Language:', b'FullName:', b'CreatedAt:'
+	created_date = metadata[metadata.find(create_key) + len(create_key):]
+	created_date = created_date[:created_date.find(b'}')].decode('utf-8')
+	created_date = created_date[created_date.find('{')+1:]
+	created_date = created_date[:created_date.find(' ')]
+	created_date = datetime.strptime(created_date, '%Y-%m-%d').date()
 
 	update_date = metadata[metadata.find(update_key) + len(update_key):]
 	keywords = metadata[metadata.find(topic_key) + len(topic_key):]
@@ -45,7 +50,10 @@ def extract_metadata(metadata):
 	lang = metadata[metadata.find(lang_key) + len(lang_key) + 1:]
 	lang = lang[:lang.find(b'\"')].decode('utf-8')
 
-	return username, update_date, keywords, lang
+	fullname = metadata[metadata.find(fullname_key) + len(fullname_key) + 1:]
+	fullname = fullname[:fullname.find(b'\"')].decode('utf-8')
+
+	return username, update_date, keywords, lang, fullname, created_date
 
 
 def load(start_date=None, end_date=None):
@@ -77,11 +85,9 @@ def load(start_date=None, end_date=None):
 
 			for metadata in output.split(b"github.Repository{"):
 				if len(metadata) != 0:
-					print(metadata)
-					break
-					username, update_date, keywords, lang = extract_metadata(metadata)
-					data += [{'username': username, 'update_date': update_date, 'keywords': keywords, 'lang':lang}]
-			
+					username, update_date, keywords, lang, fullname, created_date = extract_metadata(metadata)
+					data += [{'username': username, 'update_date': update_date, 'created_date': created_date, 'keywords': keywords, 'lang':lang, 'fullname': fullname}]
+
 			month = 30
 			start_date += delta
 
@@ -101,10 +107,9 @@ def get_info(metadata_path):
 
 	with open(metadata_path, 'rb') as f:
 		repo_lst = pickle.load(f)
-		# print(len(repo_lst))
 
 		for repo in repo_lst:
-			print(f'repo name: {repo}')
+			# print(f'repo name: {repo}')
 			company, location, email = get_user_info(repo['username'])
 			data += [{'username': repo['username'], 'company': company, 'location': location, 'email': email}]
 

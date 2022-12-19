@@ -68,15 +68,17 @@ tbb = {'2012': 26, '2013': 42, '2014': 79, '2015': 99, '2016': 92, '2017': 139, 
 index = omp.keys()
 df = pd.DataFrame({'OpenMP': list(omp.values()),
                    'Cuda': list(cuda.values()),
-                    'OpenCL': list(opencl.values()),
-                    'OpenACC': list(openacc.values()),
-                    'Cilk': list(cilk.values()),
-                    'TBB': list(tbb.values())}, index=index)
-df.plot.bar(rot=0)
+                    'OpenCL': list(opencl.values())
+                    # 'OpenACC': list(openacc.values()),
+                    # 'Cilk': list(cilk.values()),
+                    # 'TBB': list(tbb.values())
+                    }, index=index)
+# df.plot.bar(rot=0)
 # df.plot.bar(rot=0, stacked=True)
 
-# df = df.apply(lambda x: x*100/sum(x), axis=1)
-# df.plot.bar(rot=0, stacked=True)
+df = df.apply(lambda x: x*100/sum(x), axis=1)
+print(df)
+df.plot.bar(rot=0, stacked=True)
 plt.show()
 
   
