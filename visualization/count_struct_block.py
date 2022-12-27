@@ -52,54 +52,23 @@ def is_single_line_for(code):
     return not is_next_char_paren(code[idx + 1:])
 
 
-def inspect_file_LOC(file_path):
-    '''
-    Return for a fiven file all openMP verions used
-    '''    
-   
-    with open(file_path, 'r') as f:
-        code = f.read()
-        loc = count_pragmas(code)
--
-        code = redundant_line_comments.sub("\n", code)
-        code = redundant_multiline_comments.sub("\n", code)
-        code = '\n'.join(filter(lambda line: len(line.lstrip()) > 0, code.split('\n')))
-        code = code.lower()
-        
-        total_lines = code.count('\n')+1
-        idx = code.find('#pragma')
+def join_splited_lines(code_buf, delimiter='\\'):
+    code = []
+    splitted_line = False
 
-        while idx != -1:
-            code = code[idx:]
-            pragma = code[: code.find('\n')]
-            pragma = pragma[:pragma.find('{')] if '{' in pragma else pragma
+    for line in code_buf.split('\n'):
+        if not splitted_line and len(line) > 0 and line[-1] == delimiter:
+            code.append(line[:-1])
+            splitted_line = True
+        elif splitted_line and len(line) > 0 and line[-1] == delimiter:
+            code[-1] += line[:-1]
+        elif splitted_line:
+            code[-1] += line
+            splitted_line = False
+        else:
+            code.append(line)
 
-            if 'omp' in pragma and 'parallel' in pragma:
-                if is_next_char_paren(code[len(pragma):]):
-                    paren_idx = paren_matcher(0, code)
-                    if paren_idx != -1:
-                        loc += code[:paren_idx].count('\n')
-                        code = code[paren_idx + 1:]
-                    else:
-                        return (total_lines, loc)
-                elif 'for' in pragma and is_single_line_for(code[len(pragma): ]):
-                    loc += 2
-                    code = code[len(pragma):]
-                elif 'for' in pragma:
-                    paren_idx = paren_matcher(0, code)
-                    if paren_idx != -1:
-                        loc += code[:paren_idx].count('\n')
-                        code = code[paren_idx + 1:]
-                    else:
-                        return (total_lines, loc)
-                else:
-                    code = code[len(pragma):]
-            else:
-                code = code[len(pragma):]
-
-            idx = code.find('#pragma')
-
-    return (total_lines, loc)
+    return '\n'.join(code)
 
 
 # def inspect_file_LOC(file_path):
@@ -110,9 +79,15 @@ def inspect_file_LOC(file_path):
 #     with open(file_path, 'r') as f:
 #         code = f.read()
 #         loc = count_pragmas(code)
+#         updated_code = []
+#         prev_line = ''
+
 #         code = redundant_line_comments.sub("\n", code)
 #         code = redundant_multiline_comments.sub("\n", code)
 #         code = '\n'.join(filter(lambda line: len(line.lstrip()) > 0, code.split('\n')))
+#         code = join_splited_lines(code)
+
+
 #         code = code.lower()
         
 #         total_lines = code.count('\n')+1
@@ -123,8 +98,15 @@ def inspect_file_LOC(file_path):
 #             pragma = code[: code.find('\n')]
 #             pragma = pragma[:pragma.find('{')] if '{' in pragma else pragma
 
-#             if 'omp' in pragma:
-#                 if 'for' in pragma and is_single_line_for(code[len(pragma): ]):
+#             if 'omp' in pragma and 'parallel' in pragma:
+#                 if is_next_char_paren(code[len(pragma):]):
+#                     paren_idx = paren_matcher(0, code)
+#                     if paren_idx != -1:
+#                         loc += code[:paren_idx].count('\n')
+#                         code = code[paren_idx + 1:]
+#                     else:
+#                         return (total_lines, loc)
+#                 elif 'for' in pragma and is_single_line_for(code[len(pragma): ]):
 #                     loc += 2
 #                     code = code[len(pragma):]
 #                 elif 'for' in pragma:
@@ -133,7 +115,7 @@ def inspect_file_LOC(file_path):
 #                         loc += code[:paren_idx].count('\n')
 #                         code = code[paren_idx + 1:]
 #                     else:
-#                         code = code[len(pragma):]
+#                         return (total_lines, loc)
 #                 else:
 #                     code = code[len(pragma):]
 #             else:
@@ -142,6 +124,49 @@ def inspect_file_LOC(file_path):
 #             idx = code.find('#pragma')
 
 #     return (total_lines, loc)
+
+
+def inspect_file_LOC(file_path):
+    '''
+    Return for a fiven file all openMP verions used
+    '''    
+   
+    with open(file_path, 'r') as f:
+        code = f.read()
+        loc = count_pragmas(code)
+        code = redundant_line_comments.sub("\n", code)
+        code = redundant_multiline_comments.sub("\n", code)
+        code = '\n'.join(filter(lambda line: len(line.lstrip()) > 0, code.split('\n')))
+        code = join_splited_lines(code)
+        code = code.lower()
+        
+        total_lines = code.count('\n')+1
+        idx = code.find('#pragma')
+
+        while idx != -1:
+            code = code[idx:]
+            pragma = code[: code.find('\n')]
+            pragma = pragma[:pragma.find('{')] if '{' in pragma else pragma
+
+            if 'omp' in pragma:
+                if 'for' in pragma and is_single_line_for(code[len(pragma): ]):
+                    loc += 2
+                    code = code[len(pragma):]
+                elif 'for' in pragma:
+                    paren_idx = paren_matcher(0, code)
+                    if paren_idx != -1:
+                        loc += code[:paren_idx].count('\n')
+                        code = code[paren_idx + 1:]
+                    else:
+                        code = code[len(pragma):]
+                else:
+                    code = code[len(pragma):]
+            else:
+                code = code[len(pragma):]
+
+            idx = code.find('#pragma')
+
+    return (total_lines, loc)
 
 
 def scan_repos(omp_repo):
@@ -156,7 +181,6 @@ def scan_repos(omp_repo):
                     ext = file[file.rfind('.')+1:]
 
                     if ext in ['c', 'cpp'] and  'test' not in root: # alot of garbage code in test directories
-                        # print(root)
                         repo2lines[f'{user_name}/{repo_name}'][file] = inspect_file_LOC(os.path.join(root, file))
     
     with open("repo2lines.json", "w") as f:
@@ -179,16 +203,10 @@ def loc_stats():
     return total_lines, prl_lines
 
 # scan_repos('/home/talkad/Downloads/thesis/data_gathering_script/repositories_openMP')
-# print(inspect_file_LOC('/home/talkad/Downloads/thesis/data_gathering_script/repositories_openMP/0xe1d1a/pcs/omp/report/reduction.c'))
+# print(inspect_file_LOC('/home/talkad/Downloads/thesis/data_gathering_script/histo_atomic.c'))
 
-#total
-# print(loc_stats()) # (4335645, 1150409) 37.6%
-
-#only for loops
-# print(loc_stats()) # (4335645, 1115986)
-
-# only for loops + without test directories
-# print(loc_stats()) # (2969726, 418406) 14.09%
+# only for loops + without test directories    (2957494, 540458)
+# print(loc_stats()) # (2969726, 490634) 16.52%
 
 # total+ without test directories
-print(loc_stats())   # (2969726, 460083)  15.49%
+print(loc_stats())   # (2969726, 540458)  18.19%
