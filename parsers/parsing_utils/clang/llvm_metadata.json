@@ -3,5 +3,6 @@
     "_script_path": "/home/talkad/Downloads/thesis/data_gathering_script/parsers/parsing_utils/clang/compile_clang.sh",
     "temp_dir": "/home/talkad/OpenMPdb/temp",
     "_temp_dir": "/home/talkad/LIGHTBITS_SHARE/temp",
-    "patch_path": "/home/talkad/OpenMPdb/parsers/parsing_utils/clang/CPP/patch.h"
+    "patch_path": "/home/talkad/OpenMPdb/parsers/parsing_utils/clang/CPP/patch.h",
+    "cbe_dir": "/home/talkad/CBE"
 } 

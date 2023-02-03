@@ -122,6 +122,19 @@ class Injector:
 
         return '\n'.join(updated_code)
 
+    def mark_while_loop(self, code):
+        updated_code = []
+        pragma_func = 'while_loop_talkad7420();'
+
+        for line in code.split('\n'):
+            l = line.lstrip().lower()
+
+            if l.startswith('while') or l.startswith('do'):
+                updated_code.append(pragma_func)
+            updated_code.append(line)
+
+        return '\n'.join(updated_code)
+
     def clean_code(self, code):
         code = self.cleaner.unite_lines(self.cleaner.remove_comments(code))
         return self.cleaner.add_curly_braces(self.cleaner.remove_empty_lines(code))
@@ -129,6 +142,7 @@ class Injector:
 
     def inject(self, code):
         code = self.clean_code(code)
+        code = self.mark_while_loop(code)
         return  self.cleaner.remove_empty_lines(self.wrap_pragma(code))
 
 

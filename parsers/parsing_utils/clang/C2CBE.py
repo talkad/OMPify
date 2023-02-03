@@ -26,18 +26,11 @@ class C2CBE:
         return self.injector.inject(code)
 
     def run_script(self, root, file_name):
-
         name = file_name[:file_name.rfind('.')]
-        # print([self.metadata['script_path'], file_name, f'{name}.ll'])
         p = Popen([self.metadata['script_path'], root, file_name, f'{name}.ll'], stdin=PIPE, stdout=PIPE, stderr=PIPE)
         res, err = p.communicate()
-        # print(res)
-        # print(err)
 
-    def convert2cbe(self, repo_path):
-        temp_path = self.metadata['temp_dir']
-
-        # create repo env
+    def create_env(self, repo_path, temp_path):
         shutil.copytree(repo_path, temp_path)
 
         # copy the header patch into every inner directory
@@ -46,13 +39,29 @@ class C2CBE:
             for d in dirs:
                 shutil.copyfile(self.metadata['patch_path'], os.path.join(root, d, 'patch.h'))
 
+    def keep_cbe(self, temp_path):
+        shutil.move(temp_path, self.metadata['cbe_dir'])
+
+        # remove unrelevant files
+        for idx, (root, dirs, files) in enumerate(os.walk(self.metadata['cbe_dir'])):
+            for file in files:
+                # print('remove', file)
+                if not file.endswith('.cbe.c'):
+                    # print('yes')
+                    os.remove(os.path.join(root, file))
+
+    def convert2cbe(self, repo_path, repo_name):
+        temp_path = os.path.join(self.metadata['temp_dir'], repo_name)
+
+        # create repo env
+        self.create_env(repo_path, temp_path)
+
         for idx, (root, dirs, files) in enumerate(os.walk(temp_path)):
             for file_name in files:
                 ext = os.path.splitext(file_name)[1].lower()
 
                 if ext in self.langs:
                     file_path = os.path.join(root, file_name)
-                    print(file_path)
 
                     with open(file_path, 'r+') as f:
                         original_code = f.read()
@@ -62,7 +71,6 @@ class C2CBE:
                         f.write(updated_code)
 
                     # compile
-                    print(root, file_name)
                     self.run_script(root, file_name)
 
                     with open(file_path, 'w') as f:
@@ -70,18 +78,19 @@ class C2CBE:
                         f.seek(0)
                         f.write(original_code)
 
-
-        # keep cbe.c files
-        # remove all the rest
-
-        # shutil.rmtree(temp_path)
+        # keep just the cbe.c files
+        self.keep_cbe(temp_path)
+        shutil.rmtree(self.metadata['temp_dir'])
 
     def scan_dir(self):
+        # create cbe directory 
+        if os.path.exists(self.metadata['cbe_dir']):
+            shutil.rmtree(self.metadata['cbe_dir'])
+        os.mkdir(self.metadata['cbe_dir'])
 
         for repo in os.listdir(self.dir_path):
             print('repo:', repo)
-            self.convert2cbe(os.path.join(self.dir_path, repo))
-            break
+            self.convert2cbe(os.path.join(self.dir_path, repo), repo)
 
 
 cc = C2CBE('/home/talkad/OpenMPdb/asd', '/home/talkad/OpenMPdb/parsers/parsing_utils/clang/llvm_metadata.json', langs=['.cpp'])
@@ -90,3 +99,4 @@ cc.scan_dir()
 
 # os.chdir('/home/talkad/OpenMPdb/temp/folder')       
 # cc.run_script('/home/talkad/OpenMPdb/temp/folder', 'f.cpp')
+
