@@ -123,6 +123,7 @@ class CLoopParser(Parser):
             except:
                 return
         elif 'ast' in return_dict:
+            print(return_dict['ast'])
             return return_dict['ast']
 
     def extract_func_defs(self, func_calls, func_defs):
@@ -161,6 +162,7 @@ class CLoopParser(Parser):
         func_defs_extractor = FuncDefVisitor()
 
         with open(file_path, 'r+') as f:
+            print(file_path)
             try:
                 code = f.read()
             except UnicodeDecodeError:
