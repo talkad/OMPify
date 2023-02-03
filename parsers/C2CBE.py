@@ -1,8 +1,11 @@
-from injector import Injector
+from clang.injector import Injector
 from subprocess import Popen, PIPE
 import shutil
 import json
 import os
+from parsing_utils import utils
+from fake_headers import fake
+
 
 class C2CBE:
     '''
@@ -25,10 +28,40 @@ class C2CBE:
         code = '#include \"patch.h\"\n' + code
         return self.injector.inject(code)
 
-    def run_script(self, root, file_name):
+    def run_script(self, root, repo_name, file_name):
+
+        headers_folder =  'temp_headers'
         name = file_name[:file_name.rfind('.')]
-        p = Popen([self.metadata['script_path'], root, file_name, f'{name}.ll'], stdin=PIPE, stdout=PIPE, stderr=PIPE)
+        # cpp_args = ['-nostdinc', '-w', '-E', r'-I/home/talkad/OpenMPdb/parsers/fake_headers/utils_cpp']
+        cpp_args = ['-w']
+        
+        if file_name.endswith('.cpp'):
+            cpp_args.append(r'-I/home/talkad/OpenMPdb/parsers/fake_headers/utils_cpp')
+        else:
+            cpp_args.append('-nostdinc')
+            cpp_args.append(r'-I/home/talkad/OpenMPdb/parsers/fake_headers/utils')
+
+        if os.path.exists(headers_folder):
+            shutil.rmtree(headers_folder)
+
+        # create empty headers
+        os.makedirs(headers_folder)
+        fake.create_empty_headers(os.path.join(root, file_name), headers_folder)
+        cpp_args.append(r'-I' + headers_folder)
+
+        print('aaa', root[len(self.metadata['temp_dir']):])
+
+
+        p = Popen([self.metadata['script_path'], root, ' '.join(cpp_args) , file_name, f'{name}.ll'], stdin=PIPE, stdout=PIPE, stderr=PIPE)
         res, err = p.communicate()
+        # shutil.rmtree(headers_folder)
+        # print(res)
+
+        err = err.decode("utf-8")
+
+        if 'error' in err:
+            utils.log('cbe_error.txt', f'{os.path.join(root, file_name)}\n{err}\n=========================\n')
+
 
     def create_env(self, repo_path, temp_path):
         shutil.copytree(repo_path, temp_path)
@@ -42,13 +75,17 @@ class C2CBE:
     def keep_cbe(self, temp_path):
         shutil.move(temp_path, self.metadata['cbe_dir'])
 
-        # remove unrelevant files
-        for idx, (root, dirs, files) in enumerate(os.walk(self.metadata['cbe_dir'])):
-            for file in files:
-                # print('remove', file)
-                if not file.endswith('.cbe.c'):
-                    # print('yes')
-                    os.remove(os.path.join(root, file))
+        # # remove unrelevant files
+        # for idx, (root, dirs, files) in enumerate(os.walk(self.metadata['cbe_dir'])):
+        #     for file in files:
+        #         if not file.endswith('.cbe.c'):
+        #             os.remove(os.path.join(root, file))
+
+        # # remove empty dirs
+        # for idx, (root, dirs, files) in enumerate(os.walk(self.metadata['cbe_dir'], topdown=False)):
+        #     for d in dirs:
+        #         if len(os.listdir(os.path.join(root, d))) == 0:
+        #             os.rmdir(os.path.join(root, d))
 
     def convert2cbe(self, repo_path, repo_name):
         temp_path = os.path.join(self.metadata['temp_dir'], repo_name)
@@ -58,6 +95,7 @@ class C2CBE:
 
         for idx, (root, dirs, files) in enumerate(os.walk(temp_path)):
             for file_name in files:
+                # print(file_name)
                 ext = os.path.splitext(file_name)[1].lower()
 
                 if ext in self.langs:
@@ -71,12 +109,12 @@ class C2CBE:
                         f.write(updated_code)
 
                     # compile
-                    self.run_script(root, file_name)
+                    self.run_script(root, repo_name, file_name)
 
-                    with open(file_path, 'w') as f:
-                        f.truncate(0)
-                        f.seek(0)
-                        f.write(original_code)
+                    # with open(file_path, 'w') as f:
+                    #     f.truncate(0)
+                    #     f.seek(0)
+                    #     f.write(original_code)
 
         # keep just the cbe.c files
         self.keep_cbe(temp_path)
@@ -93,10 +131,9 @@ class C2CBE:
             self.convert2cbe(os.path.join(self.dir_path, repo), repo)
 
 
-cc = C2CBE('/home/talkad/OpenMPdb/asd', '/home/talkad/OpenMPdb/parsers/parsing_utils/clang/llvm_metadata.json', langs=['.cpp'])
+cc = C2CBE('/home/talkad/OpenMPdb/asd', '/home/talkad/OpenMPdb/parsers/clang/llvm_metadata.json', langs=['.cpp', '.c'])
 cc.scan_dir()
 # cc.convert2cbe('/home/talkad/Downloads/thesis/data_gathering_script/asd')
 
-# os.chdir('/home/talkad/OpenMPdb/temp/folder')       
-# cc.run_script('/home/talkad/OpenMPdb/temp/folder', 'f.cpp')
+# cc.run_script('/home/talkad/OpenMPdb/asd/Aidandos/high_performance_computing', 'check.cpp')
 

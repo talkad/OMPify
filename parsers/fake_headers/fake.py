@@ -4,13 +4,15 @@ import json
 import shutil
 from functools import reduce
 
+try:
+    with open('ENV.json', 'r') as f:
+        vars = json.loads(f.read())
 
-with open('ENV.json', 'r') as f:
-    vars = json.loads(f.read())
-
-REPOS_DIR = vars['REPOS_DIR']
-REPOS_OMP_DIR = vars['REPOS_OMP_DIR']
-FAKE_DIR = vars['FAKE_DIR']
+    REPOS_DIR = vars['REPOS_DIR']
+    REPOS_OMP_DIR = vars['REPOS_OMP_DIR']
+    FAKE_DIR = vars['FAKE_DIR']
+except FileNotFoundError:
+    print('Note: you are not running from the main dir')
 
 
 def get_headers(repo_dir, repo_name):

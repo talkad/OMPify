@@ -1,24 +1,28 @@
 import re
 
 redundant_line_comments = re.compile("\/\/.*")
-redundant_multiline_comments = re.compile("\/\*.*\*\/", re.MULTILINE|re.DOTALL)
+redundant_multiline_comments = re.compile("\/\*.*?\*\/", re.MULTILINE|re.DOTALL)
 
 
 class CleanCode:
 
-    def unite_lines(self, code):
-        updated_code = []
+    def join_splited_lines(self, code_buf, delimiter='\\'):
+        code = []
+        splitted_line = False
 
-        for idx, line in enumerate(code.split('\n')):
-            if idx == 0:
-                updated_code.append(line)
-            elif line.rstrip().endswith('\\'):
-                backslash_idx = line.rfind('\\')
-                updated_code[-1] += "\n"+f"{line[:backslash_idx]}"
+        for line in code_buf.split('\n'):
+            if not splitted_line and len(line) > 0 and line[-1] == delimiter:
+                code.append(line[:-1])
+                splitted_line = True
+            elif splitted_line and len(line) > 0 and line[-1] == delimiter:
+                code[-1] += line[:-1]
+            elif splitted_line:
+                code[-1] += line
+                splitted_line = False
             else:
-                updated_code.append(line)
+                code.append(line)
 
-        return '\n'.join(updated_code)
+        return '\n'.join(code)
 
     def remove_comments(self, code):
         code = redundant_line_comments.sub("\n", code)
@@ -129,14 +133,14 @@ class Injector:
         for line in code.split('\n'):
             l = line.lstrip().lower()
 
-            if l.startswith('while') or l.startswith('do'):
+            if l.startswith('while') or l.startswith('do ') or l.startswith('do{'):
                 updated_code.append(pragma_func)
             updated_code.append(line)
 
         return '\n'.join(updated_code)
 
     def clean_code(self, code):
-        code = self.cleaner.unite_lines(self.cleaner.remove_comments(code))
+        code = self.cleaner.join_splited_lines(self.cleaner.remove_comments(code))
         return self.cleaner.add_curly_braces(self.cleaner.remove_empty_lines(code))
 
 
@@ -149,34 +153,48 @@ class Injector:
 
 
 # code = """
-# #include <string>
+# /* FILE: omp_bug2.c
+# * DESCRIPTION:
+# *   This example attempts to show use of the parallel for construct.  However
+# *   it will generate errors at compile time.  Try to determine what is causing
+# *   the error.
+# ******************************************************************************/
 # #include <omp.h>
-# typedef int AA;
+# #include <stdio.h>
+# #include <stdlib.h>
+# #define N       50
+# #define CHUNKSIZE   5
 
-
-
-# int main()
+# int main (int argc, char *argv[])
 # {
-#         AA a;
-#         int N = 10000;
-#         int arr[N];
+# int i, chunk, tid;
+# float a[N], b[N], c[N];
 
-#         int sum = 0;
+# /* Some initializations */
+# for (i=0; i < N; i++){
+#   a[i] = b[i] = i * 1.0;
+# }
 
-#         #pragma omp parallel for
-#          for(int i = 0; i < N; i++)
-#           #pragma omp parallel for  
-#         for(int i = 0; i < N; i++)
-#             if(arr[i] > 0)
-#                 sum += arr[i];
+# chunk = CHUNKSIZE;
+#  //Problem: If one uses 'for' a 'for' loop needs to follow. Schedule needs to follow the for statement.
 
-#           sum = 1000;
+# #pragma omp parallel private(i,tid)\\
+# shared(a,b,c,chunk)
+# {
+#   tid = omp_get_thread_num();
+#   #pragma omp for schedule(static,chunk)
+#   for (i=0; i < N; i++)
+#     {
+#     c[i] = a[i] + b[i];
+#     printf("tid= %d i= %d c[i]= %f\n", tid, i, c[i]);
+#     }
+#   }
+
+
 # }
 # """
 
 
 
-
-
 # injector = Injector()
-# print(injector.inject('/home/talkad/Downloads/thesis/data_gathering_script/asd/1/aa.cpp'))
+# print(injector.inject(code))

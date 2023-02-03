@@ -9,7 +9,7 @@ redundant_directives = re.compile("MAYBE_INLINE|TM_CALLABLE|__block|RESTRICT|__t
 redundant_includes = re.compile("^\W*#\W*include\W* <\.\..*|^\W*#\W*include\W* \"\.\..*", re.MULTILINE)
 redundant_defines = re.compile("^\W*#\W*define\W* INIT().*", re.MULTILINE)
 redundant_line_comments = re.compile("\/\/.*")
-redundant_multiline_comments = re.compile("\/\*.*\*\/", re.MULTILINE|re.DOTALL)
+redundant_multiline_comments = re.compile("\/\*.*?\*\/", re.MULTILINE|re.DOTALL)
 
 if_directive = re.compile("^\W*#\W*if\W(.*)|^\W*#\W*elif\W(.*)", re.MULTILINE)
 ifdef_directive = re.compile("^\W*#\W*ifdef\W(.*)|^\W*#\W*ifndef\W(.*)", re.MULTILINE)
