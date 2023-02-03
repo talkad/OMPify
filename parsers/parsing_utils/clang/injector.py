@@ -11,7 +11,7 @@ class CleanCode:
 
         for idx, line in enumerate(code.split('\n')):
             if idx == 0:
-                continue
+                updated_code.append(line)
             elif line.rstrip().endswith('\\'):
                 backslash_idx = line.rfind('\\')
                 updated_code[-1] += "\n"+f"{line[:backslash_idx]}"
@@ -23,7 +23,6 @@ class CleanCode:
     def remove_comments(self, code):
         code = redundant_line_comments.sub("\n", code)
         code = redundant_multiline_comments.sub("\n", code)
-
         return code
 
     def remove_empty_lines(self, code):
@@ -117,7 +116,7 @@ class Injector:
             l = line.lstrip().lower()
 
             if l.startswith('#pragma') and ' omp' in l:
-                updated_code.append(f'{pragma_func}(\"{l}\")')
+                updated_code.append(f'{pragma_func}(\"{l}\");')
             else:
                 updated_code.append(line)
 
