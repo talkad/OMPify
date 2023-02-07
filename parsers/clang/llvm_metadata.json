@@ -4,5 +4,6 @@
     "temp_dir": "/home/talkad/OpenMPdb/temp",
     "_temp_dir": "/home/talkad/LIGHTBITS_SHARE/temp",
     "patch_path": "/home/talkad/OpenMPdb/parsers/clang/CPP/patch.h",
-    "cbe_dir": "/home/talkad/CBE"
+    "cbe_dir": "/home/talkad/CBE",
+    "original_repos": "/home/talkad/Downloads/repos_omp"
 } 

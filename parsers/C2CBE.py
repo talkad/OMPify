@@ -28,39 +28,55 @@ class C2CBE:
         code = '#include \"patch.h\"\n' + code
         return self.injector.inject(code)
 
-    def run_script(self, root, repo_name, file_name):
-
-        headers_folder =  'temp_headers'
+    def run_script(self, root, repo_name, file_name, stats):
+        full_path = os.path.join(root, file_name)
+        original_path = self.metadata['original_repos'] + full_path[len(self.metadata['temp_dir']): -len(file_name)-1]
+        result = True
+        # headers_folder =  'temp_headers'
         name = file_name[:file_name.rfind('.')]
         # cpp_args = ['-nostdinc', '-w', '-E', r'-I/home/talkad/OpenMPdb/parsers/fake_headers/utils_cpp']
-        cpp_args = ['-w']
+        cpp_args = ['-w', r'-I' + original_path]
+        # print(original_path)
         
-        if file_name.endswith('.cpp'):
-            cpp_args.append(r'-I/home/talkad/OpenMPdb/parsers/fake_headers/utils_cpp')
-        else:
-            cpp_args.append('-nostdinc')
-            cpp_args.append(r'-I/home/talkad/OpenMPdb/parsers/fake_headers/utils')
+        # if file_name.endswith('.cpp'):
+        #     cpp_args.append(r'-I/home/talkad/OpenMPdb/parsers/fake_headers/utils_cpp')
+        # else:
+        #     cpp_args.append('-nostdinc')
+        #     cpp_args.append(r'-I/home/talkad/OpenMPdb/parsers/fake_headers/utils')
 
-        if os.path.exists(headers_folder):
-            shutil.rmtree(headers_folder)
+        # if os.path.exists(headers_folder):
+        #     shutil.rmtree(headers_folder)
 
         # create empty headers
-        os.makedirs(headers_folder)
-        fake.create_empty_headers(os.path.join(root, file_name), headers_folder)
-        cpp_args.append(r'-I' + headers_folder)
+        # os.makedirs(headers_folder)
+        # fake.create_empty_headers(os.path.join(root, file_name), headers_folder)
+        # cpp_args.append(r'-I' + headers_folder)
 
-        print('aaa', root[len(self.metadata['temp_dir']):])
+        # print('aaa', root[len(self.metadata['temp_dir']):])
 
 
         p = Popen([self.metadata['script_path'], root, ' '.join(cpp_args) , file_name, f'{name}.ll'], stdin=PIPE, stdout=PIPE, stderr=PIPE)
         res, err = p.communicate()
         # shutil.rmtree(headers_folder)
-        # print(res)
+        print(res)
+        print(file_name)
 
         err = err.decode("utf-8")
 
         if 'error' in err:
-            utils.log('cbe_error.txt', f'{os.path.join(root, file_name)}\n{err}\n=========================\n')
+            utils.log('cbe_error.txt', f'{full_path}\n{err}\n=========================\n')
+            result = False
+        
+        if file_name.endswith('.cpp'):
+            stats['total_cpp'] += 1
+            if result:
+                stats['cpp'] += 1
+        else:
+            stats['total_c'] += 1
+            if result:
+                stats['c'] += 1
+
+        return result
 
 
     def create_env(self, repo_path, temp_path):
@@ -87,7 +103,7 @@ class C2CBE:
         #         if len(os.listdir(os.path.join(root, d))) == 0:
         #             os.rmdir(os.path.join(root, d))
 
-    def convert2cbe(self, repo_path, repo_name):
+    def convert2cbe(self, repo_path, repo_name, stats):
         temp_path = os.path.join(self.metadata['temp_dir'], repo_name)
 
         # create repo env
@@ -101,6 +117,8 @@ class C2CBE:
                 if ext in self.langs:
                     file_path = os.path.join(root, file_name)
 
+                    loop_amount, pragma_amount = utils.count_for(file_path)
+
                     with open(file_path, 'r+') as f:
                         original_code = f.read()
                         updated_code = self.inject_code(original_code)
@@ -109,18 +127,24 @@ class C2CBE:
                         f.write(updated_code)
 
                     # compile
-                    self.run_script(root, repo_name, file_name)
+                    res = self.run_script(root, repo_name, file_name, stats)
 
                     # with open(file_path, 'w') as f:
                     #     f.truncate(0)
                     #     f.seek(0)
                     #     f.write(original_code)
 
+                    if res:
+                        stats['for'] += loop_amount
+                        stats['pragma'] += pragma_amount
+
         # keep just the cbe.c files
         self.keep_cbe(temp_path)
         shutil.rmtree(self.metadata['temp_dir'])
 
     def scan_dir(self):
+        stats = {stat:0 for stat in ['pragma', 'for', 'total_cpp', 'cpp', 'total_c', 'c']}
+
         # create cbe directory 
         if os.path.exists(self.metadata['cbe_dir']):
             shutil.rmtree(self.metadata['cbe_dir'])
@@ -128,7 +152,9 @@ class C2CBE:
 
         for repo in os.listdir(self.dir_path):
             print('repo:', repo)
-            self.convert2cbe(os.path.join(self.dir_path, repo), repo)
+            self.convert2cbe(os.path.join(self.dir_path, repo), repo, stats)
+
+        print(stats)
 
 
 cc = C2CBE('/home/talkad/OpenMPdb/asd', '/home/talkad/OpenMPdb/parsers/clang/llvm_metadata.json', langs=['.cpp', '.c'])

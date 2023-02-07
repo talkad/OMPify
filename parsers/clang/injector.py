@@ -184,10 +184,10 @@ class Injector:
 #   tid = omp_get_thread_num();
 #   #pragma omp for schedule(static,chunk)
 #   for (i=0; i < N; i++)
-#     {
+#   for (i=0; i < N; i++)
+#   #pragma omp for
+#   for (i=0; i < N; i++)
 #     c[i] = a[i] + b[i];
-#     printf("tid= %d i= %d c[i]= %f\n", tid, i, c[i]);
-#     }
 #   }
 
 

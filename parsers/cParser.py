@@ -139,6 +139,98 @@ class CLoopParser(Parser):
         func_names = list(map(lambda func_call: extract_func_name(func_call), func_calls))
         return [func_def for func_def in func_defs if func_def.decl.name in func_names]
 
+    # def parse_file(self, root_dir, file_name, exclusions):
+    #     '''
+    #     Parse the given file into ast and extract the loops associated with omp pargma (or without)
+    #     '''
+    #     indexer = 0
+    #     pos, neg = 0, 0
+    #     pragma_found = 0
+    #     count_no_pragma = 0
+    #     error = 'missing pragmas'
+
+    #     file_path = os.path.join(root_dir, file_name)
+    #     log('files.txt', file_path)
+    #     _, pragma_amount = utils.count_for(file_path)
+    #     save_dir = os.path.join(self.parsed_path, root_dir[self.split_idx: ])
+    #     name = os.path.splitext(file_name)[0]
+
+    #     pfv = PragmaForVisitor()
+    #     verify_loops = ForLoopChecker()
+    #     omp_in_loop = OmpChecker()
+    #     func_call_checker = FuncCallChecker()
+    #     func_defs_extractor = FuncDefVisitor()
+
+    #     with open(file_path, 'r+') as f:
+    #         print(file_path)
+    #         try:
+    #             code = f.read()
+    #         except UnicodeDecodeError:
+    #             utils.log("fail_pragma.txt", f'{file_path}\nUnicodeDecodeError\nfound {pragma_found} | there are {pragma_amount}\n===================')
+    #             return 0, 0, False
+            
+    #         code = utils.update_code_pipline(code)    # remove unparsable code
+    #         asts = list(map(lambda code_permutation: self.parse(file_path, code_permutation), utils.get_if_permutations(code)))
+
+    #         for copy_idx, ast in enumerate(asts):
+    #             if ast is None:                 # file parsing failed
+    #                 error = 'failed to parse'
+    #                 continue
+
+    #             pfv.visit(ast)
+    #             pragma_found += len(pfv.pragmas)
+    #             pragmas = pfv.pragmas + len(pfv.neg_nodes) * [None]
+    #             nodes = pfv.pos_nodes + pfv.neg_nodes
+    #             func_defs_extractor.visit(ast)
+
+    #             for idx, (pragma, loop) in enumerate(zip(pragmas, nodes)):
+    #                 verify_loops.reset()
+    #                 omp_in_loop.reset()
+    #                 func_call_checker.reset()
+
+    #                 generator = pycparser.c_generator.CGenerator()
+    #                 code = generator.visit(loop)
+
+    #                 if code in self.memory and copy_idx > 0 and pragma is not None:
+    #                     pragma_found -= 1
+    #                     continue
+
+    #                 verify_loops.visit(loop)
+    #                 omp_in_loop.visit(loop)
+    #                 if verify_loops.found or (pragma is None and omp_in_loop.found):  # undesired tokens found
+    #                     exclusions['bad_case'] += 1
+    #                     continue
+
+    #                 if code in self.memory:
+    #                     exclusions['duplicates'] += 1
+    #                     continue
+
+    #                 if self.is_empty_loop(loop):
+    #                     exclusions['empty'] += 1
+    #                     continue
+
+    #                 func_call_checker.visit(loop)
+    #                 if func_call_checker.found:
+    #                     exclusions['func_calls'] += 1
+                
+    #                 saving_path = os.path.join(save_dir, name, str(indexer))
+    #                 self.create_directory(saving_path) 
+    #                 self.memory.append(code)
+
+    #                 relevant_func_defs = self.extract_func_defs(func_call_checker.func_calls, func_defs_extractor.func_def)
+    #                 self.save(saving_path, OmpLoop(pragma, loop, relevant_func_defs, code))
+    #                 indexer += 1
+
+    #                 if pragma is None:
+    #                     neg += 1
+    #                 else:
+    #                     pos += 1
+
+    #         if pragma_found < pragma_amount:
+    #             utils.log("fail_pragma.txt", f'{file_path}\n{error}\nfound {pragma_found} | there are {pragma_amount}\n===================')
+
+    #         return pos, neg, True
+        
     def parse_file(self, root_dir, file_name, exclusions):
         '''
         Parse the given file into ast and extract the loops associated with omp pargma (or without)
@@ -230,8 +322,8 @@ class CLoopParser(Parser):
                 utils.log("fail_pragma.txt", f'{file_path}\n{error}\nfound {pragma_found} | there are {pragma_amount}\n===================')
 
             return pos, neg, True
-        
 
+            
 # files processed:         19778   |   failed to parse:           1664
 # pos examples:            13893   |   neg examples:             37521
 # exclusions: {'bad_case': 1261656, 'empty': 2779, 'duplicates': 25767368, 'func_calls': 23763}
