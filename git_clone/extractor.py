@@ -1,6 +1,7 @@
 import os
 import shutil
 import json
+from tqdm import tqdm
 
 
 # with open('../ENV.json', 'r') as f:
@@ -65,7 +66,49 @@ def scan_dir(root_dir):
 
 	return result
 
+
+def exists_pragma_repo(repo_path):
+
+	for idx, (root, dirs, files) in enumerate(os.walk(repo_path)):
+		for file_name in files:
+			ext = os.path.splitext(file_name)[1].lower()
+
+			if ext in extentions:
+				with open(os.path.join(root, file_name), 'r') as f:
+					try:
+						for line in f:
+							if is_for_pragma(line, 'c' if ext not in fortran_extentions else 'f'):
+								return True
+					except:
+						continue
+	return False
+
+
+def scan_dir_all_repo(root_dir):
+
+	dst_dir = '/home/talkad/LIGHTBITS_SHARE/repos_omp'
+	total, copied = 0, 0
+	for username in tqdm(os.listdir(root_dir)):
+		path = os.path.join(root_dir, username)
+
+		for repo in os.listdir(path):
+			repo_path = os.path.join(path, repo)
+			total += 1
+
+			if exists_pragma_repo(repo_path):
+				copied += 1
+				shutil.copytree(repo_path, os.path.join(dst_dir, username, repo))
+
+			if total%100 == 0:
+				print(f'{copied}/{total}')
+
+	return True
+
+
 # res = scan_dir(vars['REPOS_DIR'])
 # print(res)
 
 # {'.cpp': 12381, '.c': 19784, '.f90': 4352, '.h': 933, '.cc': 513, '.f': 1528, '.f95': 279, '.f03': 10, '.cxx': 69}
+
+
+# res = scan_dir_all_repo('/home/talkad/LIGHTBITS_SHARE/git_repos')
