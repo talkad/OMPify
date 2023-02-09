@@ -1,2 +1,3 @@
-void while_loop_talkad7420();
+void for_loop_talkad7420();
 void omp_pragma_talkad7420(char *pragma);
+void omp_for_pragma_talkad7420(char *pragma);

@@ -28,6 +28,7 @@ class C2CBE:
 
     def inject_code(self, code):
         code = '#include \"patch.h\"\n' + code
+        code = '#include \"_fake_typedefs.h\"\n#include \"_fake_defines.h\"\n' + code
         return self.injector.inject(code)
 
     def run_script(self, root, repo_name, file_name, stats):
@@ -70,9 +71,12 @@ class C2CBE:
 
         # copy the header patch into every inner directory
         shutil.copyfile(self.metadata['patch_path'], os.path.join(temp_path, 'patch.h'))
-        for idx, (root, dirs, files) in enumerate(os.walk(temp_path)):
-            for d in dirs:
-                shutil.copyfile(self.metadata['patch_path'], os.path.join(root, d, 'patch.h'))
+        # for idx, (root, dirs, files) in enumerate(os.walk(temp_path)):
+        #     for d in dirs:
+        #         onlyfiles = [f for f in os.listdir(os.path.join(root, d)) if os.path.isfile(os.path.join(root, d, f))]
+
+        #         if len(onlyfiles) > 0: 
+        #             shutil.copyfile(self.metadata['patch_path'], os.path.join(root, d, 'patch.h'))
 
     def keep_cbe(self, temp_path):
         shutil.move(temp_path, self.metadata['cbe_dir'])
@@ -89,6 +93,8 @@ class C2CBE:
                 if len(os.listdir(os.path.join(root, d))) == 0:
                     os.rmdir(os.path.join(root, d))
 
+
+
     def convert2cbe(self, repo_path, repo_name, stats):
         temp_path = os.path.join(self.metadata['temp_dir'], repo_name)
 
@@ -102,7 +108,8 @@ class C2CBE:
 
                 if ext in self.langs:
                     file_path = os.path.join(root, file_name)
-                    print(file_path)
+                    utils.log('files_cbe.txt', f'{file_path}\n')
+                    # print(file_path)
 
                     loop_amount, pragma_amount = utils.count_for(file_path)
 
@@ -130,6 +137,7 @@ class C2CBE:
         shutil.rmtree(self.metadata['temp_dir'])
 
     def scan_dir(self):
+        idx = 0
         stats = {stat:0 for stat in ['pragma', 'for', 'total_cpp', 'cpp', 'total_c', 'c']}
 
         # create cbe directory 
@@ -138,14 +146,19 @@ class C2CBE:
         os.mkdir(self.metadata['cbe_dir'])
 
         for repo in tqdm(os.listdir(self.dir_path)):
-            print('repo:', repo)
+            # print('repo:', repo)
+            utils.log('files_cbe.txt', f'\n==========\nRepo: {repo}\n')
             self.convert2cbe(os.path.join(self.dir_path, repo), repo, stats)
+            
+            idx += 1
+            if idx%5 == 0:
+                print(stats)
 
         print(stats)
 
 
-cc = C2CBE('/home/talkad/OpenMPdb/asd', '/home/talkad/OpenMPdb/parsers/clang/llvm_metadata.json', langs=['.cpp', '.c'])
-# cc = C2CBE('/home/talkad/OpenMPdb/repositories_openMP', '/home/talkad/OpenMPdb/parsers/clang/llvm_metadata.json', langs=['.cpp', '.c'])
+# cc = C2CBE('/home/talkad/OpenMPdb/asd', '/home/talkad/OpenMPdb/parsers/clang/llvm_metadata.json', langs=['.cpp', '.c'])
+cc = C2CBE('/home/talkad/OpenMPdb/repositories_openMP', '/home/talkad/OpenMPdb/parsers/clang/llvm_metadata.json', langs=['.cpp', '.c'])
 
 cc.scan_dir()
 # cc.convert2cbe('/home/talkad/Downloads/thesis/data_gathering_script/asd')
