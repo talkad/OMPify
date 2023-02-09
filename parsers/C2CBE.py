@@ -161,7 +161,6 @@ class C2CBE:
 cc = C2CBE('/home/talkad/OpenMPdb/repositories_openMP', '/home/talkad/OpenMPdb/parsers/clang/llvm_metadata.json', langs=['.cpp', '.c'])
 
 cc.scan_dir()
-# cc.convert2cbe('/home/talkad/Downloads/thesis/data_gathering_script/asd')
 
-# cc.run_script('/home/talkad/OpenMPdb/asd/Aidandos/high_performance_computing', 'check.cpp')
 
+# {'pragma': 137027, 'for': 253854, 'total_cpp': 12389, 'cpp': 6761, 'total_c': 19784, 'c': 12795}

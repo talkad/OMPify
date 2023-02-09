@@ -142,6 +142,14 @@ def update_code_pipline(code):
     return code
 
 
+def update_code_cbe_pipline(code):
+    code = remove_redundants(code)
+    code = remove_attribute(code)
+    code = remove_ompt(code)
+
+    return code
+
+
 def is_if_directive(line):
 	'''
 	Returns true if the line is compiler-directive condition

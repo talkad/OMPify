@@ -1,7 +1,7 @@
 from optparse import OptionParser
 from git_clone import loader, extractor
-from parsers import cParser, cppParser, fortranParser
-from visualization import visualization
+from parsers import cParser, cppParser, cbeParser # fortranParser
+# from visualization import visualization
 from datetime import datetime
 import os
 import json
@@ -31,7 +31,8 @@ def show_stats(omp_dir):
     '''
     show omp statistics
     '''
-    visualization.show_stats(omp_dir)
+    pass
+    # visualization.show_stats(omp_dir)
 
 
 def parse(omp_dir, prog_lang):
@@ -44,11 +45,13 @@ def parse(omp_dir, prog_lang):
 
     for lang in prog_lang[1:][:-1].lower().split('|'):
         if lang == 'c':
-            parser = cParser.CLoopParser(omp_dir, os.path.join(save_dir, 'c_loops'))
+            parser = cbeParser.CBELoopParser(omp_dir, os.path.join(save_dir, 'cbe_loops'))
+            # parser = cParser.CLoopParser(omp_dir, os.path.join(save_dir, 'c_loops'))
         elif lang == 'cpp':
             parser = cppParser.CppLoopParser(omp_dir, os.path.join(save_dir, 'cpp_loops'))
         elif lang == 'fortran':
-            parser = fortranParser.FortranLoopParser(omp_dir, os.path.join(save_dir, 'fortran_loops'))
+            continue
+            # parser = fortranParser.FortranLoopParser(omp_dir, os.path.join(save_dir, 'fortran_loops'))
         else: 
             continue
 
