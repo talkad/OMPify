@@ -58,23 +58,12 @@ class CBELoopParser(Parser):
 
     def is_empty_loop(self, node):
         '''
-        precondition - node is a For struct
+        return true if the loop is empty
         '''
-        children = dict(node.children())
+        empty_checker = EmptyDoVisitor()
+        empty_checker.visit(node)
 
-        try:
-            # if there is no 'block_items' attribute than it's another compound struct
-            temp = children['stmt'].block_items
-        except:
-            return False
-
-        if children['stmt'].block_items is None:
-            return True
-        elif all(type(child) is For for child in children['stmt'].block_items):
-             # return true if one of the for loops is empty
-            return any(self.is_empty_loop(child) for child in children['stmt'].block_items)
-        else:
-            return False
+        return empty_checker.is_empty
 
 
     def create_ast(self, file_path, code, result):
@@ -107,11 +96,9 @@ class CBELoopParser(Parser):
 
         except pycparser.plyparser.ParseError as e:  
             # utils.log('error_logger.txt', f'Parser Error: {file_path} ->\n {e}\n')
-            print('a')
             print(e)
         except Exception as e:
             # utils.log('error_logger.txt', f'Unexpected Error: {file_path} ->\n {e}\n')
-            print('b')
             print(e)
 
         finally:
@@ -162,83 +149,74 @@ class CBELoopParser(Parser):
         save_dir = os.path.join(self.parsed_path, root_dir[self.split_idx: ])
         name = os.path.splitext(file_name)[0]
 
-        pfv = PragmaForVisitor()
-        verify_loops = ForLoopChecker()
-        omp_in_loop = OmpChecker()
+        preprocessor = Preprocessor()
+        cbev = CbeDoVisitor()
+        verify_loops = DoLoopChecker()
         func_call_checker = FuncCallChecker()
         func_defs_extractor = FuncDefVisitor()
 
         with open(file_path, 'r+') as f:
-            print(file_path)
+            # print(file_path)
             try:
                 code = f.read()
             except UnicodeDecodeError:
                 utils.log("fail_pragma.txt", f'{file_path}\nUnicodeDecodeError\nfound {pragma_found} | there are {pragma_amount}\n===================')
                 return 0, 0, False
             
+            code = preprocessor.preprocess(code)
             code = utils.update_code_cbe_pipline(code)    # remove unparsable code
             ast = self.parse(file_path, code)
 
-            print(ast)
-            return 0, 0, False
+            if ast is None:                 # file parsing failed
+                return 0, 0, False
 
-            # if ast is None:                 # file parsing failed
-            #     error = 'failed to parse'
-            #     continue
+            cbev.visit(ast)
+            pragma_found = len(cbev.pos_nodes)
+            pragmas = len(cbev.pos_nodes) * [True] + len(cbev.neg_nodes) * [False]
+            nodes = cbev.pos_nodes + cbev.neg_nodes
+            func_defs_extractor.visit(ast)
 
-            # pfv.visit(ast)
-            # pragma_found += len(pfv.pragmas)
-            # pragmas = pfv.pragmas + len(pfv.neg_nodes) * [None]
-            # nodes = pfv.pos_nodes + pfv.neg_nodes
-            # func_defs_extractor.visit(ast)
+            if pragma_found < pragma_amount:
+                return 0, 0, False
 
-            # for idx, (pragma, loop) in enumerate(zip(pragmas, nodes)):
-            #     verify_loops.reset()
-            #     omp_in_loop.reset()
-            #     func_call_checker.reset()
+            for idx, (pragma, loop) in enumerate(zip(pragmas, nodes)):
+                verify_loops.reset()
+                func_call_checker.reset()
 
-            #     generator = pycparser.c_generator.CGenerator()
-            #     code = generator.visit(loop)
+                generator = pycparser.c_generator.CGenerator()
+                code = generator.visit(loop)
 
-            #     if code in self.memory and copy_idx > 0 and pragma is not None:
-            #         pragma_found -= 1
-            #         continue
+                verify_loops.visit(loop)
+                if verify_loops.found:  # undesired tokens found
+                    exclusions['bad_case'] += 1
+                    continue
 
-            #     verify_loops.visit(loop)
-            #     omp_in_loop.visit(loop)
-            #     if verify_loops.found or (pragma is None and omp_in_loop.found):  # undesired tokens found
-            #         exclusions['bad_case'] += 1
-            #         continue
+                if code in self.memory:
+                    exclusions['duplicates'] += 1
+                    continue
 
-            #     if code in self.memory:
-            #         exclusions['duplicates'] += 1
-            #         continue
+                if self.is_empty_loop(loop):
+                    exclusions['empty'] += 1
+                    continue
 
-            #     if self.is_empty_loop(loop):
-            #         exclusions['empty'] += 1
-            #         continue
-
-            #     func_call_checker.visit(loop)
-            #     if func_call_checker.found:
-            #         exclusions['func_calls'] += 1
+                func_call_checker.visit(loop)
+                if func_call_checker.found:
+                    exclusions['func_calls'] += 1
             
-            #     saving_path = os.path.join(save_dir, name, str(indexer))
-            #     self.create_directory(saving_path) 
-            #     self.memory.append(code)
+                saving_path = os.path.join(save_dir, name, str(indexer))
+                self.create_directory(saving_path) 
+                self.memory.append(code)
 
-            #     relevant_func_defs = self.extract_func_defs(func_call_checker.func_calls, func_defs_extractor.func_def)
-            #     self.save(saving_path, OmpLoop(pragma, loop, relevant_func_defs, code))
-            #     indexer += 1
+                relevant_func_defs = self.extract_func_defs(func_call_checker.func_calls, func_defs_extractor.func_def)
+                self.save(saving_path, OmpLoop(None if not pragma else '#pragma omp for', loop, relevant_func_defs, code))
+                indexer += 1
 
-            #     if pragma is None:
-            #         neg += 1
-            #     else:
-            #         pos += 1
+                if not pragma:
+                    neg += 1
+                else:
+                    pos += 1
 
-            # if pragma_found < pragma_amount:
-            #     utils.log("fail_pragma.txt", f'{file_path}\n{error}\nfound {pragma_found} | there are {pragma_amount}\n===================')
-
-            # return pos, neg, True
+            return pos, neg, True
 
 
 

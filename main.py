@@ -41,7 +41,7 @@ def parse(omp_dir, prog_lang):
     '''
     assert prog_lang.startswith('(') and prog_lang.endswith(')')
 
-    save_dir = '/home/talkad/Downloads/thesis/data_gathering_script' #'../../../LIGHTBITS_SHARE'
+    save_dir = '/home/talkad/repos' #'../../../LIGHTBITS_SHARE'
 
     for lang in prog_lang[1:][:-1].lower().split('|'):
         if lang == 'c':
