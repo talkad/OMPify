@@ -1,6 +1,7 @@
 import json
 import os
 import pickle
+import shutil
 
 
 class OmpLoop:
@@ -35,22 +36,51 @@ def load(file_path):
 
 
 
+# # conversion to reem's format
+# updated_data = {}
 
+# with open('/home/talkad/Downloads/thesis/data_gathering_script/sample_c.json', 'r') as f:
+#     data = json.load(f)
+
+#     for k,v in data.items():
+#         omp = load(v)
+#         # if omp.omp_pragma is not None:
+#         #     print(omp.omp_pragma.string)
+#         #     break
+#         updated_data[int(k)] = {'code': v[len('../../../LIGHTBITS_SHARE/'):] + '/code.c',
+#                             'pragma': '' if omp.omp_pragma is None else omp.omp_pragma.string,
+#                             'code_pickle': v[len('../../../LIGHTBITS_SHARE/'):] + '/ast.pickle',
+#                             'id': k}
+
+
+# with open('/home/talkad/Downloads/thesis/data_gathering_script/sample_c_updated.json', 'w') as f:
+#     json.dump(updated_data, f, sort_keys=True, indent=4, separators=(',', ': '))
+
+
+# update to prevent data leakage
 updated_data = {}
 
 with open('/home/talkad/Downloads/thesis/data_gathering_script/sample_c.json', 'r') as f:
     data = json.load(f)
+    k = 0
+    for _,v2 in data.items():
+        v = os.path.join('..', v2)
 
-    for k,v in data.items():
+        if 'polybench' in v.lower():
+            continue
+
         omp = load(v)
-        # if omp.omp_pragma is not None:
-        #     print(omp.omp_pragma.string)
-        #     break
-        updated_data[int(k)] = {'code': v[len('../../../LIGHTBITS_SHARE/'):] + '/code.c',
+        # print(v)
+        shutil.copytree(v, os.path.join('/home/talkad/CLPP_shared',v[len('../../../../LIGHTBITS_SHARE/'):]))
+
+        updated_data[int(k)] = {'code': v[len('../../../../LIGHTBITS_SHARE/'):] + '/code.c',
                             'pragma': '' if omp.omp_pragma is None else omp.omp_pragma.string,
-                            'code_pickle': v[len('../../../LIGHTBITS_SHARE/'):] + '/ast.pickle',
+                            'code_pickle': v[len('../../../../LIGHTBITS_SHARE/'):] + '/ast.pickle',
                             'id': k}
+        k += 1
 
-
-with open('/home/talkad/Downloads/thesis/data_gathering_script/sample_c_updated.json', 'w') as f:
+with open('/home/talkad/Downloads/thesis/data_gathering_script/sample_c_updated3.json', 'w') as f:
     json.dump(updated_data, f, sort_keys=True, indent=4, separators=(',', ': '))
+
+# shutil.copytree('/home/talkad/Downloads/thesis/data_gathering_script/asd', '/home/talkad/Downloads/thesis/data_gathering_script/clpp/asd')
+# shutil.copytree('/home/talkad/Downloads/thesis/data_gathering_script/asd', '/home/talkad/Downloads/thesis/data_gathering_script/clpp/asd1')
