@@ -159,10 +159,13 @@ class DoInnerVisitor(c_ast.NodeVisitor):
         self.for_pragma = False
 
     def visit_FuncCall(self, node):
-        if self.pragma_for_func in node.name.name:
-            self.for_pragma = True
-        elif self.do_func in node.name.name:
-            self.do_loop = True
+        try:
+            if self.pragma_for_func in node.name.name:
+                self.for_pragma = True
+            elif self.do_func in node.name.name:
+                self.do_loop = True
+        except AttributeError as e:
+            pass
 
     def visit_DoWhile(self, node):
         if self.do_loop and self.for_pragma:
@@ -236,10 +239,13 @@ class DoLoopChecker(c_ast.NodeVisitor):
         self.found = False
 
     def visit_FuncCall(self, node):
-        if self.pragma_func in node.name.name:
-            self.found = True
-        else:
-            self.generic_visit(node)
+        try:
+            if self.pragma_func in node.name.name:
+                self.found = True
+            else:
+                self.generic_visit(node)
+        except AttributeError as e:
+            pass
 
 
 class OmpChecker(c_ast.NodeVisitor):

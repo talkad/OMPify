@@ -96,10 +96,12 @@ class CBELoopParser(Parser):
 
         except pycparser.plyparser.ParseError as e:  
             # utils.log('error_logger.txt', f'Parser Error: {file_path} ->\n {e}\n')
-            print(e)
+            # print(e)
+            pass
         except Exception as e:
             # utils.log('error_logger.txt', f'Unexpected Error: {file_path} ->\n {e}\n')
-            print(e)
+            # print(e)
+            pass
 
         finally:
             shutil.rmtree(dest_folder)
