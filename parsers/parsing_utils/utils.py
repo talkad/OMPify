@@ -142,10 +142,25 @@ def update_code_pipline(code):
     return code
 
 
+def clean_code_patches(code):
+    code_buf = []
+    pragma_for_func = 'omp_for_pragma_talkad7420'
+    pragma_func = 'omp_pragma_talkad7420'
+    for_func = 'for_loop_talkad7420'
+
+    for line in code.split('\n'):
+        if pragma_for_func in line or pragma_func in line or for_func in line:
+            continue
+
+        code_buf.append(line)
+
+    return '\n'.join(code_buf)
+
 def update_code_cbe_pipline(code):
     code = remove_redundants(code)
     code = remove_attribute(code)
     code = remove_ompt(code)
+    code = clean_code_patches(code)
 
     return code
 
