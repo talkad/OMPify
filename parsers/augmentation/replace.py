@@ -5,7 +5,7 @@ import sys
 from tqdm import tqdm
 
 sys.path.extend(['.', '..' ,'../parsers'])
-+from pycparser import c_ast, c_generator
+from pycparser import c_ast, c_generator
 from replace_vars import CounterIdVisitor, ReplaceIdsVisitor
 
 
