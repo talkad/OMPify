@@ -71,6 +71,8 @@ def scan_file(root, filename, clauses_amount):
 				total_clauses += 1
 				clauses_counter(l, clauses_amount)
 
+	if total_clauses > 0 and filename.endswith('.c'):
+		print(os.path.join(root, filename), total_clauses)
 	return total_clauses
 	
 
@@ -93,7 +95,11 @@ def scan_dir(root_dir):
 
 
 # res = scan_dir("/home/talkad/Downloads/thesis/data_gathering_script/repositories_openMP")
-# print(res)
+res = scan_dir("/home/talkad/LIGHTBITS_SHARE/OMP2012")
+print(res)
+({'nowait': 0, 'private': 77, 'firstprivate': 0, 'lastprivate': 0, 'shared': 201, 'reduction': 21, 'static_schedule': 46, 'dynamic_schedule': 193}, 
+{'.h': 0, '.c': 198,'.f90': 163},
+{'.h': 196,'.c': 136, '.f90': 130})
 
 # ({'nowait': 7613, 'private': 52202, 'firstprivate': 14363, 'lastprivate': 12741, 'shared': 10291, 'reduction': 36116, 'static_schedule': 17544, 'dynamic_schedule': 13034}, 
 # {'.cpp': 149337, '.c': 69979, '.f90': 15269, '.h': 3219, '.cc': 1193, '.f': 5571, '.f95': 337, '.f03': 36, '.cxx': 131},

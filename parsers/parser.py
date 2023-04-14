@@ -188,7 +188,7 @@ class Parser(ABC):
                         num_failed += 1
                     total_files += 1
 
-            if idx % (10**2) == 0:
+            if idx % 2 == 0: # (10**2) == 0:
                 print("{:20}{:10}   |   {:20} {:10}".format("files processed: ", total_files, "failed to parse: ", num_failed))
                 print("{:20}{:10}   |   {:20} {:10}".format("pos examples: ", total_pos, "neg examples: ", total_neg))
                 print(f'exclusions: {exclusions}\n')

@@ -123,7 +123,7 @@ class CLoopParser(Parser):
             except:
                 return
         elif 'ast' in return_dict:
-            print(return_dict['ast'])
+            # print(return_dict['ast'])
             return return_dict['ast']
 
     def extract_func_defs(self, func_calls, func_defs):
@@ -162,7 +162,6 @@ class CLoopParser(Parser):
         func_defs_extractor = FuncDefVisitor()
 
         with open(file_path, 'r+') as f:
-            print(file_path)
             try:
                 code = f.read()
             except UnicodeDecodeError:
@@ -170,7 +169,8 @@ class CLoopParser(Parser):
                 return 0, 0, False
             
             code = utils.update_code_pipline(code)    # remove unparsable code
-            asts = list(map(lambda code_permutation: self.parse(file_path, code_permutation), utils.get_if_permutations(code)))
+            # asts = list(map(lambda code_permutation: self.parse(file_path, code_permutation), utils.get_if_permutations(code)))
+            asts = [self.parse(file_path, code)]
 
             for copy_idx, ast in enumerate(asts):
                 if ast is None:                 # file parsing failed
@@ -182,6 +182,12 @@ class CLoopParser(Parser):
                 pragmas = pfv.pragmas + len(pfv.neg_nodes) * [None]
                 nodes = pfv.pos_nodes + pfv.neg_nodes
                 func_defs_extractor.visit(ast)
+
+                ### DEBUG ###
+                if pragma_found > 0:
+                    # print(file_path, pragma_found)
+                    utils.log("found.txt", f'{file_path}, {pragma_found}\n===================')
+                #############
 
                 for idx, (pragma, loop) in enumerate(zip(pragmas, nodes)):
                     verify_loops.reset()
@@ -218,6 +224,7 @@ class CLoopParser(Parser):
                     self.memory.append(code)
 
                     relevant_func_defs = self.extract_func_defs(func_call_checker.func_calls, func_defs_extractor.func_def)
+                    print('save', saving_path)
                     self.save(saving_path, OmpLoop(pragma, loop, relevant_func_defs, code))
                     indexer += 1
 

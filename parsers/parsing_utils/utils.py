@@ -14,6 +14,9 @@ redundant_multiline_comments = re.compile("\/\*.*?\*\/", re.MULTILINE|re.DOTALL)
 if_directive = re.compile("^\W*#\W*if\W(.*)|^\W*#\W*elif\W(.*)", re.MULTILINE)
 ifdef_directive = re.compile("^\W*#\W*ifdef\W(.*)|^\W*#\W*ifndef\W(.*)", re.MULTILINE)
 
+err_directive =  re.compile("^\s*#\s*error\s.*$")
+extern_directive = re.compile("^\s*extern\s+.*$")
+
 
 def log(file_name, msg):
     with open(file_name, 'a') as f:
@@ -130,6 +133,46 @@ def remove_ompt(code):
     return redundant_ompts.sub("", code)
 
 
+def line_union(code):
+    '''
+    if the current line of code ends with a comma, concatenate this line with the following
+    '''
+    code_buf = []
+
+    for line in code.split('\n'):
+        if len(code_buf) == 0:
+            code_buf.append(line)
+        elif code_buf[-1].rstrip().endswith(','):
+            code_buf[-1] += line
+        else:
+            code_buf.append(line)
+
+    return '\n'.join(code_buf)
+
+
+# def remove_if_directives(code):
+#     code_buf = []
+
+#     for line in code.split('\n'):
+#         if any([line.lstrip().startswith(token) for token in ['#if', '#ifdef', '#ifndef', '#elif', '#else', '#endif']]):
+#             continue
+#         else:
+#             code_buf.append(line)
+
+#     return '\n'.join(code_buf)
+
+
+def remove_err_directive(code):
+    # code = extern_directive.sub("", code)
+    ### SPEC-OMP ###
+    code = code.replace("register ", " ")
+    code = code.replace("MagickExport ", "")
+    code = code.replace("ModuleExport", "")
+    code = code.replace("WandExport", "")
+    ###
+    return err_directive.sub("", code)
+
+
 def update_code_pipline(code):
     FAKE_TYPEDEFS = '_fake_typedefs.h'
     FAKE_DEFINES = '_fake_defines.h'
@@ -137,6 +180,8 @@ def update_code_pipline(code):
     code = remove_redundants(code)
     code = remove_attribute(code)
     code = remove_ompt(code)
+    code = remove_err_directive(code)
+    code = line_union(code)
     code = f'#include \"{FAKE_TYPEDEFS}\"\n#include \"{FAKE_DEFINES}\"\n{code}'
 
     return code

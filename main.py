@@ -41,12 +41,13 @@ def parse(omp_dir, prog_lang):
     '''
     assert prog_lang.startswith('(') and prog_lang.endswith(')')
 
-    save_dir = '/home/talkad/repos' #'../../../LIGHTBITS_SHARE'
+    save_dir = '../../../LIGHTBITS_SHARE'
 
     for lang in prog_lang[1:][:-1].lower().split('|'):
         if lang == 'c':
-            parser = cbeParser.CBELoopParser(omp_dir, os.path.join(save_dir, 'cbe_loops'))
+            # parser = cbeParser.CBELoopParser(omp_dir, os.path.join(save_dir, 'cbe_loops'))
             # parser = cParser.CLoopParser(omp_dir, os.path.join(save_dir, 'c_loops'))
+            parser = cParser.CLoopParser(omp_dir, os.path.join(save_dir, 'nas_loops'))
         elif lang == 'cpp':
             parser = cppParser.CppLoopParser(omp_dir, os.path.join(save_dir, 'cpp_loops'))
         elif lang == 'fortran':
