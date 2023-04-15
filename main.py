@@ -1,6 +1,6 @@
 from optparse import OptionParser
 from git_clone import loader, extractor
-from parsers import cParser, cppParser, cbeParser # fortranParser
+from parsers import cParser, cppParser, cbeParser, cParser # fortranParser
 # from visualization import visualization
 from datetime import datetime
 import os
@@ -48,8 +48,9 @@ def parse(omp_dir, prog_lang):
             # parser = cbeParser.CBELoopParser(omp_dir, os.path.join(save_dir, 'cbe_loops'))
             # parser = cParser.CLoopParser(omp_dir, os.path.join(save_dir, 'c_loops'))
             parser = cParser.CLoopParser(omp_dir, os.path.join(save_dir, 'nas_loops'))
+
         elif lang == 'cpp':
-            parser = cppParser.CppLoopParser(omp_dir, os.path.join(save_dir, 'cpp_loops'))
+            parser = cppParser.CppLoopParser(omp_dir, os.path.join(save_dir, 'example'))
         elif lang == 'fortran':
             continue
             # parser = fortranParser.FortranLoopParser(omp_dir, os.path.join(save_dir, 'fortran_loops'))

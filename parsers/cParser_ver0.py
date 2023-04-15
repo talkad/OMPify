@@ -4,8 +4,7 @@ from parsers.parser import *
 from parsers.parser import OmpLoop
 from pycparser.c_ast import For
 import pickle
-from parsers.visitors.visitors import *
-from parsers.visitors.detailed_visitor import *
+from parsers.visitors import *
 from functools import reduce
 from parsers.fake_headers import fake
 from parsers.parsing_utils import utils
@@ -156,8 +155,6 @@ class CLoopParser(Parser):
         save_dir = os.path.join(self.parsed_path, root_dir[self.split_idx: ])
         name = os.path.splitext(file_name)[0]
 
-        func_extractor = FunctionExtractor()
-
         pfv = PragmaForVisitor()
         verify_loops = ForLoopChecker()
         omp_in_loop = OmpChecker()
@@ -175,81 +172,69 @@ class CLoopParser(Parser):
             asts = list(map(lambda code_permutation: self.parse(file_path, code_permutation), utils.get_if_permutations(code)))
             # asts = [self.parse(file_path, code)]
 
-            # iterate over functions:
-                # find var declerations and assignments. when loop found, extract all the variables used in the loop
-                # keep looking to vars, for each loop found, keep the variables that still in use after the for.
-
-
             for copy_idx, ast in enumerate(asts):
                 if ast is None:                 # file parsing failed
                     error = 'failed to parse'
                     continue
-                
-                # functions = func_extractor.extract(ast)
-                # print(functions)
 
-                var = VariableExtractor()
-                print(var.find_variables(ast))
-
-
-                # pfv.visit(ast)
-                # pragma_found += len(pfv.pragmas)
-                # pragmas = pfv.pragmas + len(pfv.neg_nodes) * [None]
-                # nodes = pfv.pos_nodes + pfv.neg_nodes
-                # func_defs_extractor.visit(ast)
+                pfv.visit(ast)
+                pragma_found += len(pfv.pragmas)
+                pragmas = pfv.pragmas + len(pfv.neg_nodes) * [None]
+                nodes = pfv.pos_nodes + pfv.neg_nodes
+                func_defs_extractor.visit(ast)
 
                 ### DEBUG ###
-                # if pragma_found > 0:
-                #     # print(file_path, pragma_found)
-                #     utils.log("found.txt", f'{file_path}, {pragma_found}\n===================')
+                if pragma_found > 0:
+                    # print(file_path, pragma_found)
+                    utils.log("found.txt", f'{file_path}, {pragma_found}\n===================')
                 #############
 
-            #     for idx, (pragma, loop) in enumerate(zip(pragmas, nodes)):
-            #         verify_loops.reset()
-            #         omp_in_loop.reset()
-            #         func_call_checker.reset()
+                for idx, (pragma, loop) in enumerate(zip(pragmas, nodes)):
+                    verify_loops.reset()
+                    omp_in_loop.reset()
+                    func_call_checker.reset()
 
-            #         generator = pycparser.c_generator.CGenerator()
-            #         code = generator.visit(loop)
+                    generator = pycparser.c_generator.CGenerator()
+                    code = generator.visit(loop)
 
-            #         if code in self.memory and copy_idx > 0 and pragma is not None:
-            #             pragma_found -= 1
-            #             continue
+                    if code in self.memory and copy_idx > 0 and pragma is not None:
+                        pragma_found -= 1
+                        continue
 
-            #         verify_loops.visit(loop)
-            #         omp_in_loop.visit(loop)
-            #         if verify_loops.found or (pragma is None and omp_in_loop.found):  # undesired tokens found
-            #             exclusions['bad_case'] += 1
-            #             continue
+                    verify_loops.visit(loop)
+                    omp_in_loop.visit(loop)
+                    if verify_loops.found or (pragma is None and omp_in_loop.found):  # undesired tokens found
+                        exclusions['bad_case'] += 1
+                        continue
 
-            #         if code in self.memory:
-            #             exclusions['duplicates'] += 1
-            #             continue
+                    if code in self.memory:
+                        exclusions['duplicates'] += 1
+                        continue
 
-            #         if self.is_empty_loop(loop):
-            #             exclusions['empty'] += 1
-            #             continue
+                    if self.is_empty_loop(loop):
+                        exclusions['empty'] += 1
+                        continue
 
-            #         func_call_checker.visit(loop)
-            #         if func_call_checker.found:
-            #             exclusions['func_calls'] += 1
+                    func_call_checker.visit(loop)
+                    if func_call_checker.found:
+                        exclusions['func_calls'] += 1
                 
-            #         saving_path = os.path.join(save_dir, name, str(indexer))
-            #         self.create_directory(saving_path) 
-            #         self.memory.append(code)
+                    saving_path = os.path.join(save_dir, name, str(indexer))
+                    self.create_directory(saving_path) 
+                    self.memory.append(code)
 
-            #         relevant_func_defs = self.extract_func_defs(func_call_checker.func_calls, func_defs_extractor.func_def)
-            #         print('save', saving_path)
-            #         # self.save(saving_path, OmpLoop(pragma, loop, relevant_func_defs, code))
-            #         indexer += 1
+                    relevant_func_defs = self.extract_func_defs(func_call_checker.func_calls, func_defs_extractor.func_def)
+                    print('save', saving_path)
+                    self.save(saving_path, OmpLoop(pragma, loop, relevant_func_defs, code))
+                    indexer += 1
 
-            #         if pragma is None:
-            #             neg += 1
-            #         else:
-            #             pos += 1
+                    if pragma is None:
+                        neg += 1
+                    else:
+                        pos += 1
 
-            # if pragma_found < pragma_amount:
-            #     utils.log("fail_pragma.txt", f'{file_path}\n{error}\nfound {pragma_found} | there are {pragma_amount}\n===================')
+            if pragma_found < pragma_amount:
+                utils.log("fail_pragma.txt", f'{file_path}\n{error}\nfound {pragma_found} | there are {pragma_amount}\n===================')
 
             return pos, neg, True
 
