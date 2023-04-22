@@ -12,5 +12,8 @@ git_metadata.sh
 **/utils_cpp
 **/.vscode
 *.txt
+*.log
 *.pkl
 *.pickle
+**/temp_folder*
+sample_cpp*

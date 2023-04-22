@@ -1,0 +1,16 @@
+python run.py \
+    --output_dir=./saved_models \
+    --tokenizer_name=microsoft/codebert-base \
+    --model_name_or_path=microsoft/codebert-base \
+    --do_eval \
+    --do_test \
+    --train_data_file=../dataset/train.jsonl \
+    --eval_data_file=../dataset/valid.jsonl \
+    --test_data_file=../dataset/test.jsonl \
+    --num_train_epochs 1 \
+    --block_size 64 \
+    --train_batch_size 8 \
+    --eval_batch_size 16 \
+    --learning_rate 2e-5 \
+    --max_grad_norm 1.0 \
+    --seed 123456  2>&1 | tee test.log
