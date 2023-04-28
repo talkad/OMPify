@@ -170,7 +170,7 @@ def scan_json(json_path):
     version_amount = {version:0 for version in versions}
     total_pragma, task_amount, for_amount = 0, 0, 0
 
-    types = {' for': 0, ' task': 0, ' section': 0, ' critical': 0, ' atomic': 0, ' flush': 0, ' single': 0, ' master': 0}
+    types = {' for': 0, ' task': 0, ' section': 0, ' critical': 0, ' atomic': 0, ' flush': 0, ' single': 0, ' master': 0, 'barrier': 0}
     
     with open(json_path, 'r') as f:
         database = json.load(f)
@@ -255,7 +255,7 @@ def scan_json_per_year(json_path, include_base=False):
 
 
 
-# print(scan_json('/home/talkad/Downloads/thesis/data_gathering_script/visualization/repo2pragmas_all.json'))
+print(scan_json('/home/talkad/Downloads/thesis/data_gathering_script/database_creator/visualization/repo2pragmas_all.json'))
 # 703354 {' for': 211742, ' task': 55364, ' section': 40347, ' critical': 13188, ' atomic': 32099, ' flush': 5031, ' single': 13392, ' master': 14899}
 # {2: 346308, 3: 42740, 4: 235213, 4.5: 51487, 5: 27606}
 
@@ -329,6 +329,6 @@ ax.set_ylabel('Amount of Pragmas')
 ax.set_xlabel('Year')
 
 
-plt.show()
+# plt.show()
 
   

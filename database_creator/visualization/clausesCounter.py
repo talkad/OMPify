@@ -5,9 +5,10 @@ from functools import reduce
 from parsers.cParser import CLoopParser
 from parsers.cppParser import CppLoopParser
 from parsers.fortranParser import FortranLoopParser
+from tqdm import tqdm
 
 
-clauses = ['nowait', 'private', 'firstprivate', 'lastprivate', 'shared', 'reduction', 'static_schedule', 'dynamic_schedule', 'target', 'reduction_private']
+clauses = ['barrier', 'nowait', 'private', 'firstprivate', 'lastprivate', 'shared', 'reduction', 'static_schedule', 'dynamic_schedule', 'target', 'reduction_private']
 
 
 def clauses_counter(line, clauses_dict):
@@ -63,7 +64,7 @@ def scan_dir(root_dir, lang='c'):
 		database = json.load(f)
 
 	for data_path in database.values():
-		data = parser.load(data_path)
+		data = parser.load(os.path.join('..', data_path))
 		code = data.textual_loop
 		pragma = '' if data.omp_pragma is None else data.omp_pragma if lang=='fortran' else data.omp_pragma.string
 
@@ -85,7 +86,7 @@ def scan_json(json_path, lang='c'):
 	with open(scan_json, 'r') as f:
 		database = json.load(f)
 
-	for pragmas in database.values():
+	for pragmas in tqdm(database.values()):
 		for paragma in pragmas:
 
 			if not pragma.startswith('#pragma'):
@@ -96,15 +97,14 @@ def scan_json(json_path, lang='c'):
 	return clauses_amount
 
 
-# res = scan_dir('/home/talkad/Downloads/thesis/data_gathering_script/sample_fortran.json', lang='fortran')
+res = scan_dir('/home/talkad/Downloads/thesis/data_gathering_script/database_creator/samples/sample_c.json', lang='c')
 
-# print(res)
+print(res)
 
 
 # cpp
 # 8241 14323
-# {'nowait': 310, 'private': 1190, 'firstprivate': 133, 'lastprivate': 60, 'shared': 796, 'reduction': 1120, 'static_schedule': 944, 'dynamic_schedule': 536, 'target': 505, 'reduction_private': 169}
-
+# {'barrier': 0, 'nowait': 310, 'private': 1190, 'firstprivate': 133, 'lastprivate': 60, 'shared': 796, 'reduction': 1120, 'static_schedule': 944, 'dynamic_schedule': 536, 'target': 970, 'reduction_private': 169}
 
 # c
 # 14906 17193
@@ -113,5 +113,4 @@ def scan_json(json_path, lang='c'):
 
 # fortran
 # 2749 3368
-# {'nowait': 8, 'private': 1136, 'firstprivate': 33, 'lastprivate': 60, 'shared': 285, 'reduction': 327, 'static_schedule': 190, 'dynamic_schedule': 43, 'target': 73, 'reduction_private': 161}
-
+# {'barrier': 0, 'nowait': 8, 'private': 1136, 'firstprivate': 33, 'lastprivate': 60, 'shared': 285, 'reduction': 327, 'static_schedule': 190, 'dynamic_schedule': 43, 'target': 146, 'reduction_private': 161}

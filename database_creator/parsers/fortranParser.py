@@ -189,6 +189,7 @@ class FortranLoopParser(Parser):
             return future_result[0]
 
     def load(self, file_path):
+        file_path = os.path.join('..', file_path)
         omp_obj = super().load(file_path)
         omp_obj.ast_loop = self.parse(file_path, omp_obj.textual_loop)
 
