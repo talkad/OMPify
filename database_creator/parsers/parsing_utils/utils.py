@@ -1,6 +1,10 @@
 import re
 import os
 import copy
+import json
+import csv
+import pandas as pd
+from tqdm import tqdm
 import itertools
 
 
@@ -69,6 +73,28 @@ def count_for(file_path, lang='c'):
                 loop_amount += 1
 
             if is_for_pragma(l, lang=lang):
+                pragma_amount += 1
+
+    return loop_amount, pragma_amount
+
+
+
+def count_for_code(code, lang='c'):
+    '''
+    Returns the amout of for-loops and pragmas exist in a given file
+    '''
+    loop_amount, pragma_amount = 0, 0
+
+    code = redundant_line_comments.sub("\n", code)
+    code = redundant_multiline_comments.sub("\n", code)
+
+    for line in code.split('\n'):
+        l = line.lower()
+        
+        if is_for(l, lang=lang):
+            loop_amount += 1
+
+        if is_for_pragma(l, lang=lang):
                 pragma_amount += 1
 
     return loop_amount, pragma_amount
@@ -305,9 +331,55 @@ def scan_dir(root_dir):
     return neg, pos
 
 
+def iterate_csv(csv_file):
+    count_samples = 0
+    num_loops, num_pragma = 0, 0
+    df = pd.read_csv(csv_file)
+
+    for index, row in tqdm(df.iterrows()):
+        count_samples += 1
+        loop_amount, pragma_amount = count_for_code(row['content'])
+
+        num_loops += loop_amount
+        num_pragma += pragma_amount
+
+    print(f'num samples: {count_samples}')
+    return num_loops, num_pragma
+
+
+def iterate_jsons(json_dir):
+    count_samples, total = 0, 0
+    num_loops, num_pragma = 0, 0
+    
+    for json_file in tqdm(os.listdir(json_dir)):
+        with open(os.path.join(json_dir, json_file), 'r') as f:
+
+            for line in f:
+                total += 1
+                js = json.loads(line.strip())
+
+                if 'content' not in js:
+                    continue
+
+                count_samples += 1
+                loop_amount, pragma_amount = count_for_code(js['content'])
+
+                num_loops += loop_amount
+                num_pragma += pragma_amount
+
+    print(f'num samples: {count_samples}/{total}')
+    return num_loops, num_pragma
+
+
+
 # res = scan_dir("/home/talkad/Downloads/thesis/data_gathering_script/repositories_openMP")
 # print(res)
 
 # c -> (82253, 49888)
 # cpp -> (98132, 124656)
 # fortran -> (46279, 20833)
+
+
+print(iterate_jsons('/home/talkad/LIGHTBITS_SHARE/dataset_gal_cpp/cpp'))
+num samples: 4735196/4737762
+(19868390, 89480)
