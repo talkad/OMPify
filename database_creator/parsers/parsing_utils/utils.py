@@ -380,6 +380,6 @@ def iterate_jsons(json_dir):
 # fortran -> (46279, 20833)
 
 
-print(iterate_jsons('/home/talkad/LIGHTBITS_SHARE/dataset_gal_cpp/cpp'))
-num samples: 4735196/4737762
-(19868390, 89480)
+print(iterate_jsons('/home/talkad/shared/nadavsc/c'))
+# num samples: 4735196/4737762
+# (19868390, 89480)
