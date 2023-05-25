@@ -31,3 +31,5 @@ if __name__ == "__main__":
     # # pretrained_model = BERT_Arch.from_pretrained("../PragFormer")
     # # model.load_state_dict(pretrained_model.state_dict())
     # model.push_to_hub("PragFormer")
+
+    

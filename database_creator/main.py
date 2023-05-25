@@ -47,7 +47,8 @@ def parse(omp_dir, prog_lang):
         if lang == 'c':
             # parser = cbeParser.CBELoopParser(omp_dir, os.path.join(save_dir, 'cbe_loops'))
             # parser = cParser.CLoopParser(omp_dir, os.path.join(save_dir, 'c_loops'))
-            parser = cParser.CLoopParser(omp_dir, os.path.join(save_dir, 'c_loops_spec_detailed'))
+            print(omp_dir)
+            parser = cParser.CLoopParser(omp_dir, os.path.join(save_dir, 'temp'))
 
         elif lang == 'cpp':
             parser = cppParser.CppLoopParser(omp_dir, os.path.join(save_dir, 'example'))
@@ -92,3 +93,6 @@ def main():
 
 if __name__ == '__main__':
     main()
+
+
+        

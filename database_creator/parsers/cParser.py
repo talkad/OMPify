@@ -120,6 +120,8 @@ class CLoopParser(Parser):
                 ast = pycparser.parse_file(tmp.name, use_cpp=True, cpp_path='mpicc', cpp_args = cpp_args)
                 result['ast'] = ast
 
+                print(ast)
+
         except pycparser.plyparser.ParseError as e:  
             # utils.log('error_logger.txt', f'Parser Error: {file_path} ->\n {e}\n')
             handle_error(file_path, str(e), code)
@@ -193,8 +195,8 @@ class CLoopParser(Parser):
                 return 0, 0, False
             
             code = utils.update_code_pipline(code)    # remove unparsable code
-            asts = list(map(lambda code_permutation: self.parse(file_path, code_permutation), utils.get_if_permutations(code)))
-            # asts = [self.parse(file_path, code)]
+            # asts = list(map(lambda code_permutation: self.parse(file_path, code_permutation), utils.get_if_permutations(code)))
+            asts = [self.parse(file_path, code)]
 
             for copy_idx, ast in enumerate(asts):
                 if ast is None:                 # file parsing failed
@@ -237,10 +239,10 @@ class CLoopParser(Parser):
                             continue
                 
                         saving_path = os.path.join(save_dir, name, str(indexer))
-                        self.create_directory(saving_path) 
-                        self.memory.append(code)
+                        # self.create_directory(saving_path) 
+                        # self.memory.append(code)
 
-                        self.save(saving_path, sample)
+                        # self.save(saving_path, sample)
                         indexer += 1
 
                         if len(sample.pragma) == 0:

@@ -176,6 +176,7 @@ class Parser(ABC):
         exclusions = {'bad_case': 0, 'empty': 0, 'duplicates': 0, 'func_calls':0}
 
         for repo in tqdm(os.listdir(omp_repo)):
+            print(repo)
 
             for idx, (root, dirs, files) in enumerate(os.walk(os.path.join(omp_repo, repo))):
                 for file_name in files:

@@ -372,6 +372,25 @@ def iterate_jsons(json_dir):
 
 
 
+def iterate_jsons_cuda(json_dir):
+    cuda, total = 0, 0
+
+    for json_file in tqdm(os.listdir(json_dir)):
+        with open(os.path.join(json_dir, json_file), 'r') as f:
+
+            for line in f:
+                total += 1
+                js = json.loads(line.strip())
+
+                if 'content' not in js:
+                    continue
+
+                if 'cuda.h' in js['content'] or 'cuda_runtime.h' in js['content']:
+                    cuda += 1
+
+    return cuda, total
+
+
 # res = scan_dir("/home/talkad/Downloads/thesis/data_gathering_script/repositories_openMP")
 # print(res)
 
@@ -380,6 +399,17 @@ def iterate_jsons(json_dir):
 # fortran -> (46279, 20833)
 
 
-print(iterate_jsons('/home/talkad/shared/nadavsc/c'))
+print(iterate_jsons('/home/talkad/LIGHTBITS_SHARE/dataset_gal_fortran/f90'))
+
+
+# print(iterate_jsons('/home/talkad/shared/nadavsc/c'))
 # num samples: 4735196/4737762
 # (19868390, 89480)
+
+# (28618243, 39459)
+
+
+# print(iterate_jsons_cuda('/home/talkad/shared/nadavsc/c'))
+# print(iterate_jsons_cuda('/home/talkad/LIGHTBITS_SHARE/dataset_gal_cpp/cpp'))
+# cpp - (3508, 4737762)
+# c - (2091, 5946252)
