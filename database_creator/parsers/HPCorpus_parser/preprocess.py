@@ -6,6 +6,9 @@ from tree_sitter import Language, Parser
 redundant_line_comments = re.compile("\/\/.*")
 redundant_multiline_comments = re.compile("\/\*.*?\*\/", re.MULTILINE|re.DOTALL)
 
+redundant_includes = re.compile("^\W*#\W*include\W* <\.\..*|^\W*#\W*include\W* \"\.\..*", re.MULTILINE)
+
+
 def remove_comments(code, c_lang=True):
     code = redundant_line_comments.sub("\n", code)
     code = redundant_multiline_comments.sub("\n", code)
@@ -45,6 +48,9 @@ def wrap_for_pragma(code, c_lang=True):
 
     return '\n'.join(updated_code)
 
+def wrap_for_pragma(code, c_lang=True):
+    return redundant_includes.sub("", code)
+
 def func_injection(func, c_lang=True):
     code = add_func_decl(func)
     code = wrap_for_pragma(wrap_for_loop(code))
@@ -81,5 +87,11 @@ def extract_funcs(code, c_lang=True):
     parser.set_language(LANGUAGE)
 
     tree = parser.parse(bytes(code, 'utf8'))
-    return traverse(code, tree.root_node)
+
+    try:
+        result = traverse(code, tree.root_node)
+    except:
+        result = []
+
+    return result
 
