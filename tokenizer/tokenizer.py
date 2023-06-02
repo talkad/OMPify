@@ -1,3 +1,4 @@
+import re
 import code_tokenize as ctok
 import sys
 import json
@@ -21,17 +22,24 @@ import parse_tools, preprocess
 #         return tokens
 
 def log(file_name, msg):
-    with open(file_name, 'a') as f:
+    with open(file_name, 'w') as f:
         f.write(f'{msg}\n')
 
 def tokenize(code, replaced=False):
     code = preprocess.remove_comments(code)
-
+    a = code
     if len(code.strip()) == 0:
         return []
-    # log('original.c', code)
+    log('aa.c', a)
     if replaced:
         code = parse_tools.generate_replaced(code)
+
+        ### DEBUG ###
+        # if re.search(r'[0-9]+NUM', code):
+        #     log('original2.c', a)
+        #     log('replaced2.c', code)
+        #     exit()
+        #############
     # log('replaced.c', code)
         
     tokens = ctok.tokenize(code, lang = "c", syntax_error = "ignore")
@@ -39,12 +47,13 @@ def tokenize(code, replaced=False):
     updated_tokens = []
     for token in tokens:
         try:
-            str_token = token.text
+            str_token = token.text.strip()
         except:
             str_token = 'TOKEN'
 
         if replaced and any([str_token.startswith(prefix) for prefix in parse_tools.replaced_prefixes.values()]):
-            updated_tokens += list(str_token.split('_'))
+            # updated_tokens += list(str_token.split('_'))
+            updated_tokens.append(str_token)
         else:
                 updated_tokens.append(str_token)
 
@@ -123,8 +132,8 @@ for json_file in os.listdir(json_dir):
             if 'content' not in js:
                 continue
 
-            tokens = tokenize_deepSCC(js['content'])
-            # tokens = tokenize(js['content'], replaced=False)
+            # tokens = tokenize_deepSCC(js['content'])
+            tokens = tokenize(js['content'], replaced=True)
 
             total_tokens += len(tokens)
             amount_samples += 1
@@ -139,11 +148,12 @@ sorted_dict = {k: v for k, v in sorted_data}
 
 print(f'AVG tokens per sample: {total_tokens/amount_samples}')
 
-with open("deepscc_vocab.json", "w") as outfile:
+with open("ours_no_split_vocab.json", "w") as outfile:
     json.dump(sorted_dict, outfile, indent=4)
 
 
 # 450 samples
 # deepSCC - AVG tokens per sample: 14050.545454545454
 # ctok -    AVG tokens per sample: 4609.314855875831
-# ours -    AVG tokens per sample: 1949.7117516629712
+# ours -    AVG tokens per sample: 5406.760532150776
+# no split - AVG tokens per sample: 4239.538802660754

@@ -4,7 +4,7 @@ import tree_sitter
 import textwrap
 from tree_sitter import Language, Parser
 
-RE_NUMBERS = re.compile(r"(?<![_a-zA-Z])-?\b[0-9]+(?:\.[0-9]+)?\b(?![0-9.-])f?")
+RE_NUMBERS = re.compile(r"(?<![_a-zA-Z])\b[0-9]+(?:\.[0-9]+)?(?:f)?\b(?![0-9.-])")
 RE_HEXA = re.compile(r"0x[0-9a-fA-F]+")
 RE_CHARS = re.compile(r"\'.\'")
 RE_STR = re.compile(r"\"(?:\\.|[^\\\"])*\"")
@@ -56,9 +56,9 @@ def count_newlines(code):
 def replace_vars(code, vars, arrays, functions, fields, name_map):
     updated_code = ''
     prev_idx = 0
-    offset = 0 # count_newlines(code)
+    offset = count_newlines(code)
 
-    vars = vars+arrays+functions+fields
+    vars = fields+vars+arrays+functions
     vars.sort(key=lambda tup: tup[1])
     for var, start, end in vars:
         updated_code += code[prev_idx:start-offset].decode() + str(name_map[var])
@@ -108,22 +108,6 @@ def generate_serial_numbers(N):
     return numbers
 
 
-# def replace_numbers(code, num_generator):
-#     matches = RE_NUMBERS.findall(code)
-#     random_numbers = num_generator(len(matches))
-#     matches = RE_NUMBERS.finditer(code)
-
-#     offset = 0
-#     for match, num in zip(matches, random_numbers):
-#         # print(f'{replaced_prefixes[NUM]}{num}', f'{match.start()}-{match.end()}')
-#         start = match.start() + offset
-#         end = match.end() + offset
-#         code = code[:start] + f'{replaced_prefixes[NUM]}{num}' + code[end:]
-#         offset += len(f'{replaced_prefixes[NUM]}{num}') - len(match.group())
-
-#     return code
-
-
 def replace_constants(code, replace_token, regex):
     matches = regex.finditer(code)
 
@@ -135,39 +119,6 @@ def replace_constants(code, replace_token, regex):
         offset += len(replace_token) - len(match.group())
 
     return code
-
-
-
-# def replace_chars(code):
-#     matches = RE_CHARS.finditer(code)
-
-#     offset = 0
-#     for match in matches:
-#         start = match.start() + offset
-#         end = match.end() + offset
-#         code = code[:start] + 'CHAR' + code[end:]
-#         offset += len('CHAR') - len(match.group())
-
-#     return code
-
-# def replace_strings(code):
-#     offset = 0
-#     matches = RE_STR.finditer(code)
-#     for match in matches:
-#         start = match.start() + offset
-#         end = match.end() + offset
-#         code = code[:start] + 'STR' + code[end:]
-#         offset += len('STR') - len(match.group())
-
-#     offset = 0
-#     matches = RE_STR_MULTI_LINE.finditer(code)
-#     for match in matches:
-#         start = match.start() + offset
-#         end = match.end() + offset
-#         code = code[:start] + 'STR' + code[end:]
-#         offset += len('STR') - len(match.group())
-
-#     return code
 
 
 def update_var_names(ast, num_generator):
@@ -185,14 +136,12 @@ def update_var_names(ast, num_generator):
 
     for r_token, regex in zip(['STR', 'STR', 'CHAR', 'NUM', 'NUM'], [RE_STR, RE_STR_MULTI_LINE, RE_CHARS, RE_NUMBERS, RE_HEXA]):
         updated_code = replace_constants(updated_code, r_token, regex)
-    # updated_code= replace_strings(replace_chars(updated_code))
-    # updated_code= replace_numbers(updated_code, num_generator)
 
     return updated_code
 
 
 def generate_replaced(code, num_generator=generate_serial_numbers):
-    tree = parse(code, 'c')
+    tree = parse(code.lstrip(), 'c')
     updated_code = update_var_names(tree.root_node, num_generator)
 
     return updated_code
@@ -201,65 +150,15 @@ def generate_replaced(code, num_generator=generate_serial_numbers):
 
 
 code = '''
-static long num_steps = 100000; 
-double step;
 
-int shit(){
-    return 0;
-}
+	balance_gap = min(low_wmark_pages(zone),
+		(zone->managed_pages + KSWAPD_ZONE_BALANCE_GAP_RATIO-1) /
+			KSWAPD_ZONE_BALANCE_GAP_RATIO);
+	watermark = high_wmark_pages(zone) + balance_gap + (2UL << sc->order);
+	watermark_ok = zone_watermark_ok_safe(zone, 0, watermark, 0, 0);
 
-int main ()
-{
-    double pi, sum = 0.0;
-    int arr[100][100];
-    step = 1.0/(double) num_steps;
-
-        for (int i=0;i< num_steps; i++){
-            double x = (i+0.5)*step;
-            sum = sum + 4.0/(1+x*x);
-        }
-
-    pi = step * sum;
-    shit();
-    return pi;
-}
 '''
 
-code = """
-static void mdss_dsi_panel_bklt_pwm(struct mdss_dsi_ctrl_pdata *ctrl, int level)
-{
-	int ret;
-	u32 duty;
-	u32 period_ns;
 
-	if (level == 0) {
-		if (ctrl->pwm_enabled) {
-			ret = pwm_config_us(ctrl->pwm_bl, level,
-					ctrl->pwm_period);
-			pwm_disable(ctrl->pwm_bl);
-		}
-	}
-
-	if (ctrl->pwm_period >= USEC_PER_SEC) {
-		ret = pwm_config_us(ctrl->pwm_bl, duty, ctrl->pwm_period);
-		if (ret) {
-			pr_err("%s: pwm_config_us() failed err=%d.\n",
-					__func__, ret);
-			return;
-		}
-	} else {
-		ret = pwm_config(ctrl->pwm_bl,
-				level * period_ns / ctrl->bklt_max,
-				period_ns);
-	}
-
-
-}
-
-
-
-"""
-
-
-
-# print(generate_replaced(code))
+# with open('WTF.c', 'w') as f, open('/home/talkad/OpenMPdb/tokenizer/aa.c', 'r') as f2:
+#     f.write(generate_replaced(code))
