@@ -22,11 +22,11 @@ def create_dfg(ast):
     pass
 
 
-def replace_vars(code, vars, arrays, name_map):
+def replace_vars(code, vars, arrays, functions, name_map):
     updated_code = ''
     prev_idx = 0
 
-    vars = vars+arrays
+    vars = vars+arrays+functions
     vars.sort(key=lambda tup: tup[1])
     for var, start, end in vars:
         updated_code += code[prev_idx:start-1].decode() + str(name_map[var])
@@ -37,25 +37,27 @@ def replace_vars(code, vars, arrays, name_map):
     return updated_code
 
 
-def get_identifires(node, is_array=False):
+def get_identifiers(node, kind=''):
     '''
-        Find identifires names in code
+        Find identifiers names in code
 
         Parameters:
-            node - decleration node in the AST
-            is_array - wherther the given node is array decleration
+            node - declaration node in the AST
+            is_array - whether the given node is array declaration
         Return:
             Two list, one with variable names and the other with array names
     '''
     if node.type == 'identifier':
-        return ([(node.text, node.start_byte, node.end_byte)],[]) if not is_array else ([],[(node.text, node.start_byte, node.end_byte)])
+        return ([(node.text, node.start_byte, node.end_byte)],[],[]) if kind=='' else ([],[(node.text, node.start_byte, node.end_byte)],[]) if kind=='arr' else ([],[],[(node.text, node.start_byte, node.end_byte)])
 
-    vars, arrays = [], []
+    vars, arrays, funcs = [], [], []
     for child in node.children:
-        va, ar = get_identifires(child, is_array=(child.type == 'array_declarator' or is_array))
-        vars, arrays = vars+va, arrays+ar
+        va, ar, fu = get_identifiers(child, kind=(kind if len(kind)>0 else 
+                                                  'arr' if child.type == 'array_declarator' else
+                                                  'func' if child.type in ['call_expression', 'function_declarator'] else ''))
+        vars, arrays, funcs = vars+va, arrays+ar, funcs+fu
 
-    return vars, arrays
+    return vars, arrays, funcs
 
 
 def generate_serial_numbers(N):
@@ -67,11 +69,13 @@ def generate_serial_numbers(N):
 
 def update_var_names(ast, num_generator):
     name_map = {}
-    vars, arrays = get_identifires(ast)
-    unique_vars, unique_arrays = list(set([var[0] for var in vars])), list(set([arr[0] for arr in arrays]))
+    vars, arrays, functions = get_identifiers(ast)
+    print(vars, arrays, functions)
+    unique_vars, unique_arrays, unique_funcs = list(set([var[0] for var in vars])), list(set([arr[0] for arr in arrays])), list(set([func[0] for func in functions]))
 
     random_numbers_vars = num_generator(len(unique_vars))
     random_numbers_arrays = num_generator(len(unique_arrays))
+    random_numbers_functions = num_generator(len(unique_funcs))
 
     for var, num in zip(unique_vars, random_numbers_vars):
         name_map[var] = f'var_{num}'
@@ -79,7 +83,10 @@ def update_var_names(ast, num_generator):
     for var, num in zip(unique_arrays, random_numbers_arrays):
         name_map[var] = f'arr_{num}'
 
-    updated_code = replace_vars(ast.text, vars, arrays, name_map)
+    for var, num in zip(unique_funcs, random_numbers_functions):
+        name_map[var] = f'func_{num}'
+
+    updated_code = replace_vars(ast.text, vars, arrays, functions, name_map)
 
     return updated_code
 
@@ -111,17 +118,6 @@ int main ()
 }
 '''
 
-
-code = '''
-int shit(){
-    return 0;
-}
-
-int main ()
-{
-    shit();
-}
-'''
 
 tree = parse(code, 'c')
 # print(dir(tree))
