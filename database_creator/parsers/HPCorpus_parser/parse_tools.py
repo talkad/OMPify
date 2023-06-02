@@ -90,6 +90,10 @@ code = '''
 static long num_steps = 100000; 
 double step;
 
+int shit(){
+    return 0;
+}
+
 int main ()
 {
     double pi, sum = 0.0;
@@ -102,12 +106,22 @@ int main ()
         }
 
     pi = step * sum;
-
+    shit();
     return pi;
 }
 '''
 
 
+code = '''
+int shit(){
+    return 0;
+}
+
+int main ()
+{
+    shit();
+}
+'''
 
 tree = parse(code, 'c')
 # print(dir(tree))
