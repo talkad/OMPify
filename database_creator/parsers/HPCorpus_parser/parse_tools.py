@@ -4,13 +4,20 @@ import tree_sitter
 import textwrap
 from tree_sitter import Language, Parser
 
-RE_NUMBERS = re.compile(r"(?<![_a-zA-Z])-?\b[0-9]+(?:\.[0-9]+)?\b(?![0-9.-])")
+RE_NUMBERS = re.compile(r"(?<![_a-zA-Z])-?\b[0-9]+(?:\.[0-9]+)?\b(?![0-9.-])f?")
+RE_HEXA = re.compile(r"0x[0-9a-fA-F]+")
+RE_CHARS = re.compile(r"\'.\'")
+RE_STR = re.compile(r"\"(?:\\.|[^\\\"])*\"")
+RE_STR_MULTI_LINE = re.compile(r"\"(?:\\.|[^\"\\])*?\"")
 
-VAR, ARR, FUNC, NUM = 1, 2, 3, 4
+
+VAR, ARR, FUNC, NUM, STRUCT, FIELD = 1, 2, 3, 4, 5, 6
 replaced_prefixes = { VAR: 'var_',
                       ARR: 'arr_',
                       FUNC: 'func_',
-                      NUM: 'num_'
+                      NUM: 'num_',
+                      STRUCT: 'struct_',
+                      FIELD: 'field_'                    
                     }
 
 
@@ -46,17 +53,17 @@ def count_newlines(code):
     return counter
 
 
-def replace_vars(code, vars, arrays, functions, name_map):
+def replace_vars(code, vars, arrays, functions, fields, name_map):
     updated_code = ''
     prev_idx = 0
-    offset = 1 # count_newlines(code)
+    offset = 0 # count_newlines(code)
 
-    vars = vars+arrays+functions
+    vars = vars+arrays+functions+fields
     vars.sort(key=lambda tup: tup[1])
     for var, start, end in vars:
         updated_code += code[prev_idx:start-offset].decode() + str(name_map[var])
-        print(updated_code)
-        print('=====')
+        # print(updated_code)
+        # print('=====')
         prev_idx = end - offset
 
     updated_code += code[prev_idx:].decode()
@@ -75,17 +82,23 @@ def get_identifiers(node, kind=''):
             list for each replaced variable kind (variable, array, function)
     '''
     if node.type == 'identifier':
-        return ([(node.text, node.start_byte, node.end_byte)],[],[]) if kind=='' else ([],[(node.text, node.start_byte, node.end_byte)],[]) if kind=='arr' else ([],[],[(node.text, node.start_byte, node.end_byte)])
+        # print('-----', node.text, f'kind {kind}')
+        return ([],[],[(node.text, node.start_byte, node.end_byte)],[]) if kind=='func' else ([],[(node.text, node.start_byte, node.end_byte)],[],[]) if kind=='arr' else ([(node.text, node.start_byte, node.end_byte)],[],[],[])
+    elif node.type == 'field_identifier':
+        # print('aaaaaaaaaaaaa')
+        return ([],[],[],[(node.text, node.start_byte, node.end_byte)])
 
-    vars, arrays, funcs = [], [], []
+    vars, arrays, funcs, fields = [], [], [], []
     for child in node.children:
         # print(child.type, ':', child.text)
-        va, ar, fu = get_identifiers(child, kind=(kind if len(kind)>0 else 
-                                                  'arr' if child.type == 'array_declarator' else
-                                                  'func' if child.type in ['call_expression', 'function_declarator'] else ''))
-        vars, arrays, funcs = vars+va, arrays+ar, funcs+fu
+        va, ar, fu, fi = get_identifiers(child, kind=('arr' if child.type == 'array_declarator' else
+                                                  'func' if child.type in ['call_expression', 'function_declarator'] else
+                                                  '' if child.type in ['parameter_declaration', 'argument_list', 'field_expression', 'parameter_list', 'compound_statement'] else
+                                                  'field' if child.type == 'field_identifier' else
+                                                   kind if len(kind)>0 else  ''))
+        vars, arrays, funcs, fields = vars+va, arrays+ar, funcs+fu, fields+fi
 
-    return vars, arrays, funcs
+    return vars, arrays, funcs, fields
 
 
 def generate_serial_numbers(N):
@@ -95,59 +108,85 @@ def generate_serial_numbers(N):
     return numbers
 
 
-# def update_var_names(ast, num_generator):
-#     name_map = {}
-#     vars, arrays, functions = get_identifiers(ast)
-#     print(vars, arrays, functions)
-#     unique_vars, unique_arrays, unique_funcs = list(set([var[0] for var in vars])), list(set([arr[0] for arr in arrays])), list(set([func[0] for func in functions]))
+# def replace_numbers(code, num_generator):
+#     matches = RE_NUMBERS.findall(code)
+#     random_numbers = num_generator(len(matches))
+#     matches = RE_NUMBERS.finditer(code)
 
-#     random_numbers_vars = num_generator(len(unique_vars))
-#     random_numbers_arrays = num_generator(len(unique_arrays))
-#     random_numbers_functions = num_generator(len(unique_funcs))
+#     offset = 0
+#     for match, num in zip(matches, random_numbers):
+#         # print(f'{replaced_prefixes[NUM]}{num}', f'{match.start()}-{match.end()}')
+#         start = match.start() + offset
+#         end = match.end() + offset
+#         code = code[:start] + f'{replaced_prefixes[NUM]}{num}' + code[end:]
+#         offset += len(f'{replaced_prefixes[NUM]}{num}') - len(match.group())
 
-#     for var, num in zip(unique_vars, random_numbers_vars):
-#         name_map[var] = f'var_{num}'
-
-#     for var, num in zip(unique_arrays, random_numbers_arrays):
-#         name_map[var] = f'arr_{num}'
-
-#     for var, num in zip(unique_funcs, random_numbers_functions):
-#         name_map[var] = f'func_{num}'
-
-#     updated_code = replace_vars(ast.text, vars, arrays, functions, name_map)
-
-#     return updated_code
+#     return code
 
 
-def replace_numbers(code, num_generator):
-    matches = RE_NUMBERS.findall(code)
-    random_numbers = num_generator(len(matches))
-    matches = RE_NUMBERS.finditer(code)
+def replace_constants(code, replace_token, regex):
+    matches = regex.finditer(code)
 
     offset = 0
-    for match, num in zip(matches, random_numbers):
-        # print(f'{replaced_prefixes[NUM]}{num}', f'{match.start()}-{match.end()}')
+    for match in matches:
         start = match.start() + offset
         end = match.end() + offset
-        code = code[:start] + f'{replaced_prefixes[NUM]}{num}' + code[end:]
-        offset += len(f'{replaced_prefixes[NUM]}{num}') - len(match.group())
+        code = code[:start] + replace_token + code[end:]
+        offset += len(replace_token) - len(match.group())
 
     return code
 
 
+
+# def replace_chars(code):
+#     matches = RE_CHARS.finditer(code)
+
+#     offset = 0
+#     for match in matches:
+#         start = match.start() + offset
+#         end = match.end() + offset
+#         code = code[:start] + 'CHAR' + code[end:]
+#         offset += len('CHAR') - len(match.group())
+
+#     return code
+
+# def replace_strings(code):
+#     offset = 0
+#     matches = RE_STR.finditer(code)
+#     for match in matches:
+#         start = match.start() + offset
+#         end = match.end() + offset
+#         code = code[:start] + 'STR' + code[end:]
+#         offset += len('STR') - len(match.group())
+
+#     offset = 0
+#     matches = RE_STR_MULTI_LINE.finditer(code)
+#     for match in matches:
+#         start = match.start() + offset
+#         end = match.end() + offset
+#         code = code[:start] + 'STR' + code[end:]
+#         offset += len('STR') - len(match.group())
+
+#     return code
+
+
 def update_var_names(ast, num_generator):
     name_map = {}
-    vars, arrays, functions = get_identifiers(ast)
+    vars, arrays, functions, fields = get_identifiers(ast)
 
-    for type, identifiers in zip([VAR, ARR, FUNC], [vars, arrays, functions]):
+    for type, identifiers in zip([VAR, ARR, FUNC, FIELD], [vars, arrays, functions, fields]):
         unique_vars= list(set([var[0] for var in identifiers]))
         random_numbers_vars = num_generator(len(unique_vars))
 
         for var, num in zip(unique_vars, random_numbers_vars):
             name_map[var] = f'{replaced_prefixes[type]}{num}'
 
-    updated_code = replace_vars(ast.text, vars, arrays, functions, name_map)
-    updated_code= replace_numbers(updated_code, num_generator)
+    updated_code = replace_vars(ast.text, vars, arrays, functions, fields, name_map)
+
+    for r_token, regex in zip(['STR', 'STR', 'CHAR', 'NUM', 'NUM'], [RE_STR, RE_STR_MULTI_LINE, RE_CHARS, RE_NUMBERS, RE_HEXA]):
+        updated_code = replace_constants(updated_code, r_token, regex)
+    # updated_code= replace_strings(replace_chars(updated_code))
+    # updated_code= replace_numbers(updated_code, num_generator)
 
     return updated_code
 
@@ -187,16 +226,40 @@ int main ()
 '''
 
 code = """
-#include <stdio.h>
+static void mdss_dsi_panel_bklt_pwm(struct mdss_dsi_ctrl_pdata *ctrl, int level)
+{
+	int ret;
+	u32 duty;
+	u32 period_ns;
 
-int main() {
-    int r[2800 + 1];
-    int i, k;
-    int b, d;
-    int c = 0;
+	if (level == 0) {
+		if (ctrl->pwm_enabled) {
+			ret = pwm_config_us(ctrl->pwm_bl, level,
+					ctrl->pwm_period);
+			pwm_disable(ctrl->pwm_bl);
+		}
+	}
+
+	if (ctrl->pwm_period >= USEC_PER_SEC) {
+		ret = pwm_config_us(ctrl->pwm_bl, duty, ctrl->pwm_period);
+		if (ret) {
+			pr_err("%s: pwm_config_us() failed err=%d.\n",
+					__func__, ret);
+			return;
+		}
+	} else {
+		ret = pwm_config(ctrl->pwm_bl,
+				level * period_ns / ctrl->bklt_max,
+				period_ns);
+	}
+
 
 }
 
+
+
 """
+
+
 
 # print(generate_replaced(code))
