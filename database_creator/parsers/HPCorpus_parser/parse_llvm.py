@@ -48,7 +48,8 @@ class LLVMParser:
     def parse(self, repo, file, code):
         code = preprocess.remove_comments(code)
 
-        code = preprocess.func_injection(code)
+        # code = preprocess.func_injection(code)
+        code = preprocess.remove_headers(code)
         save_dir = os.path.join(self.save_dir, repo, file)
         self.save(save_dir, code)
         self.convert_llvm(save_dir)
@@ -96,6 +97,7 @@ class LLVMParser:
     #     results = Parallel(n_jobs=10)(delayed(parse_json)(json_file) for json_file in tqdm(os.listdir(self.data_dir)))
 
 # parser = LLVMParser('/home/talkad/shared/nadavsc/c', '/home/talkad/shared/LLVM/c')
-parser = LLVMParser('/home/talkad/shared/nadavsc/c', '/home/talkad/LIGHTBITS_SHARE/studies/llvm/c')
+# parser = LLVMParser('/home/talkad/shared/nadavsc/c', '/home/talkad/LIGHTBITS_SHARE/studies/llvm/c')
+parser = LLVMParser('/home/talkad/shared/nadavsc/c', '/home/talkad/Downloads/thesis/data_gathering_script/database_creator/asd/c_llvm')
 
 parser.iterate_corpus()
