@@ -17,4 +17,4 @@ git_metadata.sh
 *.pickle
 **/temp_folder*
 sample_cpp*
-mydata000000000299.json
+**/HPCorpus

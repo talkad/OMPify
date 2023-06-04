@@ -7,7 +7,7 @@ import os
 from transformers import PreTrainedTokenizerFast, AutoTokenizer
 
 
-sys.path.extend(['.','/home/talkad/OpenMPdb/database_creator/parsers/HPCorpus_parser'])
+sys.path.extend(['.','/home/talkad/Downloads/thesis/data_gathering_script/database_creator/parsers/HPCorpus_parser'])
 import parse_tools, preprocess
 
 
@@ -117,7 +117,7 @@ int main() {
 
 
 # iterate over sub-HPCorpus
-json_dir = '/home/talkad/OpenMPdb/tokenizer/HPCorpus'
+json_dir = '/home/talkad/Downloads/thesis/data_gathering_script/tokenizer/HPCorpus'
 occurrences = {}
 total_tokens, amount_samples = 0, 0
 
@@ -132,8 +132,8 @@ for json_file in os.listdir(json_dir):
             if 'content' not in js:
                 continue
 
-            # tokens = tokenize_deepSCC(js['content'])
-            tokens = tokenize(js['content'], replaced=True)
+            tokens = tokenize_deepSCC(js['content'])
+            # tokens = tokenize(js['content'], replaced=True)
 
             total_tokens += len(tokens)
             amount_samples += 1
@@ -148,7 +148,7 @@ sorted_dict = {k: v for k, v in sorted_data}
 
 print(f'AVG tokens per sample: {total_tokens/amount_samples}')
 
-with open("ours_no_split_vocab.json", "w") as outfile:
+with open("deepscc.json", "w") as outfile:
     json.dump(sorted_dict, outfile, indent=4)
 
 
