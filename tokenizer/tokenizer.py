@@ -157,3 +157,9 @@ with open("deepscc.json", "w") as outfile:
 # ctok -    AVG tokens per sample: 4609.314855875831
 # ours -    AVG tokens per sample: 5406.760532150776
 # no split - AVG tokens per sample: 4239.538802660754
+
+# most used functions
+# GPT2BPE train 5% c
+# 1000 random indexing
+# function length
+# remove types

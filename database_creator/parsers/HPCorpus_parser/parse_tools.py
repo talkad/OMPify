@@ -31,6 +31,9 @@ def get_parser(lang):
 
 
 def parse(code, lang):
+    '''
+    Convert @code into an AST according to its programming @lang
+    '''
     parser = get_parser(lang)
 
     tree = parser.parse(bytes(code, 'utf8'))
@@ -55,6 +58,9 @@ def count_newlines(code):
 
 
 def replace_vars(code, var_mapping):
+    '''
+        Create replaced representation 
+    '''
     updated_code = ''
     prev_idx = 0
     offset = count_newlines(code)
@@ -62,7 +68,6 @@ def replace_vars(code, var_mapping):
     var_offset = 0
 
     for old_var, new_var, start, end in var_mapping:
-        # print(old_var, new_var, start, end)
         updated_mappings.append((new_var, old_var, start-offset+var_offset, start-offset+var_offset+len(new_var)))
         var_offset += len(new_var)-len(old_var)
         updated_code += code[prev_idx:start-offset] + new_var
@@ -108,6 +113,14 @@ def generate_serial_numbers(N):
 
 
 def replace_constants(code, replace_token, regex):
+    '''
+        Replace constatns in code with a given token
+
+        Parameters:
+            code - the original code to be updated
+            replace_token - the token that will replace the constants
+            regex - the regular expression that captures the constants
+    '''
     matches = regex.finditer(code)
 
     offset = 0
@@ -146,6 +159,9 @@ def update_var_names(ast, num_generator):
 
 
 def generate_replaced(code, num_generator=generate_serial_numbers):
+    '''
+        Main funtion to create the replaced represrntation
+    '''
     tree = parse(code.lstrip(), 'c')
     updated_code = update_var_names(tree.root_node, num_generator)
 
@@ -154,14 +170,15 @@ def generate_replaced(code, num_generator=generate_serial_numbers):
 
 
 
-code = '''
+# code = '''
 
-int a = 5;
-printf("%d", a);
-String str = "hello world";
-'''
+# int a = 5;
+# printf("%d", a);
+# String str = "hello world";
+# '''
 
 
-with open('example.c', 'w') as f:
-    f.write(generate_replaced(code))
+# with open('example.c', 'w') as f:
+#     f.write(generate_replaced(code))
+
 

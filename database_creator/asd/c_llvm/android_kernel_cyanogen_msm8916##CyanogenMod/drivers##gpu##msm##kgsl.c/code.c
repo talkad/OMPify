@@ -1,38 +1,4 @@
 
-
-#include <linux/module.h>
-#include <linux/fb.h>
-#include <linux/file.h>
-#include <linux/fs.h>
-#include <linux/fdtable.h>
-#include <linux/list.h>
-#include <linux/debugfs.h>
-#include <linux/uaccess.h>
-#include <linux/interrupt.h>
-#include <linux/workqueue.h>
-#include <linux/dma-buf.h>
-#include <linux/pm_runtime.h>
-#include <linux/rbtree.h>
-#include <linux/ashmem.h>
-#include <linux/major.h>
-#include <linux/io.h>
-#include <linux/mman.h>
-#include <linux/sort.h>
-#include <linux/security.h>
-#include <linux/compat.h>
-#include <asm/cacheflush.h>
-
-#include "kgsl.h"
-#include "kgsl_debugfs.h"
-#include "kgsl_cffdump.h"
-#include "kgsl_log.h"
-#include "kgsl_sharedmem.h"
-#include "kgsl_device.h"
-#include "kgsl_trace.h"
-#include "kgsl_sync.h"
-#include "adreno.h"
-#include "kgsl_compat.h"
-
 #undef MODULE_PARAM_PREFIX
 #define MODULE_PARAM_PREFIX "kgsl."
 

@@ -23,8 +23,8 @@ DEFAULT_IR_WORKDIR = RUN_ROOT_DIR.joinpath("ir_generation/tmp_tests_folder")
 
 ERROR_MESSAGE = "subprocess error:"
 
-C_TO_IR_COMMAND = "clang -c -emit-llvm -S -g1 -Oz -O0 {} -o {} -std=c17 -Xclang -disable-O0-optnone -Wno-narrowing"
-CPP_TO_IR_COMMAND = "clang++ -c -emit-llvm -S -g1 -Oz -O0 {} -o {} -std=c++17 -Xclang -disable-O0-optnone -Wno-narrowing"
+C_TO_IR_COMMAND = "clang -c -emit-llvm -S -g1 -Oz {} -o {} -std=c17 -Xclang -disable-O0-optnone -Wno-narrowing"
+CPP_TO_IR_COMMAND = "clang++ -c -emit-llvm -S -g1 -Oz {} -o {} -std=c++17 -Xclang -disable-O0-optnone -Wno-narrowing"
 Fortran_TO_IR_COMMAND = "flang" # not really working
 
 
