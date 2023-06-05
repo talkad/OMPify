@@ -22,8 +22,8 @@ replaced_prefixes = { VAR: 'var_',
 
 
 def get_parser(lang):
-    # LANGUAGE = Language('./my-languages.so', lang.lower())
-    LANGUAGE = Language('/home/talkad/OpenMPdb/database_creator/parsers/HPCorpus_parser/my-languages.so', lang.lower())
+    LANGUAGE = Language('./my-languages.so', lang.lower())
+    # LANGUAGE = Language('/home/talkad/OpenMPdb/database_creator/parsers/HPCorpus_parser/my-languages.so', lang.lower())
     parser = Parser()
     parser.set_language(LANGUAGE)
 
@@ -40,6 +40,7 @@ def parse(code, lang):
 def create_dfg(ast):
     pass
 
+
 def count_newlines(code):
     counter = 0
 
@@ -53,22 +54,23 @@ def count_newlines(code):
     return counter
 
 
-def replace_vars(code, vars, arrays, functions, fields, name_map):
+def replace_vars(code, var_mapping):
     updated_code = ''
     prev_idx = 0
     offset = count_newlines(code)
+    updated_mappings = []
+    var_offset = 0
 
-    vars = fields+vars+arrays+functions
-    vars.sort(key=lambda tup: tup[1])
-    for var, start, end in vars:
-        updated_code += code[prev_idx:start-offset].decode() + str(name_map[var])
-        # print(updated_code)
-        # print('=====')
+    for old_var, new_var, start, end in var_mapping:
+        # print(old_var, new_var, start, end)
+        updated_mappings.append((new_var, old_var, start-offset+var_offset, start-offset+var_offset+len(new_var)))
+        var_offset += len(new_var)-len(old_var)
+        updated_code += code[prev_idx:start-offset] + new_var
         prev_idx = end - offset
 
-    updated_code += code[prev_idx:].decode()
+    updated_code += code[prev_idx:]
 
-    return updated_code
+    return updated_code, updated_mappings
 
 
 def get_identifiers(node, kind=''):
@@ -82,15 +84,12 @@ def get_identifiers(node, kind=''):
             list for each replaced variable kind (variable, array, function)
     '''
     if node.type == 'identifier':
-        # print('-----', node.text, f'kind {kind}')
         return ([],[],[(node.text, node.start_byte, node.end_byte)],[]) if kind=='func' else ([],[(node.text, node.start_byte, node.end_byte)],[],[]) if kind=='arr' else ([(node.text, node.start_byte, node.end_byte)],[],[],[])
     elif node.type == 'field_identifier':
-        # print('aaaaaaaaaaaaa')
         return ([],[],[],[(node.text, node.start_byte, node.end_byte)])
 
     vars, arrays, funcs, fields = [], [], [], []
     for child in node.children:
-        # print(child.type, ':', child.text)
         va, ar, fu, fi = get_identifiers(child, kind=('arr' if child.type == 'array_declarator' else
                                                   'func' if child.type in ['call_expression', 'function_declarator'] else
                                                   '' if child.type in ['parameter_declaration', 'argument_list', 'field_expression', 'parameter_list', 'compound_statement'] else
@@ -132,8 +131,14 @@ def update_var_names(ast, num_generator):
         for var, num in zip(unique_vars, random_numbers_vars):
             name_map[var] = f'{replaced_prefixes[type]}{num}'
 
-    updated_code = replace_vars(ast.text, vars, arrays, functions, fields, name_map)
+    # replace and sort the vars according to their location
+    vs = fields+vars+arrays+functions
+    vs.sort(key=lambda tup: tup[1])
+    var_mapping = [(var.decode(), name_map[var], start, end) for var, start, end in vs]
+    
+    updated_code, updated_mappings = replace_vars(ast.text.decode(), var_mapping)
 
+    # replace constants
     for r_token, regex in zip(['STR', 'STR', 'CHAR', 'NUM', 'NUM'], [RE_STR, RE_STR_MULTI_LINE, RE_CHARS, RE_NUMBERS, RE_HEXA]):
         updated_code = replace_constants(updated_code, r_token, regex)
 
@@ -151,14 +156,12 @@ def generate_replaced(code, num_generator=generate_serial_numbers):
 
 code = '''
 
-	balance_gap = min(low_wmark_pages(zone),
-		(zone->managed_pages + KSWAPD_ZONE_BALANCE_GAP_RATIO-1) /
-			KSWAPD_ZONE_BALANCE_GAP_RATIO);
-	watermark = high_wmark_pages(zone) + balance_gap + (2UL << sc->order);
-	watermark_ok = zone_watermark_ok_safe(zone, 0, watermark, 0, 0);
-
+int a = 5;
+printf("%d", a);
+String str = "hello world";
 '''
 
 
-# with open('WTF.c', 'w') as f, open('/home/talkad/OpenMPdb/tokenizer/aa.c', 'r') as f2:
-#     f.write(generate_replaced(code))
+with open('example.c', 'w') as f:
+    f.write(generate_replaced(code))
+
