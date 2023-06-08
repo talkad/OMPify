@@ -5,6 +5,7 @@ import json
 from tqdm import tqdm
 import os
 from transformers import PreTrainedTokenizerFast, AutoTokenizer
+from transformers import GPT2Tokenizer
 
 
 sys.path.extend(['.','/home/talkad/Downloads/thesis/data_gathering_script/database_creator/parsers/HPCorpus_parser'])
@@ -66,6 +67,11 @@ def tokenize_deepSCC(code):
     return tokenizer.tokenize(code)
 
 
+def tokenize_gpt(code):
+    tokenizer = GPT2Tokenizer.from_pretrained("gpt2")
+    return tokenizer.tokenize(code, add_special_tokens=False)
+
+
 code = """
 #include <stdio.h>
 
@@ -115,7 +121,6 @@ int main() {
 # print(tokenize(code))
 
 
-
 # iterate over sub-HPCorpus
 json_dir = '/home/talkad/Downloads/thesis/data_gathering_script/tokenizer/HPCorpus'
 occurrences = {}
@@ -132,7 +137,7 @@ for json_file in os.listdir(json_dir):
             if 'content' not in js:
                 continue
 
-            tokens = tokenize_deepSCC(js['content'])
+            tokens = tokenize_gpt(js['content'])
             # tokens = tokenize(js['content'], replaced=True)
 
             total_tokens += len(tokens)
@@ -148,18 +153,19 @@ sorted_dict = {k: v for k, v in sorted_data}
 
 print(f'AVG tokens per sample: {total_tokens/amount_samples}')
 
-with open("deepscc.json", "w") as outfile:
+with open("gpt2.json", "w") as outfile:
     json.dump(sorted_dict, outfile, indent=4)
 
 
 # 450 samples
-# deepSCC - AVG tokens per sample: 14050.545454545454
-# ctok -    AVG tokens per sample: 4609.314855875831
-# ours -    AVG tokens per sample: 5406.760532150776
+# gpt2 -     AVG tokens per sample: 14050.552106430156
+# deepSCC -  AVG tokens per sample: 14050.545454545454
+# ctok -     AVG tokens per sample: 4609.314855875831
+# ours -     AVG tokens per sample: 5406.760532150776
 # no split - AVG tokens per sample: 4239.538802660754
 
-# most used functions
-# GPT2BPE train 5% c
+# most used functions - done 
+# GPT2BPE train 5% c - done 
 # 1000 random indexing
 # function length
 # remove types

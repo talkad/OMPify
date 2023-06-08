@@ -113,53 +113,53 @@ def extract_funcs(code, c_lang=True):
 
 
 
-code = """
-int main(int argc, char[] argv*){
-	func_2(555);
-	return 0;
-}
+# code = """
+# int main(int argc, char[] argv*){
+# 	func_2(555);
+# 	return 0;
+# }
 
-int func_2(type a){
-	printf("Hello world");
-	}
-"""
+# int func_2(type a){
+# 	printf("Hello world");
+# 	}
+# """
 
-# with open('a.c', 'w') as f:
-#     f.write(remove_headers(code))
-
-
+# # with open('a.c', 'w') as f:
+# #     f.write(remove_headers(code))
 
 
-json_dir = '/home/talkad/Downloads/thesis/data_gathering_script/tokenizer/HPCorpus'
-occurrences = {}
-
-LANGUAGE = Language('./my-languages.so', 'c')
-parser = Parser()
-parser.set_language(LANGUAGE)
-
-for json_file in os.listdir(json_dir):
-	with open(os.path.join(json_dir, json_file), 'r') as f:
-		for idx, line in tqdm(enumerate(f)):
-			# if idx > 2000:
-			# 	break
-
-			js = json.loads(line.strip())
-
-			if 'content' not in js:
-				continue
-
-			tree = parser.parse(bytes(js['content'], 'utf8'))
-			try:
-				result = get_func_calls(tree.root_node)
-			except:
-				result = []
-
-			for func in result:
-				occurrences[func] = 1 if func not in occurrences else occurrences[func]+1
 
 
-sorted_data = sorted(occurrences.items(), key=lambda x: x[1], reverse=True)
-sorted_dict = {k: v for k, v in sorted_data}
+# json_dir = '/home/talkad/Downloads/thesis/data_gathering_script/tokenizer/HPCorpus'
+# occurrences = {}
 
-with open("function_usage.json", "w") as outfile:
-    json.dump(sorted_dict, outfile, indent=4)
+# LANGUAGE = Language('./my-languages.so', 'c')
+# parser = Parser()
+# parser.set_language(LANGUAGE)
+
+# for json_file in os.listdir(json_dir):
+# 	with open(os.path.join(json_dir, json_file), 'r') as f:
+# 		for idx, line in tqdm(enumerate(f)):
+# 			# if idx > 2000:
+# 			# 	break
+
+# 			js = json.loads(line.strip())
+
+# 			if 'content' not in js:
+# 				continue
+
+# 			tree = parser.parse(bytes(js['content'], 'utf8'))
+# 			try:
+# 				result = get_func_calls(tree.root_node)
+# 			except:
+# 				result = []
+
+# 			for func in result:
+# 				occurrences[func] = 1 if func not in occurrences else occurrences[func]+1
+
+
+# sorted_data = sorted(occurrences.items(), key=lambda x: x[1], reverse=True)
+# sorted_dict = {k: v for k, v in sorted_data}
+
+# with open("function_usage.json", "w") as outfile:
+#     json.dump(sorted_dict, outfile, indent=4)
