@@ -96,9 +96,9 @@ def get_func_calls(node, func_call=False):
 
 
 def extract_funcs(code, c_lang=True):
-    parser = Language('/home/talkad/Downloads/thesis/data_gathering_script/database_creator/parsers/HPCorpus_parser/my-languages.so', 'c')
+    LANGUAGE = Language('/home/talkad/Downloads/thesis/data_gathering_script/database_creator/parsers/HPCorpus_parser/my-languages.so', 'c')
 
-    LANGUAGE = Language('./my-languages.so', 'c')
+    # LANGUAGE = Language('./my-languages.so', 'c')
     parser = Parser()
     parser.set_language(LANGUAGE)
 

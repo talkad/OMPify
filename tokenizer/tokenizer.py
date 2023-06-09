@@ -69,7 +69,7 @@ def tokenize_deepSCC(code):
 
 def tokenize_gpt(code):
     tokenizer = GPT2Tokenizer.from_pretrained("gpt2")
-    return tokenizer.tokenize(code, add_special_tokens=False)
+    return tokenizer.tokenize(code)
 
 
 code = """
@@ -137,14 +137,15 @@ for json_file in os.listdir(json_dir):
             if 'content' not in js:
                 continue
 
-            tokens = tokenize_gpt(js['content'])
-            # tokens = tokenize(js['content'], replaced=True)
+            for _, func in preprocess.extract_funcs(js['content']):
+                # tokens = tokenize_gpt(func)
+                tokens = tokenize(js['content'], replaced=False)
 
-            total_tokens += len(tokens)
-            amount_samples += 1
+                total_tokens += len(tokens)
+                amount_samples += 1
 
-            for token in tokens:
-                occurrences[token] = 1 if token not in occurrences else occurrences[token]+1
+                for token in tokens:
+                    occurrences[token] = 1 if token not in occurrences else occurrences[token]+1
 
             # break
 
@@ -153,8 +154,8 @@ sorted_dict = {k: v for k, v in sorted_data}
 
 print(f'AVG tokens per sample: {total_tokens/amount_samples}')
 
-with open("gpt2.json", "w") as outfile:
-    json.dump(sorted_dict, outfile, indent=4)
+# with open("gpt2.json", "w") as outfile:
+#     json.dump(sorted_dict, outfile, indent=4)
 
 
 # 450 samples
@@ -164,8 +165,13 @@ with open("gpt2.json", "w") as outfile:
 # ours -     AVG tokens per sample: 5406.760532150776
 # no split - AVG tokens per sample: 4239.538802660754
 
+# results per function
+# gpt2 -    
+# ctok -    
+# ours -    
+
 # most used functions - done 
 # GPT2BPE train 5% c - done 
-# 1000 random indexing
+# 1000 random indexing - done
 # function length
-# remove types
+# remove types - done 
