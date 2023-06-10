@@ -25,15 +25,15 @@ replaced_prefixes = { VAR: 'var_',
 
 
 def get_parser(lang):
-    LANGUAGE = Language('/home/talkad/Downloads/thesis/data_gathering_script/database_creator/parsers/HPCorpus_parser/my-languages.so', lang.lower())
-    # LANGUAGE = Language('/home/talkad/OpenMPdb/database_creator/parsers/HPCorpus_parser/my-languages.so', lang.lower())
+    # LANGUAGE = Language('/home/talkad/Downloads/thesis/data_gathering_script/database_creator/parsers/HPCorpus_parser/my-languages.so', lang.lower())
+    LANGUAGE = Language('/home/talkad/OpenMPdb/database_creator/parsers/HPCorpus_parser/my-languages.so', lang.lower())
     parser = Parser()
     parser.set_language(LANGUAGE)
 
     return parser
 
 
-def parse(code, lang):
+def parse(code, lang='c'):
     '''
     Convert @code into an AST according to its programming @lang
     '''
@@ -195,47 +195,47 @@ def generate_replaced(code, num_generator=generate_serial_numbers):
 
 
 
-code = '''
-#include <stdio.h>
+# code = '''
+# #include <stdio.h>
 
 
-int main() {
-    int r[2800 + 1];
-    int i, k;
-    int b, d;
-    int c = 0;
+# int main() {
+#     int r[2800 + 1];
+#     int i, k;
+#     int b, d;
+#     int c = 0;
 
 
-    for (i = 0; i < 2800; i++) {
-        r[i] = 2000;
-    }
+#     for (i = 0; i < 2800; i++) {
+#         r[i] = 2000;
+#     }
 
 
-    for (k = 2800; k > 0; k -= 14) {
-        d = 0;
+#     for (k = 2800; k > 0; k -= 14) {
+#         d = 0;
 
 
-        i = k;
-        for (;;) {
-            d += r[i] * 10000;
-            b = 2 * i - 1;
+#         i = k;
+#         for (;;) {
+#             d += r[i] * 10000;
+#             b = 2 * i - 1;
 
 
-            r[i] = d % b;
-            d /= b;
-            i--;
-            if (i == 0) break;
-            d *= i;
-        }
-        printf("%.4d", c + d / 10000);
-        c = d % 10000;
-    }
+#             r[i] = d % b;
+#             d /= b;
+#             i--;
+#             if (i == 0) break;
+#             d *= i;
+#         }
+#         printf("%.4d", c + d / 10000);
+#         c = d % 10000;
+#     }
 
 
-    return 0;
-}
-'''
+#     return 0;
+# }
+# '''
 
 
-with open('example.c', 'w') as f:
-    f.write(generate_replaced(code, num_generator=generate_random_numbers))
+# with open('example.c', 'w') as f:
+#     f.write(generate_replaced(code, num_generator=generate_random_numbers))

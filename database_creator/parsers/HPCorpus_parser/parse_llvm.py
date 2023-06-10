@@ -4,11 +4,28 @@ from tqdm import tqdm
 from pqdm.processes import pqdm
 from joblib import Parallel, delayed
 import preprocess
+import parse_tools 
+import shutil
+import pickle
+import logging
 from subprocess import Popen, PIPE
 
-def log(file_name, msg):
-    with open(file_name, 'a') as f:
-        f.write(f'{msg}\n')
+
+logging.basicConfig(filename='llvm.log', format='%(asctime)s - %(levelname)s - %(name)s -   %(message)s',datefmt='%d/%m/%Y %H:%M:%S',level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+
+C_TO_IR_COMMAND = "clang -c -emit-llvm -S -g1 -Oz code.c -o code.ll -std=c17 -Xclang -disable-O0-optnone -Wno-narrowing"
+CPP_TO_IR_COMMAND = "clang++ -c -emit-llvm -S -g1 -Oz code.c -o code.ll -std=c++17 -Xclang -disable-O0-optnone -Wno-narrowing"
+Fortran_TO_IR_COMMAND = "flang" # not really working
+
+Code2IR = {
+    "c": C_TO_IR_COMMAND,
+    "cpp": CPP_TO_IR_COMMAND,
+    "fortran": Fortran_TO_IR_COMMAND
+}
+
+
 
 
 class LLVMParser:
@@ -18,46 +35,56 @@ class LLVMParser:
         self.lang = lang
 
     def save(self, save_dir, sample):
+        '''
+        Save @sample and its AST in @save_dir
+        '''
         os.makedirs(save_dir, exist_ok=True)
         os.chdir(save_dir)
 
-        with open(f'code.c', 'w') as f:
-            f.write(sample)
+        with open(f'code.c', 'w') as code_f, open('ast.pkl', 'wb') as ast_f:
+            ast = parse_tools.parse(sample, lang='c')
 
-    def convert_llvm(self, save_dir):
-        script = '/home/talkad/Downloads/thesis/data_gathering_script/database_creator/parsers/HPCorpus_parser/convert_llvm.sh'
-        p = Popen([script, save_dir], stdin=PIPE, stdout=PIPE, stderr=PIPE)
+            code_f.write(sample)
+            # pickle.dump(ast, ast_f)    # tree_sitter object cannot be pickled
+
+    def convert_llvm(self, save_dir, lang='c'):
+        '''
+        Execute the clang compiler and save the intermediate representation
+        '''
+        os.chdir(save_dir)
+        p = Popen(Code2IR[lang], stdin=PIPE, stdout=PIPE, stderr=PIPE)
         _, error = p.communicate()
-        # print("Script error:", error.decode('utf-8'))
 
         if error:
-            log('llvm_error.log', f'{save_dir} error:\n{error}')
+            logger.error(f'{save_dir} error:\n{error}')
         else:
-            log('llvm.log', save_dir)
+            logger.info(save_dir)
 
-    # def parse(self, repo, file, code):
-    #     code = preprocess.remove_comments(code)
-    #     funcs = preprocess.extract_funcs(code)
-
-    #     for func_name, func in funcs:
-    #         code = preprocess.func_injection(func)
-    #         save_dir = os.path.join(self.save_dir, repo, file, func_name)
-    #         self.save(save_dir, code)
-    #         self.convert_llvm(save_dir)
-
-    def parse(self, repo, file, code):
+    def parse(self, repo, file, func_name, code):
+        '''
+        Remove irrelevant parts of code (comments and includes) and then parse it
+        '''
         code = preprocess.remove_comments(code)
-
-        # code = preprocess.func_injection(code)
         code = preprocess.remove_headers(code)
-        save_dir = os.path.join(self.save_dir, repo, file)
-        self.save(save_dir, code)
-        self.convert_llvm(save_dir)
+        code = preprocess.add_headers(code, lang='c')
 
+        save_dir = os.path.join(self.save_dir, repo, file, func_name)
 
+        try:
+            self.save(save_dir, code)
+            self.convert_llvm(save_dir)
+        except Exception as e:
+            # shutil.rmtree(save_dir)
+            logger.error(f'file at {save_dir} failed to parse\nerror: {e}')
+    
     def iterate_corpus(self):
-
-        for json_file in tqdm(os.listdir(self.data_dir)):
+        '''
+        Iterate over the HPCorpus and for each function save the following representations:
+            1. original code
+            2. IR
+            3. AST - can be used to produce replaced-tokens, DFG, etc.
+        '''
+        def parse_json(json_file): 
             with open(os.path.join(self.data_dir, json_file), 'r') as f:
                 for line in f:
                     js = json.loads(line.strip())
@@ -66,38 +93,25 @@ class LLVMParser:
                         continue
 
                     repo = js['repo_name'].split('/')
-                    repo = f'{repo[1]}##{repo[0]}'
+                    repo = f'{repo[1]}#{repo[0]}'
                     file = js['path']
-                    file = file.replace('/','##')
                     code = js['content']
 
-                    self.parse(repo, file, code)
-                    # return
+                    for func_name, func in preprocess.extract_code_struct(code):
+                        logger.info(f'parse function {func_name} at {repo} - {file}')
+                        self.parse(repo, file, func_name, func)
+                        exit()
 
-    
-    # def iterate_corpus(self):
-        
-    #     def parse_json(json_file): 
-    #         with open(os.path.join(self.data_dir, json_file), 'r') as f:
-    #             for line in f:
-    #                 js = json.loads(line.strip())
+        # pqdm(os.listdir(self.data_dir), parse_json, n_jobs=1)
 
-    #                 if 'content' not in js:
-    #                     continue
+        # sequential
+        for json_file in tqdm(os.listdir(self.data_dir)):
+            parse_json(json_file)
 
-    #                 repo = js['repo_name'].split('/')
-    #                 repo = f'{repo[1]}##{repo[0]}'
-    #                 file = js['path']
-    #                 file = file.replace('/','##')
-    #                 code = js['content']
 
-    #                 self.parse(repo, file, code)
-
-    #     # result = pqdm(os.listdir(self.data_dir), parse_json, n_jobs=10)
-    #     results = Parallel(n_jobs=10)(delayed(parse_json)(json_file) for json_file in tqdm(os.listdir(self.data_dir)))
-
-# parser = LLVMParser('/home/talkad/shared/nadavsc/c', '/home/talkad/shared/LLVM/c')
 # parser = LLVMParser('/home/talkad/shared/nadavsc/c', '/home/talkad/LIGHTBITS_SHARE/studies/llvm/c')
-parser = LLVMParser('/home/talkad/shared/nadavsc/c', '/home/talkad/Downloads/thesis/data_gathering_script/database_creator/asd/c_llvm')
+# parser = LLVMParser('/home/talkad/shared/nadavsc/c', '/home/talkad/Downloads/thesis/data_gathering_script/database_creator/asd/c_llvm')
+parser = LLVMParser('/home/talkad/OpenMPdb/tokenizer/HPCorpus', '/home/talkad/OpenMPdb/database_creator/asd/c_llvm')
+
 
 parser.iterate_corpus()

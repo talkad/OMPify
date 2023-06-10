@@ -8,8 +8,28 @@ from tree_sitter import Language, Parser
 
 redundant_line_comments = re.compile("\/\/.*")
 redundant_multiline_comments = re.compile("\/\*.*?\*\/", re.MULTILINE|re.DOTALL)
-
 redundant_includes = re.compile("^\W*#\W*include.*$", re.MULTILINE)
+
+
+
+LANG_IMPORTS = {
+    "cpp": """#include <iostream>
+    #include <cstdlib>
+    #include <string>
+    #include <vector>
+    #include <fstream>
+    #include <iomanip>
+    #include <bits/stdc++.h>
+    using namespace std;""",
+
+    "c":"""#include <stdio.h>
+    #include <stdlib.h>
+    #include <string.h>
+    #include <stdbool.h>
+    #include <math.h>""", 
+
+    "fortran":""
+}
 
 
 def remove_comments(code, c_lang=True):
@@ -55,6 +75,9 @@ def remove_headers(code, c_lang=True):
     code = redundant_includes.sub("", code)
     return code
 
+def add_headers(code, lang='c'):
+    return f'{LANG_IMPORTS[lang]}\n{code}'
+
 def func_injection(func, c_lang=True):
     code = add_func_decl(func)
     code = wrap_for_pragma(wrap_for_loop(code))
@@ -63,7 +86,8 @@ def func_injection(func, c_lang=True):
 
 
 def node2code(code, node):
-    start_byte = node.start_byte
+
+    start_byte = node.start_byte-1
     end_byte = node.end_byte
     func = code[start_byte:end_byte]
 
@@ -73,15 +97,29 @@ def node2code(code, node):
 
     return func_name, func
 
-def traverse(code, node):
+def get_functions(code, node):
     if node.type == 'function_definition':
         func_name, code = node2code(code, node)
+
         return [(func_name, code)]
 
     nodes = []
     for child in node.children:
-        nodes += traverse(code, child)
+        nodes += get_functions(code, child)
     return nodes
+
+
+def get_for_loops(code, node):
+    if node.type == 'for_statement':
+        return [(node, node.text)]
+
+    nodes = []
+    for child in node.children:
+        nodes += get_for_loops(child)
+    return nodes
+
+
+
 
 def get_func_calls(node, func_call=False):
 	# print(node.type, node.text)
@@ -95,8 +133,9 @@ def get_func_calls(node, func_call=False):
 	return func_calls
 
 
-def extract_funcs(code, c_lang=True):
-    LANGUAGE = Language('/home/talkad/Downloads/thesis/data_gathering_script/database_creator/parsers/HPCorpus_parser/my-languages.so', 'c')
+def extract_code_struct(code, traverse_func=get_functions, c_lang=True):
+    # LANGUAGE = Language('/home/talkad/Downloads/thesis/data_gathering_script/database_creator/parsers/HPCorpus_parser/my-languages.so', 'c')
+    LANGUAGE = Language('/home/talkad/OpenMPdb/database_creator/parsers/HPCorpus_parser/my-languages.so', 'c')
 
     # LANGUAGE = Language('./my-languages.so', 'c')
     parser = Parser()
@@ -105,32 +144,46 @@ def extract_funcs(code, c_lang=True):
     tree = parser.parse(bytes(code, 'utf8'))
 
     try:
-        result = traverse(code, tree.root_node)
-    except:
+        result = traverse_func(code, tree.root_node)
+    except Exception as e:
+        print('extraction error: ', e)
         result = []
 
     return result
 
 
 
-# code = """
-# int main(int argc, char[] argv*){
-# 	func_2(555);
-# 	return 0;
-# }
+code = """
 
-# int func_2(type a){
-# 	printf("Hello world");
-# 	}
-# """
-
-# # with open('a.c', 'w') as f:
-# #     f.write(remove_headers(code))
+extern int mdss_dsi_cmdlist_rx(struct mdss_dsi_ctrl_pdata *ctrl,
+				struct dcs_cmd_req *req);
 
 
+void mdss_dsi_panel_pwm_cfg(struct mdss_dsi_ctrl_pdata *ctrl)
+{
+	if (ctrl->pwm_pmi)
+		return;
+
+	ctrl->pwm_bl = pwm_request(ctrl->pwm_lpg_chan, "lcd-bklt");
+	if (ctrl->pwm_bl == NULL || IS_ERR(ctrl->pwm_bl)) {
+		pr_err("%s: Error: lpg_chan=%d pwm request failed",
+				__func__, ctrl->pwm_lpg_chan);
+	}
+	ctrl->pwm_enabled = 0;
+}
 
 
-# json_dir = '/home/talkad/Downloads/thesis/data_gathering_script/tokenizer/HPCorpus'
+"""
+
+
+print(extract_code_struct(code))
+
+
+
+
+# # json_dir = '/home/talkad/Downloads/thesis/data_gathering_script/tokenizer/HPCorpus'
+# json_dir = '/home/talkad/OpenMPdb/tokenizer/HPCorpus'
+
 # occurrences = {}
 
 # LANGUAGE = Language('./my-languages.so', 'c')
@@ -138,28 +191,30 @@ def extract_funcs(code, c_lang=True):
 # parser.set_language(LANGUAGE)
 
 # for json_file in os.listdir(json_dir):
-# 	with open(os.path.join(json_dir, json_file), 'r') as f:
-# 		for idx, line in tqdm(enumerate(f)):
-# 			# if idx > 2000:
-# 			# 	break
+#     with open(os.path.join(json_dir, json_file), 'r') as f:
+#         for idx, line in tqdm(enumerate(f)):
+#             # if idx > 2000:
+#             # 	break
 
-# 			js = json.loads(line.strip())
+#             js = json.loads(line.strip())
 
-# 			if 'content' not in js:
-# 				continue
+#             if 'content' not in js:
+#                 continue
 
-# 			tree = parser.parse(bytes(js['content'], 'utf8'))
-# 			try:
-# 				result = get_func_calls(tree.root_node)
-# 			except:
-# 				result = []
+#             tree = parser.parse(bytes(js['content'], 'utf8'))
+                
+#             for for_loop, _ in get_for_loops(tree.root_node):
+#                 try:
+#                     result = get_func_calls(for_loop)
+#                 except:
+#                     result = []
 
-# 			for func in result:
-# 				occurrences[func] = 1 if func not in occurrences else occurrences[func]+1
+#                 for func in result:
+#                     occurrences[func] = 1 if func not in occurrences else occurrences[func]+1
 
 
 # sorted_data = sorted(occurrences.items(), key=lambda x: x[1], reverse=True)
 # sorted_dict = {k: v for k, v in sorted_data}
 
-# with open("function_usage.json", "w") as outfile:
+# with open("function_usage_for.json", "w") as outfile:
 #     json.dump(sorted_dict, outfile, indent=4)

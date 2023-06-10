@@ -8,8 +8,14 @@ from transformers import PreTrainedTokenizerFast, AutoTokenizer
 from transformers import GPT2Tokenizer
 
 
-sys.path.extend(['.','/home/talkad/Downloads/thesis/data_gathering_script/database_creator/parsers/HPCorpus_parser'])
+# sys.path.extend(['.','/home/talkad/Downloads/thesis/data_gathering_script/database_creator/parsers/HPCorpus_parser'])
+sys.path.extend(['.','/home/talkad/OpenMPdb/database_creator/parsers/HPCorpus_parser'])
+
 import parse_tools, preprocess
+
+
+tokenizer_gpt = GPT2Tokenizer.from_pretrained("gpt2")
+tokenizer_deepscc = AutoTokenizer.from_pretrained('NTUYG/DeepSCC-RoBERTa')
 
 
 # class CodeTokenizer(PreTrainedTokenizerFast):
@@ -33,7 +39,7 @@ def tokenize(code, replaced=False):
         return []
 
     if replaced:
-        code = parse_tools.generate_replaced(code)
+        code = parse_tools.generate_replaced(code, num_generator=parse_tools.generate_random_numbers)
 
         ### DEBUG ###
         # if re.search(r'[0-9]+NUM', code):
@@ -52,76 +58,37 @@ def tokenize(code, replaced=False):
             str_token = 'TOKEN'
 
         if replaced and any([str_token.startswith(prefix) for prefix in parse_tools.replaced_prefixes.values()]):
-            # updated_tokens += list(str_token.split('_'))
-            updated_tokens.append(str_token)
+            updated_tokens += list(str_token.split('_'))
+            # updated_tokens.append(str_token)
         else:
-                updated_tokens.append(str_token)
+            updated_tokens.append(str_token)
 
                                 
     return updated_tokens
 
 
 def tokenize_deepSCC(code):
-    tokenizer = AutoTokenizer.from_pretrained('NTUYG/DeepSCC-RoBERTa')
-    return tokenizer.tokenize(code)
+    return tokenizer_deepscc.tokenize(code)
 
 
 def tokenize_gpt(code):
-    tokenizer = GPT2Tokenizer.from_pretrained("gpt2")
-    return tokenizer.tokenize(code)
+    return tokenizer_gpt.tokenize(code)
 
 
-code = """
-#include <stdio.h>
 
 
-int main() {
-    int r[2800 + 1];
-    int i, k;
-    int b, d;
-    int c = 0;
+# with open("ours_vocab.json", "r") as f:
+#     vocab = json.load(f)
 
-
-    for (i = 0; i < 2800; i++) {
-        r[i] = 2000;
-    }
-
-
-    for (k = 2800; k > 0; k -= 14) {
-        d = 0;
-
-
-        i = k;
-        for (;;) {
-            d += r[i] * 10000;
-            b = 2 * i - 1;
-
-
-            r[i] = d % b;
-            d /= b;
-            i--;
-            if (i == 0) break;
-            d *= i;
-        }
-        printf("%.4d", c + d / 10000);
-        c = d % 10000;
-    }
-
-
-    return 0;
-}
-
-"""
-
-# tokenizer = CodeTokenizer()
-# tokens = tokenizer.tokenize(code)
-# print(tokens)
-
-# print(tokenize(code))
+#     vals = vocab.values()
+#     print(f'OOVs : {sum(list(vals)[1100:])/sum(vals)}')
+# exit()
 
 
 # iterate over sub-HPCorpus
-json_dir = '/home/talkad/Downloads/thesis/data_gathering_script/tokenizer/HPCorpus'
+# json_dir = '/home/talkad/Downloads/thesis/data_gathering_script/tokenizer/HPCorpus'
+json_dir = '/home/talkad/OpenMPdb/tokenizer/HPCorpus'
+
 occurrences = {}
 total_tokens, amount_samples = 0, 0
 
@@ -138,10 +105,14 @@ for json_file in os.listdir(json_dir):
 
             for _, func in preprocess.extract_funcs(js['content']):
                 # tokens = tokenize_gpt(func)
-                tokens = tokenize(js['content'], replaced=True)
+                tokens = tokenize(func, replaced=True)
 
                 total_tokens += len(tokens)
                 amount_samples += 1
+
+                # print(func)
+                # print(total_tokens)
+                # break
 
                 for token in tokens:
                     occurrences[token] = 1 if token not in occurrences else occurrences[token]+1
@@ -153,7 +124,7 @@ sorted_dict = {k: v for k, v in sorted_data}
 
 print(f'AVG tokens per sample: {total_tokens/amount_samples}')
 
-with open("ctok_vocab.json", "w") as outfile:
+with open("ours_vocab.json", "w") as outfile:
     json.dump(sorted_dict, outfile, indent=4)
 
 
@@ -165,12 +136,6 @@ with open("ctok_vocab.json", "w") as outfile:
 # no split - AVG tokens per sample: 4239.538802660754
 
 # results per function
-# gpt2 -    
-# ctok -    
-# ours -    
-
-# most used functions - done 
-# GPT2BPE train 5% c - done 
-# 1000 random indexing - done
-# function length
-# remove types - done 
+# gpt2 -    AVG tokens per sample: 382.46796409846263
+# ctok -    AVG tokens per sample: 146.37741046831957
+# ours -    AVG tokens per sample: 198.7129654314405
