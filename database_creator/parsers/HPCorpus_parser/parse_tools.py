@@ -25,7 +25,7 @@ replaced_prefixes = { VAR: 'var_',
 
 
 def get_parser(lang):
-    LANGUAGE = Language('./my-languages.so', lang.lower())
+    LANGUAGE = Language('/home/talkad/Downloads/thesis/data_gathering_script/database_creator/parsers/HPCorpus_parser/my-languages.so', lang.lower())
     # LANGUAGE = Language('/home/talkad/OpenMPdb/database_creator/parsers/HPCorpus_parser/my-languages.so', lang.lower())
     parser = Parser()
     parser.set_language(LANGUAGE)

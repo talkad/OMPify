@@ -31,7 +31,7 @@ def tokenize(code, replaced=False):
     a = code
     if len(code.strip()) == 0:
         return []
-    log('aa.c', a)
+
     if replaced:
         code = parse_tools.generate_replaced(code)
 
@@ -41,7 +41,6 @@ def tokenize(code, replaced=False):
         #     log('replaced2.c', code)
         #     exit()
         #############
-    # log('replaced.c', code)
         
     tokens = ctok.tokenize(code, lang = "c", syntax_error = "ignore")
 
@@ -139,7 +138,7 @@ for json_file in os.listdir(json_dir):
 
             for _, func in preprocess.extract_funcs(js['content']):
                 # tokens = tokenize_gpt(func)
-                tokens = tokenize(js['content'], replaced=False)
+                tokens = tokenize(js['content'], replaced=True)
 
                 total_tokens += len(tokens)
                 amount_samples += 1
@@ -154,8 +153,8 @@ sorted_dict = {k: v for k, v in sorted_data}
 
 print(f'AVG tokens per sample: {total_tokens/amount_samples}')
 
-# with open("gpt2.json", "w") as outfile:
-#     json.dump(sorted_dict, outfile, indent=4)
+with open("ctok_vocab.json", "w") as outfile:
+    json.dump(sorted_dict, outfile, indent=4)
 
 
 # 450 samples
