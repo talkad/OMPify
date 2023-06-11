@@ -1,8 +1,12 @@
 import re
 import random
 import tree_sitter
-import textwrap
 from tree_sitter import Language, Parser
+import pycparser
+import tempfile
+from dfg_parser import extract_dataflow
+from ast_parser import generate_statement_xsbt
+
 
 RE_NUMBERS = re.compile(r"(?<![_a-zA-Z])\b[0-9]+(?:\.[0-9]+)?(?:f)?\b(?![0-9.-])")
 RE_HEXA = re.compile(r"0x[0-9a-fA-F]+")
@@ -43,9 +47,54 @@ def parse(code, lang='c'):
     return tree
 
 
-def create_dfg(ast):
-    pass
+def code2dfg(code, lang='c'):
+    '''
+    Convert code to DFG
+    '''
+    _, dfg = extract_dataflow(code, lang=lang)
 
+    return dfg
+
+
+def code2xsbt(code, lang='c'):
+    '''
+    Convert code to XSBT (Structured Based Traversal as presented in SPT-Code)
+    '''
+    tree = parse(code, lang=lang)
+    node = tree.root_node
+    xsbt_str = generate_statement_xsbt(node, lang)
+
+    return xsbt_str
+
+
+def prettify_xsbt(xsbt):
+    tokens = xsbt.split()
+    updated_xsbt = ''
+    ident = 0
+
+    for token in tokens:
+        if token.endswith('__'):
+            updated_xsbt += '\t'*ident + token + '\n'
+            ident += 1
+        elif token.startswith('__'):
+            ident -= 1
+            updated_xsbt += '\t'*ident + token + '\n'
+        else:
+            updated_xsbt += '\t'*ident + token + '\n'
+            
+    return updated_xsbt
+
+
+def create_ast(code):
+    '''
+    Create AST for c codes using pycparser
+    '''
+    with tempfile.NamedTemporaryFile(suffix='.c', mode='w+') as tmp:    
+        tmp.write(code)
+        tmp.seek(0)
+        ast = pycparser.parse_file(tmp.name) #, use_cpp=True, cpp_path='mpicc', cpp_args = [])
+
+    return ast
 
 def count_newlines(code):
     counter = 0
@@ -195,54 +244,85 @@ def generate_replaced(code, num_generator=generate_serial_numbers):
 
 
 
-# code = '''
-# #include <stdio.h>
+code = '''
+#include <stdio.h>
 
 
-# int main() {
-#     int r[2800 + 1];
-#     int i, k;
-#     int b, d;
-#     int c = 0;
+int main() {
+    int r[2800 + 1];
+    int i, k;
+    int b, d;
+    int c = 0;
 
 
-#     for (i = 0; i < 2800; i++) {
-#         r[i] = 2000;
-#     }
+    for (i = 0; i < 2800; i++) {
+        r[i] = 2000;
+    }
 
 
-#     for (k = 2800; k > 0; k -= 14) {
-#         d = 0;
+    for (k = 2800; k > 0; k -= 14) {
+        d = 0;
 
 
-#         i = k;
-#         for (;;) {
-#             d += r[i] * 10000;
-#             b = 2 * i - 1;
+        i = k;
+        for (;;) {
+            d += r[i] * 10000;
+            b = 2 * i - 1;
 
 
-#             r[i] = d % b;
-#             d /= b;
-#             i--;
-#             if (i == 0) break;
-#             d *= i;
-#         }
-#         printf("%.4d", c + d / 10000);
-#         c = d % 10000;
-#     }
+            r[i] = d % b;
+            d /= b;
+            i--;
+            if (i == 0) break;
+            d *= i;
+        }
+        printf("%.4d", c + d / 10000);
+        c = d % 10000;
+    }
 
 
-#     return 0;
-# }
-# '''
+    return 0;
+}
+'''
 
-# code = '''
-# int main(char *argv[]){
+code = '''
+type_591 func_466() {
+    type_591 arr_448[num_589 + num_992];
+    type_591 var_15, var_561;
+    type_591 var_567, var_518;
+    type_591 var_782 = num_699;
 
-# }
+    for (var_15 = num_699; var_15 < num_589; var_15++) {
+        arr_448[var_15] = num_174;
+    }
 
-# void func(){}
-# '''
+    for (var_561 = num_589; var_561 > num_699; var_561 -= num_917) {
+        var_518 = num_699;
 
-# with open('example.c', 'w') as f:
-#     f.write(generate_replaced(code, num_generator=generate_random_numbers))
+        var_15 = var_561;
+        for (;;) {
+            var_518 += arr_448[var_15] * num_948;
+            var_567 = num_146 * var_15 - num_992;
+
+            arr_448[var_15] = var_518 % var_567;
+            var_518 /= var_567;
+            var_15--;
+            if (var_15 == num_699) break;
+            var_518 *= var_15;
+        }
+        func_725(str_237, var_782 + var_518 / num_948);
+        var_782 = var_518 % num_948;
+    }
+
+    return num_699;
+}
+
+'''
+
+xsbt = "compound_statement__ declaration__ binary_expression __declaration declaration declaration declaration for_statement__ assignment_expression binary_expression update_expression compound_statement__ expression_statement__ assignment_expression__ subscript_expression __assignment_expression __expression_statement __compound_statement __for_statement for_statement__ assignment_expression binary_expression assignment_expression compound_statement__ expression_statement__ assignment_expression __expression_statement expression_statement__ assignment_expression __expression_statement for_statement__ compound_statement__ expression_statement__ assignment_expression__ binary_expression__ subscript_expression __binary_expression __assignment_expression __expression_statement expression_statement__ assignment_expression__ binary_expression__ binary_expression __binary_expression __assignment_expression __expression_statement expression_statement__ assignment_expression__ subscript_expression binary_expression __assignment_expression __expression_statement expression_statement__ assignment_expression __expression_statement expression_statement__ update_expression __expression_statement if_statement__ parenthesized_expression__ binary_expression __parenthesized_expression break_statement __if_statement expression_statement__ assignment_expression __expression_statement __compound_statement __for_statement expression_statement__ call_expression__ binary_expression__ binary_expression __binary_expression __call_expression __expression_statement expression_statement__ assignment_expression__ binary_expression __assignment_expression __expression_statement __compound_statement __for_statement return_statement __compound_statement"
+with open('example.c', 'w') as f:
+    # f.write(generate_replaced(code, num_generator=generate_random_numbers))
+    # f.write(code2xsbt(code))
+    # f.write(prettify_xsbt(xsbt))
+
+    print(code2dfg(code))
