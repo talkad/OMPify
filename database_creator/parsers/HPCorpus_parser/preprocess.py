@@ -98,6 +98,7 @@ def node2code(code, node):
     return func_name, func
 
 def get_functions(code, node):
+    print(node.type, node.text)
     if node.type == 'function_definition':
         func_name, code = node2code(code, node)
 
@@ -119,6 +120,8 @@ def get_for_loops(code, node):
     return nodes
 
 
+def get_func_declaration(func):
+    return func[:func.find(')')+1] + ';'
 
 
 def get_func_calls(node, func_call=False):
@@ -153,30 +156,16 @@ def extract_code_struct(code, traverse_func=get_functions, c_lang=True):
 
 
 
-code = """
 
-extern int mdss_dsi_cmdlist_rx(struct mdss_dsi_ctrl_pdata *ctrl,
-				struct dcs_cmd_req *req);
+# code = '''
+# int main(char *argv[]){
 
+# }
 
-void mdss_dsi_panel_pwm_cfg(struct mdss_dsi_ctrl_pdata *ctrl)
-{
-	if (ctrl->pwm_pmi)
-		return;
+# void func(){}
+# '''
 
-	ctrl->pwm_bl = pwm_request(ctrl->pwm_lpg_chan, "lcd-bklt");
-	if (ctrl->pwm_bl == NULL || IS_ERR(ctrl->pwm_bl)) {
-		pr_err("%s: Error: lpg_chan=%d pwm request failed",
-				__func__, ctrl->pwm_lpg_chan);
-	}
-	ctrl->pwm_enabled = 0;
-}
-
-
-"""
-
-
-print(extract_code_struct(code))
+# print(extract_code_struct(code))
 
 
 

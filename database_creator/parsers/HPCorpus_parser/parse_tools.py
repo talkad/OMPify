@@ -236,6 +236,13 @@ def generate_replaced(code, num_generator=generate_serial_numbers):
 # }
 # '''
 
+# code = '''
+# int main(char *argv[]){
+
+# }
+
+# void func(){}
+# '''
 
 # with open('example.c', 'w') as f:
 #     f.write(generate_replaced(code, num_generator=generate_random_numbers))

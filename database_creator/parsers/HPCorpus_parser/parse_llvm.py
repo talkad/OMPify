@@ -97,10 +97,19 @@ class LLVMParser:
                     file = js['path']
                     code = js['content']
 
-                    for func_name, func in preprocess.extract_code_struct(code):
+                    funcs = preprocess.extract_code_struct(code)
+
+                    for curr_idx, func_name, func in enumerate(funcs):
                         logger.info(f'parse function {func_name} at {repo} - {file}')
-                        self.parse(repo, file, func_name, func)
-                        exit()
+
+                        # append all function declaration into the current function code
+                        code = ''
+                        for _, other_func in funcs[:curr_idx]+funcs[curr_idx+1:]:
+                            code += preprocess.get_func_declaration(other_func) + '\n'
+                        code += func
+
+                        self.parse(repo, file, func_name, code)
+                        # exit()
 
         # pqdm(os.listdir(self.data_dir), parse_json, n_jobs=1)
 
