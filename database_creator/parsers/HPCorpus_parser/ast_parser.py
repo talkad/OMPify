@@ -1,21 +1,9 @@
 
-import tree_sitter
-from tree_sitter import Language, Parser
-
-# LANGUAGE = {'c': Language('./my-languages.so', 'c'),
-#             'cpp': Language('./my-languages.so', 'cpp')}
-
-LANGUAGE = {'c': Language('/home/talkad/OpenMPdb/database_creator/parsers/HPCorpus_parser/my-languages.so', 'c'),
-            'cpp': Language('/home/talkad/OpenMPdb/database_creator/parsers/HPCorpus_parser/my-languages.so', 'cpp')}
-
-parser = Parser()
-
 
 STATEMENT_ENDING_STRINGS = {
     'c': ['statement', 'expression', 'declaration'],
     'cpp': ['statement', 'expression', 'declaration'],
 }
-
 
 
 def is_statement_node(node, lang):
@@ -96,9 +84,5 @@ def generate_statement_xsbt(node, lang):
         str: X-SBT string
 
     """
-    # if lang in PATTERNS_METHOD_BODY:
-    #     query = LANGUAGE[lang].query(PATTERNS_METHOD_BODY[lang])
-    #     captures = query.captures(node)
-    #     node = captures[0][0]
     tokens = __statement_xsbt(node=node, lang=lang)
     return ' '.join(tokens)

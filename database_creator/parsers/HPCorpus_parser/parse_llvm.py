@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 
 C_TO_IR_COMMAND = "clang -c -emit-llvm -S -g1 -Oz code.c -o code.ll -std=c17 -Xclang -disable-O0-optnone -Wno-narrowing"
 CPP_TO_IR_COMMAND = "clang++ -c -emit-llvm -S -g1 -Oz code.c -o code.ll -std=c++17 -Xclang -disable-O0-optnone -Wno-narrowing"
-Fortran_TO_IR_COMMAND = "flang" # not really working
+Fortran_TO_IR_COMMAND = "flang" # not working
 
 Code2IR = {
     "c": C_TO_IR_COMMAND,
@@ -33,19 +33,6 @@ class LLVMParser:
         self.data_dir = data_dir
         self.save_dir = save_dir
         self.lang = lang
-
-    def save(self, save_dir, sample):
-        '''
-        Save @sample and its AST in @save_dir
-        '''
-        os.makedirs(save_dir, exist_ok=True)
-        os.chdir(save_dir)
-
-        with open(f'code.c', 'w') as code_f, open('ast.pkl', 'wb') as ast_f:
-            ast = parse_tools.parse(sample, lang='c')
-
-            code_f.write(sample)
-            # pickle.dump(ast, ast_f)    # tree_sitter object cannot be pickled
 
     def convert_llvm(self, save_dir, lang='c'):
         '''
@@ -80,11 +67,21 @@ class LLVMParser:
     def iterate_corpus(self):
         '''
         Iterate over the HPCorpus and for each function save the following representations:
-            1. original code
-            2. IR
-            3. AST - can be used to produce replaced-tokens, DFG, etc.
+            1. username
+            2. repo name
+            3. path to file
+            4. function name
+            5. original code
+            6. LLVM IR
+            7. codes SHA-256
+            8. memory usage 
+
+            ---  AST - can be used to produce replaced-tokens, DFG, etc. (will be generated at training time)
         '''
         def parse_json(json_file): 
+            dataset = []
+
+            # read json and create process the data
             with open(os.path.join(self.data_dir, json_file), 'r') as f:
                 for line in f:
                     js = json.loads(line.strip())
@@ -93,9 +90,9 @@ class LLVMParser:
                         continue
 
                     repo = js['repo_name'].split('/')
-                    repo = f'{repo[1]}#{repo[0]}'
-                    file = js['path']
-                    code = js['content']
+                    # repo = f'{repo[1]}#{repo[0]}'
+                    # file = js['path']
+                    # code = js['content']
 
                     funcs = preprocess.extract_code_struct(code)
 
@@ -109,8 +106,23 @@ class LLVMParser:
                         code += func
 
                         self.parse(repo, file, func_name, code)
-                        # exit()
 
+                        dataset.append({'username': repo[0],
+                                        'repo': repo[1],
+                                        'path': js['path'],
+                                        'function': func_name,
+                                        'code': None,
+                                        'llvm': None,
+                                        'hash': None,
+                                        'memory': None
+                        })
+
+            # write the dataset into json
+            with open(os.path.join(self.save_dir, json_file), 'w') as data_f:
+                for sample in dataset:
+                    data_f.write(json.dumps(sample) + '\n')
+
+        # parallel
         # pqdm(os.listdir(self.data_dir), parse_json, n_jobs=1)
 
         # sequential
