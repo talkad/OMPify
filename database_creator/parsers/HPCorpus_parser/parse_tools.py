@@ -1,6 +1,5 @@
 import re
 import random
-import tree_sitter
 from tree_sitter import Language, Parser
 import pycparser
 import tempfile
@@ -225,10 +224,6 @@ def update_var_names(ast, num_generator):
     
     updated_code, updated_mappings = replace_vars(ast.text.decode(), var_mapping)
 
-    # # replace constants
-    # for r_token, regex in zip(['STR', 'STR', 'CHAR', 'NUM', 'NUM'], [RE_STR, RE_STR_MULTI_LINE, RE_CHARS, RE_NUMBERS, RE_HEXA]):
-    #     updated_code = replace_constants(updated_code, r_token, regex)
-
     return updated_code
 
 
@@ -241,54 +236,3 @@ def generate_replaced(code, num_generator=generate_serial_numbers):
 
     return updated_code
 
-
-
-
-code = '''
-#include <stdio.h>
-
-
-int main() {
-    AA asd;
-    int r[2800 + 1];
-    int i, k;
-    int b, d;
-    int c = 0;
-
-
-    for (i = 0; i < 2800; i++) {
-        r[i] = 2000;
-    }
-
-
-    for (k = 2800; k > 0; k -= 14) {
-        d = 0;
-
-
-        i = k;
-        for (;;) {
-            d += r[i] * 10000;
-            b = 2 * i - 1;
-
-
-            r[i] = d % b;
-            d /= b;
-            i--;
-            if (i == 0) break;
-            d *= i;
-        }
-        printf("%.4d", c + d / 10000);
-        c = d % 10000;
-    }
-
-
-    return 0;
-}
-'''
-
-with open('example.c', 'w') as f:
-    f.write(generate_replaced(code, num_generator=generate_random_numbers))
-#     # f.write(code2xsbt(code))
-#     # f.write(prettify_xsbt(xsbt))
-
-#     print(code2dfg(code))
