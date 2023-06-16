@@ -62,7 +62,7 @@ def node2code(code, node):
 
 
 def get_functions(code, node):
-    print(node.type, node.text)
+    # print(node.type, node.text)
     if node.type == 'function_definition':
         func_name, code = node2code(code, node)
 
@@ -108,7 +108,7 @@ def extract_code_struct(code, traverse_func=get_functions, lang='c'):
     try:
         result = traverse_func(code, tree.root_node)
     except Exception as e:
-        print('extraction error: ', e)
+        # print('extraction error: ', e)
         result = []
 
     return result

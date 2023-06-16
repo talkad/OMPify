@@ -6,7 +6,7 @@ from joblib import Parallel, delayed
 import preprocess
 import parse_tools 
 import shutil
-import pickle
+import tempfile
 import logging
 from subprocess import Popen, PIPE
 
@@ -29,10 +29,27 @@ Code2IR = {
 
 
 class LLVMParser:
-    def __init__(self, data_dir, save_dir, lang='C'):
+    def __init__(self, data_dir, save_dir, lang='c'):
         self.data_dir = data_dir
         self.save_dir = save_dir
         self.lang = lang
+
+    def get_mem_usage(self, code):
+        '''
+        get the memory usage of a file containing @param:code
+        '''
+        with tempfile.NamedTemporaryFile() as temp_file:
+            file_path = temp_file.name
+
+            temp_file.write(bytes(code, 'utf-8'))
+            temp_file.flush()
+
+            mem_usage = os.path.getsize(file_path)
+
+        return mem_usage
+
+    def get_llvm_ir(self, code, lang):
+        pass
 
     def convert_llvm(self, save_dir, lang='c'):
         '''
@@ -78,7 +95,7 @@ class LLVMParser:
 
             ---  AST - can be used to produce replaced-tokens, DFG, etc. (will be generated at training time)
         '''
-        def parse_json(json_file): 
+        def parse_json(json_file, lang='c'): 
             dataset = []
 
             # read json and create process the data
@@ -90,32 +107,34 @@ class LLVMParser:
                         continue
 
                     repo = js['repo_name'].split('/')
-                    # repo = f'{repo[1]}#{repo[0]}'
-                    # file = js['path']
-                    # code = js['content']
+                    file = js['path']
 
-                    funcs = preprocess.extract_code_struct(code)
+                    funcs = preprocess.extract_code_struct(js['content'])
+                    print([a for a,b in funcs])
 
-                    for curr_idx, func_name, func in enumerate(funcs):
+                    for curr_idx, func in enumerate(funcs):
+                        func_name, func_code = func
                         logger.info(f'parse function {func_name} at {repo} - {file}')
 
                         # append all function declaration into the current function code
                         code = ''
                         for _, other_func in funcs[:curr_idx]+funcs[curr_idx+1:]:
                             code += preprocess.get_func_declaration(other_func) + '\n'
-                        code += func
+                        code += func_code
 
-                        self.parse(repo, file, func_name, code)
+                        mem_usage = self.get_mem_usage(func_code)
+                        llvm = self.get_llvm_ir(code, lang)
 
                         dataset.append({'username': repo[0],
                                         'repo': repo[1],
-                                        'path': js['path'],
+                                        'path': file,
                                         'function': func_name,
-                                        'code': None,
+                                        'code': func_code,
                                         'llvm': None,
-                                        'hash': None,
-                                        'memory': None
+                                        'hash': preprocess.get_hash(func_code),
+                                        'memory': mem_usage
                         })
+                    break
 
             # write the dataset into json
             with open(os.path.join(self.save_dir, json_file), 'w') as data_f:
@@ -132,7 +151,7 @@ class LLVMParser:
 
 # parser = LLVMParser('/home/talkad/shared/nadavsc/c', '/home/talkad/LIGHTBITS_SHARE/studies/llvm/c')
 # parser = LLVMParser('/home/talkad/shared/nadavsc/c', '/home/talkad/Downloads/thesis/data_gathering_script/database_creator/asd/c_llvm')
-parser = LLVMParser('/home/talkad/OpenMPdb/tokenizer/HPCorpus', '/home/talkad/OpenMPdb/database_creator/asd/c_llvm')
+parser = LLVMParser('/home/talkad/OpenMPdb/tokenizer/HPCorpus', '/home/talkad/OpenMPdb/database_creator/asd')
 
 
 parser.iterate_corpus()

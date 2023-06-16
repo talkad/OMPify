@@ -32,21 +32,15 @@ def log(file_name, msg):
     with open(file_name, 'w') as f:
         f.write(f'{msg}\n')
 
+
 def tokenize(code, replaced=False):
     code = preprocess.remove_comments(code)
-    a = code
+
     if len(code.strip()) == 0:
         return []
 
     if replaced:
         code = parse_tools.generate_replaced(code, num_generator=parse_tools.generate_random_numbers)
-
-        ### DEBUG ###
-        # if re.search(r'[0-9]+NUM', code):
-        #     log('original2.c', a)
-        #     log('replaced2.c', code)
-        #     exit()
-        #############
         
     tokens = ctok.tokenize(code, lang = "c", syntax_error = "ignore")
 
@@ -86,45 +80,45 @@ def tokenize_gpt(code):
 
 # iterate over sub-HPCorpus
 # json_dir = '/home/talkad/Downloads/thesis/data_gathering_script/tokenizer/HPCorpus'
-json_dir = '/home/talkad/OpenMPdb/tokenizer/HPCorpus'
+# json_dir = '/home/talkad/OpenMPdb/tokenizer/HPCorpus'
 
-occurrences = {}
-total_tokens, amount_samples = 0, 0
+# occurrences = {}
+# total_tokens, amount_samples = 0, 0
 
-for json_file in os.listdir(json_dir):
-    with open(os.path.join(json_dir, json_file), 'r') as f:
-        for idx, line in tqdm(enumerate(f)):
-            if idx > 450:
-                break
+# for json_file in os.listdir(json_dir):
+#     with open(os.path.join(json_dir, json_file), 'r') as f:
+#         for idx, line in tqdm(enumerate(f)):
+#             if idx > 450:
+#                 break
 
-            js = json.loads(line.strip())
+#             js = json.loads(line.strip())
 
-            if 'content' not in js:
-                continue
+#             if 'content' not in js:
+#                 continue
 
-            for _, func in preprocess.extract_funcs(js['content']):
-                # tokens = tokenize_gpt(func)
-                tokens = tokenize(func, replaced=True)
+#             for _, func in preprocess.extract_funcs(js['content']):
+#                 # tokens = tokenize_gpt(func)
+#                 tokens = tokenize(func, replaced=True)
 
-                total_tokens += len(tokens)
-                amount_samples += 1
+#                 total_tokens += len(tokens)
+#                 amount_samples += 1
 
-                # print(func)
-                # print(total_tokens)
-                # break
+#                 # print(func)
+#                 # print(total_tokens)
+#                 # break
 
-                for token in tokens:
-                    occurrences[token] = 1 if token not in occurrences else occurrences[token]+1
+#                 for token in tokens:
+#                     occurrences[token] = 1 if token not in occurrences else occurrences[token]+1
 
-            # break
+#             # break
 
-sorted_data = sorted(occurrences.items(), key=lambda x: x[1], reverse=True)
-sorted_dict = {k: v for k, v in sorted_data}
+# sorted_data = sorted(occurrences.items(), key=lambda x: x[1], reverse=True)
+# sorted_dict = {k: v for k, v in sorted_data}
 
-print(f'AVG tokens per sample: {total_tokens/amount_samples}')
+# print(f'AVG tokens per sample: {total_tokens/amount_samples}')
 
-with open("ours_vocab.json", "w") as outfile:
-    json.dump(sorted_dict, outfile, indent=4)
+# with open("ours_vocab.json", "w") as outfile:
+#     json.dump(sorted_dict, outfile, indent=4)
 
 
 # 450 samples
