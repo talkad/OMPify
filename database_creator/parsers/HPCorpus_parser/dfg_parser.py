@@ -232,7 +232,8 @@ dfg_function={
 #load parsers
 parsers={}        
 for lang in dfg_function:
-    LANGUAGE = Language('./my-languages.so', lang)
+    LANGUAGE = Language('/home/talkad/OpenMPdb/database_creator/parsers/HPCorpus_parser/my-languages.so', lang)
+    # LANGUAGE = Language('./my-languages.so', lang)
     parser = Parser()
     parser.set_language(LANGUAGE) 
     parser = [parser,dfg_function[lang]]    

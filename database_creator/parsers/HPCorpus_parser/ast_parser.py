@@ -2,9 +2,11 @@
 import tree_sitter
 from tree_sitter import Language, Parser
 
+# LANGUAGE = {'c': Language('./my-languages.so', 'c'),
+#             'cpp': Language('./my-languages.so', 'cpp')}
 
-LANGUAGE = {'c': Language('./my-languages.so', 'c'),
-            'cpp': Language('./my-languages.so', 'cpp')}
+LANGUAGE = {'c': Language('/home/talkad/OpenMPdb/database_creator/parsers/HPCorpus_parser/my-languages.so', 'c'),
+            'cpp': Language('/home/talkad/OpenMPdb/database_creator/parsers/HPCorpus_parser/my-languages.so', 'cpp')}
 
 parser = Parser()
 

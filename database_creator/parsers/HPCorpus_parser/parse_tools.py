@@ -145,7 +145,7 @@ def get_identifiers(node, kind=''):
         return ([],[],[(node.text, node.start_byte, node.end_byte)],[],[],[],[],[]) if kind=='func' else ([],[(node.text, node.start_byte, node.end_byte)],[],[],[],[],[],[]) if kind=='arr' else ([(node.text, node.start_byte, node.end_byte)],[],[],[],[],[],[],[])
     elif node.type == 'field_identifier':
         return ([],[],[],[(node.text, node.start_byte, node.end_byte)],[],[],[],[])
-    elif node.type in ['primitive_type', 'type_identifier']:
+    elif node.type == 'type_identifier':
         return ([],[],[],[],[(node.text, node.start_byte, node.end_byte)],[],[],[])
     elif node.type == 'number_literal':
         return ([],[],[],[],[],[(node.text, node.start_byte, node.end_byte)],[],[])
@@ -249,6 +249,7 @@ code = '''
 
 
 int main() {
+    AA asd;
     int r[2800 + 1];
     int i, k;
     int b, d;
@@ -285,44 +286,9 @@ int main() {
 }
 '''
 
-code = '''
-type_591 func_466() {
-    type_591 arr_448[num_589 + num_992];
-    type_591 var_15, var_561;
-    type_591 var_567, var_518;
-    type_591 var_782 = num_699;
-
-    for (var_15 = num_699; var_15 < num_589; var_15++) {
-        arr_448[var_15] = num_174;
-    }
-
-    for (var_561 = num_589; var_561 > num_699; var_561 -= num_917) {
-        var_518 = num_699;
-
-        var_15 = var_561;
-        for (;;) {
-            var_518 += arr_448[var_15] * num_948;
-            var_567 = num_146 * var_15 - num_992;
-
-            arr_448[var_15] = var_518 % var_567;
-            var_518 /= var_567;
-            var_15--;
-            if (var_15 == num_699) break;
-            var_518 *= var_15;
-        }
-        func_725(str_237, var_782 + var_518 / num_948);
-        var_782 = var_518 % num_948;
-    }
-
-    return num_699;
-}
-
-'''
-
-xsbt = "compound_statement__ declaration__ binary_expression __declaration declaration declaration declaration for_statement__ assignment_expression binary_expression update_expression compound_statement__ expression_statement__ assignment_expression__ subscript_expression __assignment_expression __expression_statement __compound_statement __for_statement for_statement__ assignment_expression binary_expression assignment_expression compound_statement__ expression_statement__ assignment_expression __expression_statement expression_statement__ assignment_expression __expression_statement for_statement__ compound_statement__ expression_statement__ assignment_expression__ binary_expression__ subscript_expression __binary_expression __assignment_expression __expression_statement expression_statement__ assignment_expression__ binary_expression__ binary_expression __binary_expression __assignment_expression __expression_statement expression_statement__ assignment_expression__ subscript_expression binary_expression __assignment_expression __expression_statement expression_statement__ assignment_expression __expression_statement expression_statement__ update_expression __expression_statement if_statement__ parenthesized_expression__ binary_expression __parenthesized_expression break_statement __if_statement expression_statement__ assignment_expression __expression_statement __compound_statement __for_statement expression_statement__ call_expression__ binary_expression__ binary_expression __binary_expression __call_expression __expression_statement expression_statement__ assignment_expression__ binary_expression __assignment_expression __expression_statement __compound_statement __for_statement return_statement __compound_statement"
 with open('example.c', 'w') as f:
-    # f.write(generate_replaced(code, num_generator=generate_random_numbers))
-    # f.write(code2xsbt(code))
-    # f.write(prettify_xsbt(xsbt))
+    f.write(generate_replaced(code, num_generator=generate_random_numbers))
+#     # f.write(code2xsbt(code))
+#     # f.write(prettify_xsbt(xsbt))
 
-    print(code2dfg(code))
+#     print(code2dfg(code))

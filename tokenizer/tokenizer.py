@@ -76,7 +76,6 @@ def tokenize_gpt(code):
 
 
 
-
 # with open("ours_vocab.json", "r") as f:
 #     vocab = json.load(f)
 
