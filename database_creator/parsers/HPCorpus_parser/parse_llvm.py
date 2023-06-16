@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 
 
 C_TO_IR_COMMAND = "clang -c -emit-llvm -S -g1 -Oz code.c -o code.ll -std=c17 -Xclang -disable-O0-optnone -Wno-narrowing"
-CPP_TO_IR_COMMAND = "clang++ -c -emit-llvm -S -g1 -Oz code.c -o code.ll -std=c++17 -Xclang -disable-O0-optnone -Wno-narrowing"
+CPP_TO_IR_COMMAND = "clang++ -c -emit-llvm -S -g1 -Oz code.cpp -o code.ll -std=c++17 -Xclang -disable-O0-optnone -Wno-narrowing"
 Fortran_TO_IR_COMMAND = "flang" # not working
 
 Code2IR = {
@@ -49,38 +49,29 @@ class LLVMParser:
         return mem_usage
 
     def get_llvm_ir(self, code, lang):
-        pass
-
-    def convert_llvm(self, save_dir, lang='c'):
         '''
-        Execute the clang compiler and save the intermediate representation
+        Create the LLVM IR of given code
         '''
-        os.chdir(save_dir)
-        p = Popen(Code2IR[lang], stdin=PIPE, stdout=PIPE, stderr=PIPE)
-        _, error = p.communicate()
+        with open(f"code.{'f90' if lang=='fortran' else lang}", "w") as code_f:
+            code = preprocess.add_headers(code, lang=lang)
+            code_f.write(code)
+            p = Popen(Code2IR[lang], stdin=PIPE, stdout=PIPE, stderr=PIPE)
+            _, error = p.communicate()
 
-        if error:
-            logger.error(f'{save_dir} error:\n{error}')
-        else:
-            logger.info(save_dir)
+            ### DEBUG ###
+            if error:
+                logger.error(f'error:\n{error}')
+            else:
+                logger.info('ok')
+            ### DEBUG ###
+        
+        llvm_ir = ''
+        if os.path.exists('code.ll'):
+            with open(code.ll, 'r') as f:
+                llvm_ir = f.read()
+        
+        return llvm_ir
 
-    def parse(self, repo, file, func_name, code):
-        '''
-        Remove irrelevant parts of code (comments and includes) and then parse it
-        '''
-        code = preprocess.remove_comments(code)
-        code = preprocess.remove_headers(code)
-        code = preprocess.add_headers(code, lang='c')
-
-        save_dir = os.path.join(self.save_dir, repo, file, func_name)
-
-        try:
-            self.save(save_dir, code)
-            self.convert_llvm(save_dir)
-        except Exception as e:
-            # shutil.rmtree(save_dir)
-            logger.error(f'file at {save_dir} failed to parse\nerror: {e}')
-    
     def iterate_corpus(self):
         '''
         Iterate over the HPCorpus and for each function save the following representations:
@@ -110,10 +101,10 @@ class LLVMParser:
                     file = js['path']
 
                     funcs = preprocess.extract_code_struct(js['content'])
-                    print([a for a,b in funcs])
 
                     for curr_idx, func in enumerate(funcs):
                         func_name, func_code = func
+                        func_code = preprocess.remove_comments(func_code)
                         logger.info(f'parse function {func_name} at {repo} - {file}')
 
                         # append all function declaration into the current function code
@@ -130,7 +121,7 @@ class LLVMParser:
                                         'path': file,
                                         'function': func_name,
                                         'code': func_code,
-                                        'llvm': None,
+                                        'llvm': llvm,
                                         'hash': preprocess.get_hash(func_code),
                                         'memory': mem_usage
                         })

@@ -53,10 +53,8 @@ def tokenize(code, replaced=False):
 
         if replaced and any([str_token.startswith(prefix) for prefix in parse_tools.replaced_prefixes.values()]):
             updated_tokens += list(str_token.split('_'))
-            # updated_tokens.append(str_token)
         else:
             updated_tokens.append(str_token)
-
                                 
     return updated_tokens
 
