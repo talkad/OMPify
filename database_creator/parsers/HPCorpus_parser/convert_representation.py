@@ -210,7 +210,7 @@ def update_var_names(ast, num_generator):
     return updated_code
 
 
-def generate_replaced(code, num_generator=generate_serial_numbers):
+def generate_replaced(code, num_generator=generate_random_numbers):
     '''
         Main funtion to create the replaced represrntation
     '''

@@ -52,23 +52,28 @@ class LLVMParser:
         '''
         Create the LLVM IR of given code
         '''
-        with open(f"code.{'f90' if lang=='fortran' else lang}", "w") as code_f:
+        filename = f"code.{'f90' if lang=='fortran' else lang}"
+
+        with open(filename, "w") as code_f:
             code = preprocess.add_headers(code, lang=lang)
             code_f.write(code)
             p = Popen(Code2IR[lang], stdin=PIPE, stdout=PIPE, stderr=PIPE)
             _, error = p.communicate()
-
+        
             ### DEBUG ###
             if error:
                 logger.error(f'error:\n{error}')
             else:
                 logger.info('ok')
             ### DEBUG ###
+        os.remove(filename)
         
         llvm_ir = ''
         if os.path.exists('code.ll'):
             with open(code.ll, 'r') as f:
                 llvm_ir = f.read()
+
+            os.remove('code.ll')
         
         return llvm_ir
 
