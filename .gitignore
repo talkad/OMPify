@@ -18,4 +18,5 @@ git_metadata.sh
 **/temp_folder*
 sample_cpp*
 **/HPCorpus
+**/asd
 !requirements.txt

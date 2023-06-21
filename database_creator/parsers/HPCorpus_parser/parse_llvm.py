@@ -96,7 +96,7 @@ class LLVMParser:
 
             # read json and create process the data
             with open(os.path.join(self.data_dir, json_file), 'r') as f:
-                for line in f:
+                for line in tqdm(f):
                     js = json.loads(line.strip())
 
                     if 'content' not in js:
@@ -119,18 +119,18 @@ class LLVMParser:
                         code += func_code
 
                         mem_usage = self.get_mem_usage(func_code)
-                        llvm = self.get_llvm_ir(code, lang)
+                        # llvm = self.get_llvm_ir(code, lang)
 
                         dataset.append({'username': repo[0],
                                         'repo': repo[1],
                                         'path': file,
                                         'function': func_name,
                                         'code': func_code,
-                                        'llvm': llvm,
+                                        'llvm': '', #llvm,
                                         'hash': preprocess.get_hash(func_code),
                                         'memory': mem_usage
                         })
-                    break
+                    # break
 
             # write the dataset into json
             with open(os.path.join(self.save_dir, json_file), 'w') as data_f:
