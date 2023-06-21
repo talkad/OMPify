@@ -12,6 +12,7 @@ from transformers import GPT2Tokenizer
 sys.path.extend(['.','/home/talkad/OpenMPdb/database_creator/parsers/HPCorpus_parser'])
 
 import parse_tools, preprocess
+from convert_representation import code2xsbt, code2dfg
 
 
 tokenizer_gpt = GPT2Tokenizer.from_pretrained("gpt2")
@@ -33,7 +34,7 @@ def log(file_name, msg):
         f.write(f'{msg}\n')
 
 
-def tokenize(code, replaced=False):
+def tokenize_code(code, replaced=False):
     code = preprocess.remove_comments(code)
 
     if len(code.strip()) == 0:
@@ -57,6 +58,25 @@ def tokenize(code, replaced=False):
             updated_tokens.append(str_token)
                                 
     return updated_tokens
+
+
+def tokenize_ast(code, replaced=False):
+    ast = code2xsbt(code)
+    return ast.split()
+
+
+def tokenize_dfg(code, replaced=False):
+    dfg = code2dfg(code)
+    updated_dfg = []
+
+    if replaced:
+        for cnt in dfg:
+            sample = (tuple(cnt[0].split('_')), cnt[1], cnt[2], [tuple(var.split('_')) for var in cnt[3]], cnt[4])
+            updated_dfg.append(sample)
+    else:
+        updated_dfg = dfg
+
+    return updated_dfg
 
 
 def tokenize_deepSCC(code):
@@ -130,3 +150,42 @@ def tokenize_gpt(code):
 # gpt2 -    AVG tokens per sample: 382.46796409846263
 # ctok -    AVG tokens per sample: 146.37741046831957
 # ours -    AVG tokens per sample: 198.7129654314405
+
+
+code = '''
+#include <stdio.h>
+
+int func_879() {
+    int arr_285[num_405 + num_293];
+    int var_723, var_651;
+    int var_914, var_640;
+    int var_841 = num_167;
+
+    for (var_723 = num_167; var_723 < num_405; var_723++) {
+        arr_285[var_723] = num_76;
+    }
+
+    for (var_651 = num_405; var_651 > num_167; var_651 -= num_613) {
+        var_640 = num_167;
+
+        var_723 = var_651;
+        for (;;) {
+            var_640 += arr_285[var_723] * num_274;
+            var_914 = num_194 * var_723 - num_293;
+
+            arr_285[var_723] = var_640 % var_914;
+            var_640 /= var_914;
+            var_723--;
+            if (var_723 == num_167) break;
+            var_640 *= var_723;
+        }
+        func_819(str_523, var_841 + var_640 / num_274);
+        var_841 = var_640 % num_274;
+    }
+
+    return num_167;
+}
+
+'''
+
+print(tokenize_ast(code, replaced=True))
