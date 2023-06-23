@@ -8,16 +8,22 @@ import parse_tools
 import shutil
 import tempfile
 import logging
+import subprocess
 from subprocess import Popen, PIPE
+import time
+
+
+download_path = '/mnt/c/Users/tal74/Downloads/'
+folders = ['cpp1','cpp2','cpp3','cpp4','cpp5']
 
 
 logging.basicConfig(filename='llvm.log', format='%(asctime)s - %(levelname)s - %(name)s -   %(message)s',datefmt='%d/%m/%Y %H:%M:%S',level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
-C_TO_IR_COMMAND = "clang -c -emit-llvm -S -g1 -Oz code.c -o code.ll -std=c17 -Xclang -disable-O0-optnone -Wno-narrowing"
-CPP_TO_IR_COMMAND = "clang++ -c -emit-llvm -S -g1 -Oz code.cpp -o code.ll -std=c++17 -Xclang -disable-O0-optnone -Wno-narrowing"
-Fortran_TO_IR_COMMAND = "flang" # not working
+C_TO_IR_COMMAND = ["clang", "-c", "-emit-llvm", "-S", "-g1", "-Oz", "code.c", "-o", "code.ll", "-std=c17", "-Xclang", "-disable-O0-optnone", "-Wno-narrowing"]
+CPP_TO_IR_COMMAND =  ["clang++", "-c", "-emit-llvm", "-S", "-g1", "-Oz", "code.cpp", "-o", "code.ll", "-std=c++17", "-Xclang", "-disable-O0-optnone", "-Wno-narrowing"]
+Fortran_TO_IR_COMMAND = ["flang"] # not working
 
 Code2IR = {
     "c": C_TO_IR_COMMAND,
@@ -57,26 +63,33 @@ class LLVMParser:
         with open(filename, "w") as code_f:
             code = preprocess.add_headers(code, lang=lang)
             code_f.write(code)
-            p = Popen(Code2IR[lang], stdin=PIPE, stdout=PIPE, stderr=PIPE)
-            _, error = p.communicate()
-        
-            ### DEBUG ###
-            if error:
-                logger.error(f'error:\n{error}')
-            else:
-                logger.info('ok')
-            ### DEBUG ###
-        os.remove(filename)
+            # print('code')
+
+        p = subprocess.Popen(['./script.sh',], stdin=PIPE, stdout=PIPE, stderr=PIPE)
+        res, error = p.communicate()
+        # print('error: ', error)
+        # print('res: ', res)
+        ### DEBUG ###
+        # if error:
+        #     logger.error(f'error:\n{error}')
+        # else:
+        #     logger.info('ok')
+        ### DEBUG ###
+    # os.remove(filename)
         
         llvm_ir = ''
+
         if os.path.exists('code.ll'):
-            with open(code.ll, 'r') as f:
+            print('aaaaaaaaaaaa')
+            time.sleep(5)
+            with open('code.ll', 'r') as f:
                 llvm_ir = f.read()
 
             os.remove('code.ll')
+        print('llvm:\n', llvm_ir)
         
         return llvm_ir
-
+        
     def iterate_corpus(self):
         '''
         Iterate over the HPCorpus and for each function save the following representations:
@@ -91,7 +104,9 @@ class LLVMParser:
 
             ---  AST - can be used to produce replaced-tokens, DFG, etc. (will be generated at training time)
         '''
-        def parse_json(json_file, lang='c'): 
+        info = {'total': 0, 'total_llvm': 0}
+
+        def parse_json(json_file, info, lang='cpp'):             
             dataset = []
 
             # read json and create process the data
@@ -101,7 +116,7 @@ class LLVMParser:
 
                     if 'content' not in js:
                         continue
-
+                    
                     repo = js['repo_name'].split('/')
                     file = js['path']
 
@@ -110,44 +125,53 @@ class LLVMParser:
                     for curr_idx, func in enumerate(funcs):
                         func_name, func_code = func
                         func_code = preprocess.remove_comments(func_code)
-                        logger.info(f'parse function {func_name} at {repo} - {file}')
+                        # logger.info(f'parse function {func_name} at {repo} - {file}')
+
+                        info['total'] += 1
 
                         # append all function declaration into the current function code
                         code = ''
                         for _, other_func in funcs[:curr_idx]+funcs[curr_idx+1:]:
+                            decl = preprocess.get_func_declaration(other_func)
+
+                            if len(decl.split('\n')) > 2:
+                                continue
+
                             code += preprocess.get_func_declaration(other_func) + '\n'
                         code += func_code
 
                         mem_usage = self.get_mem_usage(func_code)
-                        # llvm = self.get_llvm_ir(code, lang)
+                        llvm = self.get_llvm_ir(code, lang)
+
+                        if llvm:
+                            info['total_llvm'] += 1
 
                         dataset.append({'username': repo[0],
                                         'repo': repo[1],
                                         'path': file,
                                         'function': func_name,
                                         'code': func_code,
-                                        'llvm': '', #llvm,
+                                        'llvm': llvm,
                                         'hash': preprocess.get_hash(func_code),
                                         'memory': mem_usage
                         })
-                    # break
+                    break
 
             # write the dataset into json
             with open(os.path.join(self.save_dir, json_file), 'w') as data_f:
                 for sample in dataset:
                     data_f.write(json.dumps(sample) + '\n')
+            
 
-        # parallel
-        # pqdm(os.listdir(self.data_dir), parse_json, n_jobs=1)
+        samples = os.listdir(self.data_dir)
+        for sample in tqdm(samples):
+            parse_json(sample, info)
+            break
+        # pqdm(samples, parse_json, n_jobs=1)
 
-        # sequential
-        for json_file in tqdm(os.listdir(self.data_dir)):
-            parse_json(json_file)
+        print(info)
 
 
-# parser = LLVMParser('/home/talkad/shared/nadavsc/c', '/home/talkad/LIGHTBITS_SHARE/studies/llvm/c')
-# parser = LLVMParser('/home/talkad/shared/nadavsc/c', '/home/talkad/Downloads/thesis/data_gathering_script/database_creator/asd/c_llvm')
-parser = LLVMParser('/home/talkad/OpenMPdb/tokenizer/HPCorpus', '/home/talkad/OpenMPdb/database_creator/asd')
-
+parser = LLVMParser('/mnt/c/Users/tal74/Downloads/cpp1', '/home/talkad/OpenMPdb/database_creator/asd/cpp1')
 
 parser.iterate_corpus()
