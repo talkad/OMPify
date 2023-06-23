@@ -112,3 +112,7 @@ def extract_code_struct(code, traverse_func=get_functions, lang='c'):
         result = []
 
     return result
+
+
+def get_filename(filename):
+     return filename[:filename.rfind('.')]

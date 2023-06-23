@@ -63,30 +63,17 @@ class LLVMParser:
         with open(filename, "w") as code_f:
             code = preprocess.add_headers(code, lang=lang)
             code_f.write(code)
-            # print('code')
 
-        p = subprocess.Popen(['./script.sh',], stdin=PIPE, stdout=PIPE, stderr=PIPE)
-        res, error = p.communicate()
-        # print('error: ', error)
-        # print('res: ', res)
-        ### DEBUG ###
-        # if error:
-        #     logger.error(f'error:\n{error}')
-        # else:
-        #     logger.info('ok')
-        ### DEBUG ###
-    # os.remove(filename)
+        subprocess.run(Code2IR[lang], stderr=subprocess.DEVNULL)
+        os.remove(filename)
         
         llvm_ir = ''
 
         if os.path.exists('code.ll'):
-            print('aaaaaaaaaaaa')
-            time.sleep(5)
             with open('code.ll', 'r') as f:
                 llvm_ir = f.read()
 
             os.remove('code.ll')
-        print('llvm:\n', llvm_ir)
         
         return llvm_ir
         
@@ -107,7 +94,6 @@ class LLVMParser:
         info = {'total': 0, 'total_llvm': 0}
 
         def parse_json(json_file, info, lang='cpp'):             
-            dataset = []
 
             # read json and create process the data
             with open(os.path.join(self.data_dir, json_file), 'r') as f:
@@ -121,6 +107,7 @@ class LLVMParser:
                     file = js['path']
 
                     funcs = preprocess.extract_code_struct(js['content'])
+                    dataset = []
 
                     for curr_idx, func in enumerate(funcs):
                         func_name, func_code = func
@@ -155,23 +142,26 @@ class LLVMParser:
                                         'hash': preprocess.get_hash(func_code),
                                         'memory': mem_usage
                         })
-                    break
 
-            # write the dataset into json
-            with open(os.path.join(self.save_dir, json_file), 'w') as data_f:
-                for sample in dataset:
-                    data_f.write(json.dumps(sample) + '\n')
+                    # write the dataset into json
+                    with open(os.path.join(self.save_dir, f"{preprocess.get_filename(json_file)}_{preprocess.get_filename(file.split('/')[-1])}.json"), 'w') as data_f:
+                        for sample in dataset:
+                            data_f.write(json.dumps(sample) + '\n')
+                    print(info)
             
-
         samples = os.listdir(self.data_dir)
         for sample in tqdm(samples):
             parse_json(sample, info)
-            break
+
         # pqdm(samples, parse_json, n_jobs=1)
 
         print(info)
 
 
-parser = LLVMParser('/mnt/c/Users/tal74/Downloads/cpp1', '/home/talkad/OpenMPdb/database_creator/asd/cpp1')
 
-parser.iterate_corpus()
+code = "\nstruct piw::ranger_t::impl_t: pic::lckobject_t\n{\n    impl_t(piw::clockdomain_ctl_t *clock_domain, const piw::cookie_t &output): ctl_(output), data_(&ctl_,clock_domain)\n    {\n    }\n\n    virtual ~impl_t()\n    {\n    }\n\n    ctl_filter_t ctl_;\n    data_filter_t data_;\n}"
+with open('code.cpp', 'w') as f:
+    f.write(code)
+
+# parser = LLVMParser('/mnt/c/Users/tal74/Downloads/cpp1', '/home/talkad/OpenMPdb/database_creator/asd/cpp1')
+# parser.iterate_corpus()
