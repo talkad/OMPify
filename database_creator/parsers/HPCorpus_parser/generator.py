@@ -1,6 +1,6 @@
 import os 
 import json
-from convert_representation import generate_replaced, code2xsbt, code2dfg
+from convert_representation import generate_replaced, code2xsbt, code2dfg, code2ast
 
 
 def load_json(json_dir, json_file):
@@ -30,7 +30,7 @@ def update_batch(batch, **kwargs):
             code = generate_replaced(code)
             sample['replaced'] = code
         if 'ast' in kwargs and kwargs['ast'] == True:
-            sample['ast'] = code2xsbt(code)
+            sample['ast'] = code2ast(code)
         if 'dfg' in kwargs and kwargs['dfg'] == True:
             sample['dfg'] = code2dfg(code)
 
