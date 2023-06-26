@@ -32,6 +32,7 @@ Code2IR = {
 }
 
 
+
 class LLVMParser:
     def __init__(self, data_dir, save_dir, lang='c'):
         self.data_dir = data_dir
@@ -125,14 +126,14 @@ class LLVMParser:
                         code += func_code
 
                         mem_usage = self.get_mem_usage(func_code)
-                        llvm = self.get_llvm_ir(code, lang)
+                        # llvm = self.get_llvm_ir(code, lang)
 
                         dataset.append({'username': repo[0],
                                         'repo': repo[1],
                                         'path': file,
                                         'function': func_name,
                                         'code': func_code,
-                                        'llvm': llvm,
+                                        'llvm': '', # llvm,
                                         'hash': preprocess.get_hash(func_code),
                                         'memory': mem_usage
                         })
