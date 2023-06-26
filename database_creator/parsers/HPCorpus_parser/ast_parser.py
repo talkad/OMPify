@@ -86,3 +86,13 @@ def generate_statement_xsbt(node, lang):
     """
     tokens = __statement_xsbt(node=node, lang=lang)
     return ' '.join(tokens)
+
+
+def generate_naive_ast(node, lang):
+    """
+    Generate AST string by wrapping compound structures with brackets
+    """
+    if node.children:
+        return f"{node.type} ( {' '.join([generate_naive_ast(child, lang) for child in node.children])} )"
+    else:
+        return node.text.decode()

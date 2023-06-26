@@ -3,7 +3,7 @@ import random
 import pycparser
 import tempfile
 from dfg_parser import extract_dataflow
-from ast_parser import generate_statement_xsbt
+from ast_parser import generate_statement_xsbt, generate_naive_ast
 import parse_tools
 
 
@@ -46,6 +46,17 @@ def code2xsbt(code, lang='c'):
     xsbt_str = generate_statement_xsbt(node, lang)
 
     return xsbt_str
+
+
+def code2ast(code, lang='c'):
+    '''
+    Convert code to AST
+    '''
+    tree = parse_tools.parse(code, lang=lang)
+    node = tree.root_node
+    ast = generate_naive_ast(node, lang)
+
+    return ast
 
 
 def prettify_xsbt(xsbt):
@@ -210,14 +221,53 @@ def update_var_names(ast, num_generator):
     return updated_code
 
 
-def generate_replaced(code, num_generator=generate_random_numbers):
+def generate_replaced(code, num_generator=generate_random_numbers, lang='c'):
     '''
         Main funtion to create the replaced represrntation
     '''
-    tree = parse_tools.parse(code.lstrip(), 'c')
+    tree = parse_tools.parse(code.lstrip(), lang=lang)
     updated_code = update_var_names(tree.root_node, num_generator)
 
     return updated_code
 
 
 
+
+
+
+
+
+code ='''
+int main() {
+    int r[2800 + 1];
+    int i, k;
+    int b, d;
+    int c = 0;
+
+    for (i = 0; i < 2800; i++) {
+        r[i] = 2000;
+    }
+
+    for (k = 2800; k > 0; k -= 14) {
+        d = 0;
+
+        i = k;
+        for (;;) {
+            d += r[i] * 10000;
+            b = 2 * i - 1;
+
+            r[i] = d % b;
+            d /= b;
+            i--;
+            if (i == 0) break;
+            d *= i;
+        }
+        printf("%.4d", c + d / 10000);
+        c = d % 10000;
+    }
+
+    return 0;
+}
+'''
+
+print(code2ast(code))

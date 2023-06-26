@@ -12,6 +12,7 @@ from abc import ABC, abstractmethod
 sys.path.extend(['.','/home/talkad/OpenMPdb/database_creator/parsers/HPCorpus_parser'])
 
 import parse_tools, preprocess
+import convert_representation as cr
 from convert_representation import code2xsbt, code2dfg
 
 
@@ -19,7 +20,7 @@ from convert_representation import code2xsbt, code2dfg
 class Tokenizer(ABC):
 
     @abstractmethod
-    def tokenize(self, s: str, replaced: bool = False) -> List[str]:
+    def tokenize(self, s: str, replaced: bool = False, lang: str = 'c') -> List[str]:
         '''
             convert string into sequence tokens
 
@@ -62,14 +63,14 @@ class Tokompiler(Tokenizer):
     '''
         Compiler oriented tokenization
     '''
-    def tokenize(self, s: str, replaced: bool = False) -> List[str]:
+    def tokenize(self, s: str, replaced: bool = False, lang: str = 'c') -> List[str]:
         if len(s.strip()) == 0:
             return []
 
         if replaced:
-            s = parse_tools.generate_replaced(s, num_generator=parse_tools.generate_random_numbers)
+            s = cr.generate_replaced(s, num_generator=cr.generate_random_numbers, lang=lang)
             
-        tokens = ctok.tokenize(s, lang = "c", syntax_error = "ignore")
+        tokens = ctok.tokenize(s, lang=lang, syntax_error="ignore")
 
         updated_tokens = []
         for token in tokens:
@@ -99,10 +100,10 @@ class TokenizerBPE(Tokenizer):
     def __init__(self):
         self.tokenizer = AutoTokenizer.from_pretrained('NTUYG/DeepSCC-RoBERTa')
 
-    def tokenize(self, s: str, replaced: bool = False) -> List[str]:
+    def tokenize(self, s: str, replaced: bool = False, lang: str = 'c') -> List[str]:
 
         if replaced:
-            s = parse_tools.generate_replaced(s, num_generator=parse_tools.generate_random_numbers)
+            s = parse_tools.generate_replaced(s, num_generator=parse_tools.generate_random_numbers, lang=lang)
 
         return self.tokenizer.tokenize(s)
 
@@ -117,8 +118,8 @@ class ASTokenizer(Tokenizer):
     '''
         convert AST representation into sequence XSBT
     '''
-    def tokenize(self, s: str, replaced: bool = False) -> List[str]:
-        ast = code2xsbt(s)
+    def tokenize(self, s: str, replaced: bool = False, lang: str = 'c') -> List[str]:
+        ast = code2xsbt(s, lang=lang)
         return ast.split()
 
     def encode(self, s: str) ->  List[int]:
@@ -132,8 +133,8 @@ class DFGTokenizer(Tokenizer):
     '''
         convert DFG representation into sequence of tokens
     '''
-    def tokenize(self, s: str, replaced: bool = False) -> List[str]:
-        dfg = code2dfg(s)
+    def tokenize(self, s: str, replaced: bool = False, lang: str = 'c') -> List[str]:
+        dfg = code2dfg(s, lang=lang)
         updated_dfg = []
 
         if replaced:
