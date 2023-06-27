@@ -244,7 +244,12 @@ def generate_replaced(code, num_generator=generate_random_numbers, lang='c'):
         Main funtion to create the replaced represrntation
     '''
     tree = parse_tools.parse(code.lstrip(), lang=lang)
-    updated_code = update_var_names(tree.root_node, num_generator)
+    updated_code = ''
+
+    try:
+        updated_code = update_var_names(tree.root_node, num_generator)
+    except ValueError as e: # N cannot be larger than 1000.
+        print(e)
 
     return updated_code
 

@@ -226,7 +226,9 @@ def index_to_code_token(index,code):
 
 
 dfg_function={
-    'c':DFG_c
+    'c':DFG_c,
+    'cpp':DFG_c,
+    'fortran':DFG_c
 }
 
 #load parsers
@@ -243,6 +245,7 @@ for lang in dfg_function:
 
 def extract_dataflow(code,lang):
     parser = parsers[lang]
+
 
     try:
         tree = parser[0].parse(bytes(code,'utf8'))    

@@ -106,7 +106,12 @@ class LLVMParser:
                     repo = js['repo_name'].split('/')
                     file = js['path']
 
-                    funcs = preprocess.extract_code_struct(js['content'], lang=self.lang)
+                    funcs = []
+                    try:
+                        funcs = preprocess.extract_code_struct(js['content'], lang=self.lang)
+                    except:    
+                        # The C code beneath the tree-sitter throws a memory exception when attempting to allocate memory for excessively long code.
+                        continue
 
                     if not funcs: # if there are no functions
                         continue
@@ -161,3 +166,8 @@ parser.iterate_corpus()
 
 
 
+# Fortran - done
+# cpp - [1, ]
+# c - 12 / 41 c_0
+# 2130it [00:17, 136.60it/sfree(): invalid size
+# Aborted[00:21, 98.67it/s]

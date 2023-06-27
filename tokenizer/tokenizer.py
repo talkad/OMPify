@@ -1,5 +1,6 @@
 import re
 import code_tokenize as ctok
+# from fortranformat import FortranFormat as ftok
 import sys
 import json
 import os
@@ -13,7 +14,7 @@ sys.path.extend(['.','/home/talkad/OpenMPdb/database_creator/parsers/HPCorpus_pa
 
 import parse_tools, preprocess
 import convert_representation as cr
-from convert_representation import code2xsbt, code2dfg
+from convert_representation import code2xsbt, code2dfg, code2ast
 
 
 
@@ -67,10 +68,12 @@ class Tokompiler(Tokenizer):
         if len(s.strip()) == 0:
             return []
 
-        if replaced:
-            s = cr.generate_replaced(s, num_generator=cr.generate_random_numbers, lang=lang)
-            
-        tokens = ctok.tokenize(s, lang=lang, syntax_error="ignore")
+        # if replaced:
+        #     s = cr.generate_replaced(s, num_generator=cr.generate_random_numbers, lang=lang)
+        if lang == 'fortran':
+            tokens = s.split()   # not the best solution, but sufficient one     
+        else:
+            tokens = ctok.tokenize(s, lang=lang, syntax_error="ignore")
 
         updated_tokens = []
         for token in tokens:
@@ -79,7 +82,7 @@ class Tokompiler(Tokenizer):
             except:
                 str_token = 'TOKEN'
 
-            if replaced and any([str_token.startswith(prefix) for prefix in parse_tools.replaced_prefixes.values()]):
+            if replaced and any([str_token.startswith(prefix) for prefix in cr.replaced_prefixes.values()]):
                 updated_tokens += list(str_token.split('_'))
             else:
                 updated_tokens.append(str_token)
@@ -105,7 +108,22 @@ class TokenizerBPE(Tokenizer):
         if replaced:
             s = parse_tools.generate_replaced(s, num_generator=parse_tools.generate_random_numbers, lang=lang)
 
-        return self.tokenizer.tokenize(s)
+        tokens = self.tokenizer.tokenize(s)
+        updated_tokens = []
+
+        for token in tokens:
+            if token.startswith('Ċ') or token.startswith('Ġ'):
+                updated_token = token[1:]
+
+                if 'Ċ' in updated_token or 'Ġ' in updated_token:
+                    continue
+            else:
+                updated_token = token
+
+            if updated_token:
+                updated_tokens.append(updated_token)
+
+        return updated_tokens
 
     def encode(self, s: str) ->  List[int]:
         return []
@@ -119,8 +137,21 @@ class ASTokenizer(Tokenizer):
         convert AST representation into sequence XSBT
     '''
     def tokenize(self, s: str, replaced: bool = False, lang: str = 'c') -> List[str]:
-        ast = code2xsbt(s, lang=lang)
-        return ast.split()
+        # ast = code2xsbt(s, lang=lang)
+        ast = code2ast(s, lang=lang)
+        ast = ast.split()
+        updated_ast = []
+
+        if replaced:
+            for node in ast:
+                if any([node.startswith(prefix) for prefix in cr.replaced_prefixes.values()]):
+                    updated_ast += node.split('_')
+                else:
+                    updated_ast.append(node)
+        else:
+            updated_ast = ast
+
+        return updated_ast
 
     def encode(self, s: str) ->  List[int]:
         return []
