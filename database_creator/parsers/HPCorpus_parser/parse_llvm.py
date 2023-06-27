@@ -93,7 +93,7 @@ class LLVMParser:
             ---  AST - can be used to produce replaced-tokens, DFG, etc. (will be generated at training time)
         '''
 
-        def parse_json(json_file, lang='c'):             
+        def parse_json(json_file):             
 
             # read json and create process the data
             with open(os.path.join(self.data_dir, json_file), 'r') as f:
@@ -106,12 +106,16 @@ class LLVMParser:
                     repo = js['repo_name'].split('/')
                     file = js['path']
 
-                    funcs = preprocess.extract_code_struct(js['content'], lang=lang)
+                    funcs = preprocess.extract_code_struct(js['content'], lang=self.lang)
+
+                    if not funcs: # if there are no functions
+                        continue
+
                     dataset = []
 
                     for curr_idx, func in enumerate(funcs):
                         func_name, func_code = func
-                        func_code = preprocess.remove_comments(func_code)
+                        func_code = preprocess.remove_comments(func_code, lang=self.lang)
                         # logger.info(f'parse function {func_name} at {repo} - {file}')
 
                         # append all function declaration into the current function code
@@ -144,10 +148,16 @@ class LLVMParser:
                             data_f.write(json.dumps(sample) + '\n')
             
         samples = os.listdir(self.data_dir)
-        samples_bag = db.from_sequence(samples)
-        processed_data = samples_bag.map(parse_json)
-        processed_data.compute()
+        for sample in tqdm(samples):
+            parse_json(sample)
+        # samples = os.listdir(self.data_dir)
+        # samples_bag = db.from_sequence(samples)
+        # processed_data = samples_bag.map(parse_json)
+        # processed_data.compute()
 
 
-parser = LLVMParser('/mnt/c/Users/tal74/Downloads/c_0', '/home/talkad/OpenMPdb/database_creator/asd/c')
+parser = LLVMParser('/mnt/c/Users/tal74/Downloads/c_0', '/home/talkad/OpenMPdb/database_creator/asd/c', lang='c')
 parser.iterate_corpus()
+
+
+

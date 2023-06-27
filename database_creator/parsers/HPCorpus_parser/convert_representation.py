@@ -77,6 +77,24 @@ def prettify_xsbt(xsbt):
     return updated_xsbt
 
 
+def prettify_ast(ast):
+    tokens = ast.split()
+    updated_ast = ''
+    ident = 0
+
+    for token in tokens:
+        if token.endswith('('):
+            updated_ast += '\t'*ident + token + '\n'
+            ident += 1
+        elif token.startswith(')'):
+            ident -= 1
+            updated_ast += '\t'*ident + token + '\n'
+        else:
+            updated_ast += '\t'*ident + token + '\n'
+            
+    return updated_ast
+
+
 def create_ast(code):
     '''
     Create AST for c codes using pycparser
