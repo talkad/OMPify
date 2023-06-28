@@ -3,6 +3,7 @@
 STATEMENT_ENDING_STRINGS = {
     'c': ['statement', 'expression', 'declaration'],
     'cpp': ['statement', 'expression', 'declaration'],
+    'fortran': ['statement', 'expression', 'declaration']
 }
 
 

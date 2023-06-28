@@ -17,7 +17,7 @@ dfgTokenizer = DFGTokenizer()
 # print(astTokenizer.tokenize(code, replaced=True, lang=lang))
 # print(dfgTokenizer.tokenize(code, replaced=True, lang=lang))
 
-dir = '/home/talkad/OpenMPdb/database_creator/asd/cpp'
+dir = '/home/talkad/OpenMPdb/database_creator/asd/fortran'
 files = os.listdir(dir)
 num_samples, total_tokens = 0, 0
 
@@ -28,7 +28,7 @@ for file in tqdm(files):
             code = js['code']
             # code = generate_replaced(code, lang='fortran')
 
-            tokens = bpe.tokenize(code, lang='cpp')
+            tokens = astTokenizer.tokenize(code, lang='fortran')
 
             num_samples += 1
             total_tokens += len(tokens)
