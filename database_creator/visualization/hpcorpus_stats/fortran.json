@@ -1,0 +1,1 @@
+{"do": 0, "lastprivate": 0, "task": 0, "nowait": 0, "target": 0, "barrier": 0, "parallel_for": 0, "section": 0, "loop_total": 1244204, "single": 0, "private": 0, "reduction": 0, "firstprivate": 0, "master": 0, "atomic": 0, "flush": 0, "static_schedule": 0, "shared": 0, "critical": 0, "dynamic_schedule": 0}

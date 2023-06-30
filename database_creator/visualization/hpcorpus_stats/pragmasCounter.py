@@ -1,10 +1,9 @@
 import os
 import re
 import json
-from tqdm import tqdm
-from functools import reduce
 
 # clauses = ['nowait', 'private', 'firstprivate', 'lastprivate', 'shared', 'reduction', 'atomic', 'section', 'for', 'task', 'barrier', 'critical', 'flush', 'single', 'master', 'target', 'static_schedule', 'dynamic_schedule']
+
 clauses = ['nowait', 'private', 'firstprivate', 'lastprivate', 'shared', 'reduction', 'atomic', 'section', 'do', 'task', 'barrier', 'critical', 'flush', 'single', 'master', 'target', 'parallel_for', 'static_schedule', 'dynamic_schedule', 'loop_total']
 
 
@@ -91,7 +90,7 @@ def scan_file(code, clauses_amount, is_fortran):
 def iterate_jsons(json_dir, is_fortran=False):
     clauses_amount = {clause: 0 for clause in clauses}
 
-    for json_file in tqdm(os.listdir(json_dir)):
+    for json_file in os.listdir(json_dir):
         with open(os.path.join(json_dir, json_file), 'r') as f:
             for line in f:
                 js = json.loads(line.strip())
@@ -104,11 +103,12 @@ def iterate_jsons(json_dir, is_fortran=False):
     return clauses_amount
 
 
-print(iterate_jsons('/tier2/bgu/bigQuery_repos/c'))
-# print(iterate_jsons('/tier2/bgu/bigQuery_repos/cpp'))
-# print(iterate_jsons('/tier2/bgu/bigQuery_repos/Fortran', is_fortran=True))
+# clauses = iterate_jsons('/tier2/bgu/bigQuery_repos/c')
+# clauses = iterate_jsons('/tier2/bgu/bigQuery_repos/cpp')
+clauses = iterate_jsons('/tier2/bgu/bigQuery_repos/Fortran', is_fortran=True)
 
-
+with open('fortran.json', 'w') as f:
+    f.write(json.dumps(clauses))
 
 # cpp:
 # {'nowait': 2274, 'private': 34420, 'firstprivate': 10363, 'lastprivate': 8519, 'shared': 10208, 'reduction': 22875, 'atomic': 5394, 'section': 9654, 'for': 89726, 'task': 18270, 'barrier': 2728, 'critical': 8657, 'flush': 1398, 'single': 3469, 'master': 7871, 'target': 79076, 'static_schedule': 5628, 'dynamic_schedule': 3823, 'omp_lock': 389}
