@@ -7,7 +7,8 @@ import multiprocessing
 
 corpus_dir = '/mnt/c/Users/tal74/Downloads/'
 # dirs = ['c_220'] # 'c_0', 'c_40', 'c_70', 'c_100', 'c_140', 'c_180', 'c_220', 'c_260', 'c_300', 'c_340']
-dirs = ['Fortran/Fortran', 'cpp1', 'cpp2', 'cpp3', 'cpp4', 'cpp5', 'c_0', 'c_40', 'c_70', 'c_100', 'c_140', 'c_180', 'c_220', 'c_260', 'c_300', 'c_340']
+# dirs = ['Fortran/Fortran', 'cpp1', 'cpp2', 'cpp3', 'cpp4', 'cpp5', 'c_0', 'c_40', 'c_70', 'c_100', 'c_140', 'c_180', 'c_220', 'c_260', 'c_300', 'c_340']
+dirs = ['c_220', 'c_260', 'c_300', 'c_340']
 
 
 paradigms = {
@@ -68,7 +69,7 @@ def save_paradigms(dir):
         f.write(json.dumps(repos))
 
 
-pool = multiprocessing.Pool(processes=8)
+pool = multiprocessing.Pool(processes=4)
 results = pool.map(save_paradigms, dirs)
 
 pool.close()
