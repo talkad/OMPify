@@ -2,14 +2,13 @@ import os
 import re
 import json
 from tqdm import tqdm
-from functools import reduce
 
 # clauses = ['nowait', 'private', 'firstprivate', 'lastprivate', 'shared', 'reduction', 'atomic', 'section', 'for', 'task', 'barrier', 'critical', 'flush', 'single', 'master', 'target', 'static_schedule', 'dynamic_schedule']
 clauses = ['nowait', 'private', 'firstprivate', 'lastprivate', 'shared', 'reduction', 'atomic', 'section', 'do', 'task', 'barrier', 'critical', 'flush', 'single', 'master', 'target', 'parallel_for', 'static_schedule', 'dynamic_schedule', 'loop_total']
 
 
 redundant_line_comments_c = re.compile("\/\/.*")
-redundant_line_comments_fortran = re.compile("!.*$|^c.*$", re.MULTILINE)
+redundant_line_comments_fortran = re.compile("![^\$].*$|^c.*$", re.MULTILINE)
 redundant_multiline_comments_c = re.compile("\/\*.*?\*\/", re.MULTILINE|re.DOTALL)
 
 
@@ -36,7 +35,7 @@ def is_for(line, lang='c'):
     return sub_line.startswith('do ')
 
 
-def is_omp_pragma(line, is_fortran):
+def is_omp_pragma(line, count, is_fortran):
 	'''
 	Return true if the given line is for-pragma
 	'''
@@ -66,55 +65,100 @@ def clauses_counter(line, clauses_dict, is_fortran):
 			clauses_dict['dynamic_schedule'] += 1
 			
 	if is_fortran:
-		if 'parallel ' in line in 'do' in line:
+		if 'parallel ' in line and 'do' in line:
 			clauses_dict['parallel_for'] += 1
 	else:
-		if 'parallel ' in line in 'for' in line:
+		if 'parallel ' in line and 'for' in line:
 			clauses_dict['parallel_for'] += 1
 
 
+def scan_file(code, clauses_amount, count, is_fortran):
+    lang = 'fortran' if is_fortran else 'c'
+    code = remove_comments(code, lang=lang)
+    code = code.lower()
 
-def scan_file(code, clauses_amount, is_fortran):
-	lang = 'fortran' if is_fortran else 'c'
-	code = remove_comments(code, lang=lang)
-	code = code.lower()
+    for line in code.split('\n'):
+        count['line'] += 1
+        if is_for(line, lang=lang):
+            clauses_amount['loop_total'] += 1
 
-	for line in code.split('\n'):
-		
-		if is_for(line, lang=lang):
-			clauses_amount['loop_total']  += 1
+        if is_omp_pragma(line, count, is_fortran):  # check if pragma
+            count['res'] += 1
+            clauses_counter(line, clauses_amount, is_fortran)
 
-		if is_omp_pragma(line, is_fortran=is_fortran): # check if pragma
-			clauses_counter(line, clauses_amount, is_fortran)
 
 
 def iterate_jsons(json_dir, is_fortran=False):
     clauses_amount = {clause: 0 for clause in clauses}
-
+    count = {}
+    count['res'] = 0
+    count['line'] = 0
     for json_file in tqdm(os.listdir(json_dir)):
         with open(os.path.join(json_dir, json_file), 'r') as f:
             for line in f:
                 js = json.loads(line.strip())
-
                 if 'content' not in js:
                     continue
 
-                scan_file(js['content'], clauses_amount, is_fortran=is_fortran)
-
+                scan_file(js['content'], clauses_amount, count, is_fortran=is_fortran)
+    print(count)
     return clauses_amount
 
 
-print(iterate_jsons('/tier2/bgu/bigQuery_repos/c'))
+
+
+
+
+
+
+    # for json_file in tqdm(os.listdir(json_dir)):
+    #     with open(os.path.join(json_dir, json_file), 'r') as f:
+	    
+    #         for line in f:
+    #             js = json.loads(line.strip())
+
+    #             if 'content' not in js:
+    #                 continue
+
+    #             scan_file(js['content'], clauses_amount, count, is_fortran=is_fortran)
+		
+    # return clauses_amount
+
+
+# clauses_amount = {clause: 0 for clause in clauses}
+# code = """
+# a = 20
+# ! $ adsf
+# !$omp parallel do private ! asdd
+# do i = 1, 50
+# ! omp
+# end do
+
+# /*
+# ads
+# adf
+# adg */
+# asc
+# // aed
+# """
+
+# scan_file(code, clauses_amount, False)
+# print(clauses_amount)
+
+# print(iterate_jsons('/tier2/bgu/bigQuery_repos/c'))
 # print(iterate_jsons('/tier2/bgu/bigQuery_repos/cpp'))
 # print(iterate_jsons('/tier2/bgu/bigQuery_repos/Fortran', is_fortran=True))
 
 
 
 # cpp:
-# {'nowait': 2274, 'private': 34420, 'firstprivate': 10363, 'lastprivate': 8519, 'shared': 10208, 'reduction': 22875, 'atomic': 5394, 'section': 9654, 'for': 89726, 'task': 18270, 'barrier': 2728, 'critical': 8657, 'flush': 1398, 'single': 3469, 'master': 7871, 'target': 79076, 'static_schedule': 5628, 'dynamic_schedule': 3823, 'omp_lock': 389}
+# {"lastprivate": 8519, "task": 18270, "nowait": 2274, "barrier": 2728, "for": 89726, "parallel_for": 71428, "section": 9654, "simd": 54557, "single": 3469, "private": 34412, "dynamic_schedule": 3823, "reduction": 22875, "firstprivate": 10363, "master": 7871, "atomic": 5394, "flush": 1398, "static_schedule": 5628, "shared": 10194, "loop_total": 19868390, "critical": 8657, "target": 79076}
 
 # c:
-# {'nowait': 1306, 'private': 17408, 'firstprivate': 2612, 'lastprivate': 2231, 'shared': 10148, 'reduction': 3948, 'atomic': 5180, 'section': 3266, 'for': 40339, 'task': 5931, 'barrier': 3765, 'critical': 6431, 'flush': 808, 'single': 1411, 'master': 1789, 'target': 8265, 'static_schedule': 8184, 'dynamic_schedule': 2623, 'loop_total': 8739725, 'omp_lock': 561}
+# {"lastprivate": 1623, "task": 4501, "nowait": 1008, "barrier": 2833, "for": 30185, "parallel_for": 22201, "section": 2501, "simd": 9877, "single": 1027, "private": 12885, "dynamic_schedule": 2093, "reduction": 3056, "firstprivate": 1908, "master": 1289, "atomic": 3652, "flush": 599, "static_schedule": 6168, "shared": 7712, "loop_total": 21936098, "critical": 4757, "target": 6248}
 
 # fortran
-# {'nowait': 17, 'private': 17538, 'firstprivate': 1565, 'lastprivate': 481, 'shared': 6563, 'reduction': 2930, 'atomic': 2103, 'section': 1006, 'do': 18798, 'task': 1695, 'barrier': 869, 'critical': 1077, 'flush': 205, 'single': 623, 'master': 607, 'target': 2592, 'static_schedule': 2187, 'dynamic_schedule': 864, 'loop_total': 774559, 'omp_lock': 0}
+# {"do": 17660, "lastprivate": 481, "task": 1695, "nowait": 12, "target": 2586, "barrier": 859, "parallel_for": 7949, "section": 979, "simd": 1252, "single": 584, "private": 16660, "reduction": 2819, "firstprivate": 1559, "master": 579, "atomic": 2085, "flush": 205, "static_schedule": 2164, "shared": 6016, "loop_total": 1203913, "critical": 1067, "dynamic_schedule": 806}
+
+
+print(iterate_jsons('/mnt/c/Users/tal74/Downloads/Fortran/Fortran', is_fortran=True))

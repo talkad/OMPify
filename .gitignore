@@ -20,4 +20,5 @@ sample_cpp*
 **/HPCorpus
 **/asd
 **/repos
+**/openmp_versions
 !requirements.txt

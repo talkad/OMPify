@@ -3,12 +3,13 @@ import json
 from tqdm import tqdm
 import re
 import multiprocessing
+import timeout_decorator
 
 
 corpus_dir = '/mnt/c/Users/tal74/Downloads/'
-# dirs = ['c_220'] # 'c_0', 'c_40', 'c_70', 'c_100', 'c_140', 'c_180', 'c_220', 'c_260', 'c_300', 'c_340']
-# dirs = ['Fortran/Fortran', 'cpp1', 'cpp2', 'cpp3', 'cpp4', 'cpp5', 'c_0', 'c_40', 'c_70', 'c_100', 'c_140', 'c_180', 'c_220', 'c_260', 'c_300', 'c_340']
-dirs = ['c_220', 'c_260', 'c_300', 'c_340']
+# # dirs = ['c_220'] # 'c_0', 'c_40', 'c_70', 'c_100', 'c_140', 'c_180', 'c_220', 'c_260', 'c_300', 'c_340']
+# # dirs = ['Fortran/Fortran', 'cpp1', 'cpp2', 'cpp3', 'cpp4', 'cpp5', 'c_0', 'c_40', 'c_70', 'c_100', 'c_140', 'c_180', 'c_220', 'c_260', 'c_300', 'c_340']
+dirs = ['c_180']
 
 
 paradigms = {
@@ -22,6 +23,7 @@ paradigms = {
     'MPI': [r'^\W*#\W*include\W+<mpi.h>.*$', r'\W*use\W+mpi.*$']
 }
 
+@timeout_decorator.timeout(30)
 def get_parallel_paradigms(code):
     matched_paradigms = []
 
@@ -56,44 +58,69 @@ def save_paradigms(dir):
                 code = js['content']
                 code = code.lower()
 
-                paradigms = get_parallel_paradigms(code)
+                try:
+                    paradigms = get_parallel_paradigms(code)
+                except timeout_decorator.timeout_decorator.TimeoutError as e:
+                    print(e)
+                    paradigms = []
+
                 if repo_name not in repos:
-                    repos['repo_name'] = {'CUDA': False, 'OpenCL': False, 'OpenACC': False, 'SYCL': False, 
+                    repos[repo_name] = {'CUDA': False, 'OpenCL': False, 'OpenACC': False, 'SYCL': False, 
                                           'TBB': False, 'Cilk': False, 'OpenMP': False, 'MPI': False}
-                    
+                if paradigms is None:
+                    continue
                 for paradigm in paradigms:
-                    repos['repo_name'][paradigm] = True
+                    repos[repo_name][paradigm] = True
 
     save_dir = dir.replace('/', '_')
     with open(f'{save_dir}.json', 'w') as f:
         f.write(json.dumps(repos))
 
 
-pool = multiprocessing.Pool(processes=4)
-results = pool.map(save_paradigms, dirs)
+# pool = multiprocessing.Pool(processes=4)
+# results = pool.map(save_paradigms, dirs)
 
-pool.close()
-pool.join()
+# pool.close()
+# pool.join()
 
-
-# # repos = set()
-
-# # files = ['repos_c1', 'repos_c2', 'repos_c3', 'repos_c4', 'repos_c5', 'repos_c6', 'repos_c7', 'repos_c8', 'repos_c9', 'repos_c10', 'repos', 'repos1', 'repos2', 'repos3', 'repos4', 'repos5']
-# # corpus_dir = '/home/talkad/OpenMPdb/database_creator/visualization/hpcorpus_stats/repos'
+# save_paradigms('c_180')
 
 
 
-# # for file in tqdm(files):
-# #     dir_path = os.path.join(corpus_dir, f'{file}.jsonl')
+## union 
+# total_repos = {}
 
-# #     with open(dir_path, 'r') as f:
-# #         for sample in f:
-# #             js = json.loads(sample.strip())
+# files = ['Fortran_Fortran', 'cpp1', 'cpp2', 'cpp3', 'cpp4', 'cpp5', 'c_0', 'c_40', 'c_70', 'c_100', 'c_140', 'c_180', 'c_220', 'c_260', 'c_300', 'c_340']
+# corpus_dir = '/home/talkad/OpenMPdb/database_creator/visualization/hpcorpus_stats'
 
-# #             str = js['username']+'/'+js['repo_name']
-# #             repos.add(str)
+# for file in tqdm(files):
+#     dir_path = os.path.join(corpus_dir, f'{file}.json')
 
-# # with open('hpcorpus_repos.jsonl', 'w') as f:
-# #     for repo in repos:
-# #         r = repo.split('/')
-# #         f.write(json.dumps({'username': r[0], 'repo_name': r[1]}) + '\n')
+#     with open(dir_path, 'r') as f:
+#         repos = json.loads(f.read())
+        
+#         for repo_name, paradigms in repos.items():
+#             if repo_name not in total_repos:
+#                 total_repos[repo_name] = paradigms
+#             else:
+#                 for paradigm, val in paradigms.items():
+#                     total_repos[repo_name][paradigm] |= val
+
+# with open('hpcorpus_paradigms.jsonl', 'w') as f:
+#     f.write(json.dumps(total_repos))
+
+
+counter = {'CUDA': 0, 'OpenCL': 0, 'OpenACC': 0, 'SYCL': 0, 
+            'TBB': 0, 'Cilk': 0, 'OpenMP': 0, 'MPI': 0}
+
+with open('hpcorpus_paradigms.jsonl') as f:
+    repos = json.loads(f.read())
+
+    for paradigms in tqdm(repos.values()):
+        for paradigm, val in paradigms.items():
+            if val:
+                counter[paradigm] += 1
+
+print(counter)
+# {'CUDA': 409, 'OpenCL': 399, 'OpenACC': 47, 'SYCL': 11, 'TBB': 91, 'Cilk': 75, 'OpenMP': 4261, 'MPI': 2226}
+# sum = 7519
