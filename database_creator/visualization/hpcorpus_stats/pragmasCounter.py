@@ -4,11 +4,13 @@ import json
 
 # clauses = ['nowait', 'private', 'firstprivate', 'lastprivate', 'shared', 'reduction', 'atomic', 'section', 'for', 'task', 'barrier', 'critical', 'flush', 'single', 'master', 'target', 'static_schedule', 'dynamic_schedule']
 
-clauses = ['nowait', 'private', 'firstprivate', 'lastprivate', 'shared', 'reduction', 'atomic', 'section', 'do', 'task', 'barrier', 'critical', 'flush', 'single', 'master', 'target', 'parallel_for', 'static_schedule', 'dynamic_schedule', 'loop_total']
+
+
+clauses = ['nowait', 'private', 'firstprivate', 'lastprivate', 'shared', 'reduction', 'atomic', 'section', 'for', 'task', 'barrier', 'critical', 'flush', 'single', 'simd', 'master', 'target', 'parallel_for', 'static_schedule', 'dynamic_schedule', 'loop_total']
 
 
 redundant_line_comments_c = re.compile("\/\/.*")
-redundant_line_comments_fortran = re.compile("!.*$|^c.*$", re.MULTILINE)
+redundant_line_comments_fortran = re.compile("![^\$].*$|^c.*$", re.MULTILINE)
 redundant_multiline_comments_c = re.compile("\/\*.*?\*\/", re.MULTILINE|re.DOTALL)
 
 
@@ -65,10 +67,10 @@ def clauses_counter(line, clauses_dict, is_fortran):
 			clauses_dict['dynamic_schedule'] += 1
 			
 	if is_fortran:
-		if 'parallel ' in line in 'do' in line:
+		if 'parallel ' in line and 'do' in line:
 			clauses_dict['parallel_for'] += 1
 	else:
-		if 'parallel ' in line in 'for' in line:
+		if 'parallel ' in line and 'for' in line:
 			clauses_dict['parallel_for'] += 1
 
 
@@ -83,7 +85,7 @@ def scan_file(code, clauses_amount, is_fortran):
 		if is_for(line, lang=lang):
 			clauses_amount['loop_total']  += 1
 
-		if is_omp_pragma(line, is_fortran=is_fortran): # check if pragma
+		if is_omp_pragma(line, is_fortran): # check if pragma
 			clauses_counter(line, clauses_amount, is_fortran)
 
 
@@ -103,18 +105,12 @@ def iterate_jsons(json_dir, is_fortran=False):
     return clauses_amount
 
 
-# clauses = iterate_jsons('/tier2/bgu/bigQuery_repos/c')
-# clauses = iterate_jsons('/tier2/bgu/bigQuery_repos/cpp')
-clauses = iterate_jsons('/tier2/bgu/bigQuery_repos/Fortran', is_fortran=True)
 
-with open('fortran.json', 'w') as f:
+
+# clauses = iterate_jsons('/tier2/bgu/bigQuery_repos/c')
+clauses = iterate_jsons('/tier2/bgu/bigQuery_repos/cpp')
+# clauses = iterate_jsons('/tier2/bgu/bigQuery_repos/Fortran', is_fortran=True)
+
+with open('cpp.json', 'w') as f:
     f.write(json.dumps(clauses))
 
-# cpp:
-# {'nowait': 2274, 'private': 34420, 'firstprivate': 10363, 'lastprivate': 8519, 'shared': 10208, 'reduction': 22875, 'atomic': 5394, 'section': 9654, 'for': 89726, 'task': 18270, 'barrier': 2728, 'critical': 8657, 'flush': 1398, 'single': 3469, 'master': 7871, 'target': 79076, 'static_schedule': 5628, 'dynamic_schedule': 3823, 'omp_lock': 389}
-
-# c:
-# {'nowait': 1306, 'private': 17408, 'firstprivate': 2612, 'lastprivate': 2231, 'shared': 10148, 'reduction': 3948, 'atomic': 5180, 'section': 3266, 'for': 40339, 'task': 5931, 'barrier': 3765, 'critical': 6431, 'flush': 808, 'single': 1411, 'master': 1789, 'target': 8265, 'static_schedule': 8184, 'dynamic_schedule': 2623, 'loop_total': 8739725, 'omp_lock': 561}
-
-# fortran
-# {'nowait': 17, 'private': 17538, 'firstprivate': 1565, 'lastprivate': 481, 'shared': 6563, 'reduction': 2930, 'atomic': 2103, 'section': 1006, 'do': 18798, 'task': 1695, 'barrier': 869, 'critical': 1077, 'flush': 205, 'single': 623, 'master': 607, 'target': 2592, 'static_schedule': 2187, 'dynamic_schedule': 864, 'loop_total': 774559, 'omp_lock': 0}
