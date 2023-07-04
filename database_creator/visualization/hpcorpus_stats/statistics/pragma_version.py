@@ -16,19 +16,19 @@ def update_versions(line, versions, is_fortran):
     '''
     line = line.lstrip()
     #     version 5
-    clauses = [clause for clause in ['requiers','loop', 'order(concurrent)', 'scan', 'inscan',  'mutexinoutset'] if clause in line]
+    clauses = [clause for clause in ['requires','loop', 'order(concurrent)', 'scan', 'inscan',  'mutexinoutset'] if clause in line]
     if 'atomic' in line and 'hint' in line:
         clauses.append('atomic_hint')
     if 'taskwait' in line and 'depend' in line:
         clauses.append('taskwait_depend')
     if 'task' in line:
-        clauses += ['task_'+clause for clause in ['detach', 'affinity', 'in_reduction'] if clause in line]
+        clauses += ['task_'+clause for clause in ['detach', 'affinity', 'in_reduction', 'target'] if clause in line]
 
     for clause in clauses:
         versions['5'][clause] = 1 if clause not in versions['5'] else versions['5'][clause]+1
 
     #     version 4.5
-    clauses = [clause for clause in ['linear', 'simdlen', 'target', 'taskloop'] if clause in line]
+    clauses = [clause for clause in ['linear', 'simdlen', 'taskloop'] if clause in line]
     if 'task' in line and 'priority' in line:
         clauses.append('task_priority')
     if 'target' in line:
