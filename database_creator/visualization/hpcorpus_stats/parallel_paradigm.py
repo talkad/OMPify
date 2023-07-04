@@ -23,6 +23,7 @@ paradigms = {
     'MPI': [r'^\W*#\W*include\W+<mpi.h>.*$', r'\W*use\W+mpi.*$']
 }
 
+
 @timeout_decorator.timeout(30)
 def get_parallel_paradigms(code):
     matched_paradigms = []
@@ -34,6 +35,7 @@ def get_parallel_paradigms(code):
                 break
     
     return matched_paradigms
+
 
 
 def save_paradigms(dir):

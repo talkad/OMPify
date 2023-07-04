@@ -11,7 +11,7 @@ corpus_dir = '/mnt/c/Users/tal74/Downloads/'
 # # dirs = ['Fortran/Fortran', 'cpp1', 'cpp2', 'cpp3', 'cpp4', 'cpp5', 'c_0', 'c_40', 'c_70', 'c_100', 'c_140', 'c_180', 'c_220', 'c_260', 'c_300', 'c_340']
 # dirs = [  'c_220', 'c_260', 'c_300', 'c_340']
 
-
+ 
 
 def get_omp_version(line, res, is_fortran):
     '''
@@ -29,7 +29,7 @@ def get_omp_version(line, res, is_fortran):
             res['3'] += 1
         else:
             res['2'] += 1
-    
+   
 
 @timeout_decorator.timeout(30)
 def iterate_code(code, versions, is_fortran):
