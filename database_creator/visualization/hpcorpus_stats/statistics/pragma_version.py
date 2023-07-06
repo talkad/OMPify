@@ -46,20 +46,23 @@ def update_versions(line, versions, is_fortran):
         versions['4'][clause] = 1 if clause not in versions['4'] else versions['4'][clause]+1
 
     #     version 3
-    clauses = [clause for clause in ['task', 'taskwait', 'schedule(auto)', 'taskyield'] if clause in line]
+    clauses = [clause for clause in ['taskwait', 'atomic', 'schedule(auto)', 'taskyield'] if clause in line]
     if 'task' in line:
         clauses += ['task_'+clause for clause in ['final', 'mergeable'] if clause in line]
     if 'atomic' in line:
         clauses += ['atomic_'+clause for clause in ['read', 'write', 'capture', 'update'] if clause in line]
+
+    if any([directive=='task' for directive in line.split()]):
+        clauses += ['task']
     
     for clause in clauses:
         versions['3'][clause] = 1 if clause not in versions['3'] else versions['3'][clause]+1
 
     #     version 2.5
-    clauses = [clause for clause in [' private', 'section', 'barrier', 'nowait', 'critical', 'flush', 'single', 'master', 'firstprivate', 'lastprivate', 'shared', 'reduction', ' if', 'num_threads', 'collapse'] if clause in line]
+    clauses = [clause for clause in [' private', 'section', 'barrier', 'nowait', 'critical', 'flush', 'single', 'master', 'firstprivate', 'lastprivate', 'shared', 'reduction', ' if', 'num_threads', 'collapse', 'threadprivate'] if clause in line]
     
     if 'schedule' in line:
-        clauses += ['schedule_'+clause for clause in ['static', 'dynamic'] if clause in line]
+        clauses += ['schedule_'+clause for clause in ['static', 'dynamic', 'guided', 'runtime', 'auto'] if clause in line]
 
     if (is_fortran and ' do' in line) or (not is_fortran and ' for' in line):
         clauses += ['for']

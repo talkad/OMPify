@@ -3,7 +3,32 @@ from datetime import datetime
 import json
 
 
+def unite_paradigms():
+    '''
+    Join the different JSON files by repo name
+    '''
+    repos = {}
+
+    for lang in ['Fortran', 'c', 'cpp']:
+        with open(f'analyzed_data/{lang}_paradigms.json', 'r') as f:
+            paradigms = json.loads(f.read())
+
+            for repo, pars in paradigms.items():
+                if repo not in repos:
+                    repos[repo] = {'CUDA': False, 'OpenCL': False, 'OpenACC': False, 'SYCL': False, 
+                                          'TBB': False, 'Cilk': False, 'OpenMP': False, 'MPI': False}
+
+                for par, val in pars.items():
+                    repos[repo][par] |= val
+
+    with open('analyzed_data/total_paradigms.json', 'w') as f:
+        f.write(json.dumps(repos))
+
+    
 def get_repo_metadata(metadata_filepath):
+    '''
+    Load metadata - creation and last update time of each repo
+    '''
     metadata = {}
     prefix = 'https://github.com/'
     suffix = '.git'
@@ -12,46 +37,114 @@ def get_repo_metadata(metadata_filepath):
         dict_reader = DictReader(f)
 
         for line in list(dict_reader):
-            metadata[line['URL'][len(prefix): -len(suffix)]] = {'creation_time': line['creation_time'], 'update_time': line['update_time']}
+            creation_time = datetime.strptime(line['creation_time'], '%Y-%m-%dT%H:%M:%SZ')
+            update_time = datetime.strptime(line['update_time'], '%Y-%m-%dT%H:%M:%SZ')
+            fork = True if line['fork'] == 'True' else False
+
+            metadata[line['URL'][len(prefix): -len(suffix)]] = {'creation_time': creation_time, 'update_time': update_time, 'fork': fork}
 
     return metadata
 
 
-def get_paradigms_over_time(paradigm_list, metadata_filepath):
+def get_paradigms_over_time(paradigm_list, metadata_filepath, avoid_fork=True, key='update_time'):
+    '''
+    Get the number of repositories that used different parallelization APIs per month.
+    '''
     repos_over_time = {}
 
-    langs = ['Fortran', 'cpp'] # ['Fortran', 'c', 'cpp']
     metadata = get_repo_metadata(metadata_filepath)
 
-    for lang in langs:
-        with open(f'{lang}_paradigms.json', 'r') as f:
-            paradigm_per_repo = json.loads(f.read())
+    with open('analyzed_data/total_paradigms.json', 'r') as f:
+        paradigm_per_repo = json.loads(f.read())
 
-            for repo, paradigms in paradigm_per_repo.items():
-                if repo in metadata and all([val for paradigm ,val in paradigms.items() if paradigm in paradigm_list]):
-                    dt_object = datetime.strptime(metadata[repo]['update_time'], '%Y-%m-%dT%H:%M:%SZ')
+        for repo, paradigms in paradigm_per_repo.items():
+            if repo in metadata and all([val for paradigm ,val in paradigms.items() if paradigm in paradigm_list]):
 
-                    year = dt_object.year
-                    month = dt_object.month
+                if avoid_fork and metadata[repo]['fork']:
+                    continue
 
-                    if year not in repos_over_time:
-                        repos_over_time[year] = {}
+                dt_object = metadata[repo][key]
 
-                    if month not in repos_over_time[year]:
-                        repos_over_time[year][month] = 0
+                year = dt_object.year
+                month = dt_object.month
 
-                    repos_over_time[year][month] += 1
+                if year not in repos_over_time:
+                    repos_over_time[year] = {}
+
+                if month not in repos_over_time[year]:
+                    repos_over_time[year][month] = 0
+
+                repos_over_time[year][month] += 1
 
     return repos_over_time
 
 
+def get_total_repos_over_time(metadata_filepath):
+    '''
+    Figure 2
+
+    Get the total usage of HPCorpus repositories
+    '''
+    paradigm_per_year = {}
+    paradigm_over_time = get_paradigms_over_time([], metadata_filepath, avoid_fork=False, key='update_time')
+
+    for year in paradigm_over_time:
+        paradigm_per_year[year] = sum(paradigm_over_time[year].values())
+
+    return paradigm_per_year
+
+
+def aggregate_paradigms(metadata_filepath):
+    '''
+    Figure 3
+
+    Aggregate the usage of each parallelization API.
+    '''
+    metadata = get_repo_metadata(metadata_filepath)
+    count_paradigms = {'CUDA': 0, 'OpenCL': 0, 'OpenACC': 0, 'SYCL': 0, 
+                            'TBB': 0, 'Cilk': 0, 'OpenMP': 0, 'MPI': 0}
+    amount_repos = 0
+    amount_repo_forked = 0
+    amount_missed_repo = 0
+
+    with open('analyzed_data/total_paradigms.json', 'r') as f:
+        paradigm_per_repo = json.loads(f.read())
+
+        for repo_name, paradigms in paradigm_per_repo.items():
+            
+            if repo_name not in metadata:
+                amount_missed_repo += 1
+                continue
+
+            if metadata[repo_name]['fork']:
+                amount_repo_forked += 1
+                continue
+
+            amount_repos += 1
+
+            for paradigm, val in paradigms.items():
+                if val:
+                    count_paradigms[paradigm] += 1
+
+        print(f'Amount of valid repos: {amount_repos}')
+        print(f'Amount of repos not exist in metadata: {amount_missed_repo}')
+        print(f'Amount of forked repos: {amount_repo_forked}')
+
+        return count_paradigms
+    
+
 def cumulative_openmp(metadata_filepath):
+    '''
+    Figure 4
+
+    Accumulate the usage of OpenMP API over the last decade
+    '''
     total = 0
     openmp_over_time_cumulative = {}
 
-    openmp_over_time = get_paradigms_over_time(['OpenMP'], metadata_filepath)
+    openmp_over_time = get_paradigms_over_time(['OpenMP'], metadata_filepath, avoid_fork=True, key='update_time')
 
-    for year in range(2012, 2023):
+    for year in range(2008, 2024):
         for month in range(12):
             y, m = year, month+1
 
@@ -66,9 +159,12 @@ def cumulative_openmp(metadata_filepath):
     return openmp_over_time_cumulative
 
 
-def get_paradigm_per_year(paradigm, metadata_filepath):
+def get_paradigm_per_year(paradigms, metadata_filepath, key='creation_time'):
+    '''
+    Get the usage of a given parallelization API over the last decade.
+    '''
     paradigm_per_year = {}
-    paradigm_over_time = get_paradigms_over_time([paradigm], metadata_filepath)
+    paradigm_over_time = get_paradigms_over_time(paradigms, metadata_filepath, key=key)
 
     for year in paradigm_over_time:
         paradigm_per_year[year] = sum(paradigm_over_time[year].values())
@@ -76,19 +172,47 @@ def get_paradigm_per_year(paradigm, metadata_filepath):
     return paradigm_per_year
 
 
+def get_paradigms_per_year(metadata_filepath):
+    '''
+    Figure 5
+
+    Get the usage of each parallelization API per year
+    '''
+    paradigms_per_year = {}
+
+    for paradigm in ['CUDA', 'OpenCL', 'OpenACC', 'SYCL', 'TBB', 'Cilk', 'OpenMP', 'MPI']:
+        paradigms_per_year[paradigm] = get_paradigm_per_year([paradigm], metadata_filepath, key='update_time')
+
+    return paradigms_per_year
+
+
+def get_omp_mpi_usage(metadata_filepath):
+    '''
+    Figure 6
+
+    Get the usage of OpenMP + MPI
+    '''
+    return get_paradigm_per_year(['OpenMP', 'MPI'], metadata_filepath, key='update_time')
+
+
 def get_version_per_year(metadata_filepath):
+    '''
+    Figure 7
+
+    Get the usage of each OpenMP version across the last decade
+    '''
     versions_per_year = {}
 
-    langs = ['Fortran', 'cpp'] # ['Fortran', 'c', 'cpp']
+    langs = ['Fortran', 'c', 'cpp']
     metadata = get_repo_metadata(metadata_filepath)
 
     for lang in langs:
-        with open(f'{lang}_versions.json', 'r') as f:
+        with open(f'analyzed_data/{lang}_versions.json', 'r') as f:
             versions_per_repo = json.loads(f.read())
 
             for repo, versions in versions_per_repo.items():
                 if repo in metadata:
-                    dt_object = datetime.strptime(metadata[repo]['update_time'], '%Y-%m-%dT%H:%M:%SZ')
+                    dt_object = metadata[repo]['update_time']
 
                     year = dt_object.year
 
@@ -106,25 +230,15 @@ def get_version_per_year(metadata_filepath):
     return versions_per_year
 
 
-def reduce_paradigms(lang):
-    count_paradigms = {'CUDA': 0, 'OpenCL': 0, 'OpenACC': 0, 'SYCL': 0, 
-                                          'TBB': 0, 'Cilk': 0, 'OpenMP': 0, 'MPI': 0}
+def aggregate_versions(lang):
+    '''
+    Figure 8 - 11
 
-    with open(f'{lang}_paradigms.json', 'r') as f:
-        paradigm_per_repo = json.loads(f.read())
-
-        for paradigms in paradigm_per_repo.values():
-            for paradigm, val in paradigms.items():
-                if val:
-                    count_paradigms[paradigm] += 1
-
-        return count_paradigms
-
-
-def reduce_versions(lang):
+    Aggregate the usage of each OpenMP directive
+    '''
     count_versions = {'total_loop': 0, 'vers': {'2': {}, '3':{}, '4':{}, '4.5':{}, '5':{}} }
 
-    with open(f'{lang}_versions.json', 'r') as f:
+    with open(f'analyzed_data/{lang}_versions.json', 'r') as f:
         version_per_repo = json.loads(f.read())
 
         for versions in version_per_repo.values():
@@ -138,22 +252,49 @@ def reduce_versions(lang):
                     
         return count_versions
     
-print(reduce_versions('cpp'))
-# print(get_paradigm_per_year('MPI', 'hpcorpus.timestamps.csv'))
-
-# fortran
-# {'total_loop': 1203773, 'vers': 
-# {'2': {' private': 12466, 'for': 17283, 'shared': 5587, 'parallel_for': 7845, 'critical': 1067, 'schedule_dynamic': 806, 'master': 579, 'schedule_static': 2084, 'section': 977, 'reduction': 2692, ' if': 667, 'barrier': 859, 'firstprivate': 1477, 'single': 549, 'lastprivate': 473, 'nowait': 12, 'collapse': 4781, 'num_threads': 1009, 'flush': 205}, 
-# '3': {'atomic_update': 209, 'atomic_write': 263, 'atomic_read': 248, 'taskwait': 312, 'taskyield': 11, 'task': 1656, 'task_final': 50, 'atomic_capture': 196, 'schedule(auto)': 15, 'task_mergeable': 39}, 
-# '4': {'cancel': 469, 'proc_bind': 79, 'taskgroup': 233, 'simd': 1199}, 
-# '4.5': {'target': 2561, 'target_private': 147, 'target_defaultmap': 148, 'linear': 316, 'simdlen': 96, 'taskloop': 311, 'target_firstprivate': 70, 'target_nowait': 11, 'task_priority': 43}, 
-# '5': {'scan': 128, 'order(concurrent)': 120, 'task_in_reduction': 50, 'atomic_hint': 50, 'inscan': 75, 'loop': 436, 'task_detach': 38, 'task_affinity': 38, 'mutexinoutset': 2}}}
 
 
-# cpp
-# {'total_loop': 19841237, 'vers': 
-# {'2': {'parallel_for': 89489, 'critical': 8657, 'for': 89489, 'collapse': 5176, 'section': 9654, 'schedule_static': 5689, 'single': 3473, 'master': 7871, ' if': 8724, ' private': 14615, 'num_threads': 4588, 'reduction': 23205, 'schedule_dynamic': 3842, 'shared': 10957, 'flush': 1398, 'firstprivate': 10423, 'barrier': 2728, 'nowait': 2276, 'lastprivate': 8524}, 
-# '3': {'taskwait': 1012, 'task': 18272, 'taskyield': 705, 'atomic_update': 552, 'atomic_capture': 1497, 'schedule(auto)': 208, 'atomic_write': 288, 'atomic_read': 242, 'task_mergeable': 98, 'task_final': 431}, 
-# '4': {'cancel': 988, 'simd': 54557, 'task_depend': 455, 'taskgroup': 1113, 'proc_bind': 798}, 
-# '4.5': {'linear': 4648, 'target': 79126, 'target_private': 6748, 'simdlen': 1229, 'target_defaultmap': 1688, 'target_depend': 4129, 'task_priority': 476, 'taskloop': 11074, 'target_firstprivate': 2612, 'target_nowait': 716}, 
-# '5': {'loop': 11139, 'task_in_reduction': 1331, 'scan': 341, 'task_detach': 52, 'order(concurrent)': 50, 'atomic_hint': 25, 'inscan': 77, 'mutexinoutset': 12, 'task_affinity': 96, 'taskwait_depend': 37}}}
+
+# unite_paradigms()
+
+# print(get_total_repos_over_time('analyzed_data/hpcorpus.timestamps.csv'))
+
+# print(aggregate_paradigms('analyzed_data/hpcorpus.timestamps.csv'))
+# Amount of valid repos: 189903
+# Amount of repos not exist in metadata: 51193
+# Amount of forked repos: 28858
+# {'CUDA': 879, 'OpenCL': 956, 'OpenACC': 61, 'SYCL': 24, 'TBB': 374, 'Cilk': 97, 'OpenMP': 3881, 'MPI': 2115}
+
+
+# print(cumulative_openmp('analyzed_data/hpcorpus.timestamps.csv'))
+
+
+# print(get_version_per_year('analyzed_data/hpcorpus.timestamps.csv'))
+
+
+
+
+
+
+
+
+
+# for par in ['CUDA', 'OpenCL', 'OpenACC', 'SYCL', 'TBB', 'Cilk', 'OpenMP', 'MPI']:
+#     print(par, get_paradigm_per_year([par], 'hpcorpus.timestamps.csv' ))
+# print(get_paradigms_over_time(['OpenMP'], 'hpcorpus.timestamps.csv', key='creation_time')) # 4835
+
+
+
+# print(reduce_paradigms())
+
+
+# for par in ['CUDA', 'OpenCL', 'OpenACC', 'SYCL','TBB', 'Cilk', 'OpenMP', 'MPI']:
+# print(get_version_per_year('hpcorpus.timestamps.csv'))
+
+
+# print(get_paradigm_per_year(['OpenMP', 'MPI'], 'hpcorpus.timestamps.csv'))
+# {2023: 1167, 2021: 345, 2022: 590, 2016: 584, 2020: 269, 2017: 358, 2015: 662, 2018: 261, 2019: 249, 2014: 276, 2013: 74}
+# {2021: 195, 2023: 514, 2017: 188, 2022: 278, 2015: 401, 2019: 143, 2018: 127, 2020: 131, 2016: 332, 2014: 210, 2013: 59, 2012: 2}
+# {2021: 65, 2023: 190, 2017: 60, 2022: 88, 2018: 49, 2015: 95, 2016: 104, 2019: 45, 2014: 42, 2020: 44, 2013: 11}
+
+print(aggregate_versions('Fortran'))
