@@ -230,9 +230,43 @@ def get_version_per_year(metadata_filepath):
     return versions_per_year
 
 
+def get_loops():
+    '''
+    Figure 8
+
+    get for-loop usage
+    '''
+    result = {}
+
+    for lang in ['c', 'cpp', 'Fortran']:
+        count_versions = aggregate_versions(lang)
+        result[lang] = {'total_loop': count_versions['total_loop'],
+                        'omp_for': count_versions['vers']['2']['for']}
+        
+    return result
+
+
+def get_scheduling():
+    '''
+    Figure 10
+
+    Get scheduling  usage
+    '''
+    result = {}
+
+    for lang in ['c', 'cpp', 'Fortran']:
+        count_versions = aggregate_versions(lang)
+        result[lang] = {'schedule_static': count_versions['vers']['2']['schedule_static'],
+                        'schedule_dynamic': count_versions['vers']['2']['schedule_dynamic'],
+                        'schedule_guided': count_versions['vers']['2']['schedule_guided'],
+                        'schedule_auto': count_versions['vers']['2']['schedule_auto'],
+                        'schedule_runtime': count_versions['vers']['2']['schedule_runtime']}
+        
+    return result
+
 def aggregate_versions(lang):
     '''
-    Figure 8 - 11
+    Figure 11
 
     Aggregate the usage of each OpenMP directive
     '''
@@ -269,7 +303,7 @@ def aggregate_versions(lang):
 # print(cumulative_openmp('analyzed_data/hpcorpus.timestamps.csv'))
 
 
-# print(get_version_per_year('analyzed_data/hpcorpus.timestamps.csv'))
+# print(get_paradigms_per_year('analyzed_data/hpcorpus.timestamps.csv'))
 
 
 
@@ -297,4 +331,7 @@ def aggregate_versions(lang):
 # {2021: 195, 2023: 514, 2017: 188, 2022: 278, 2015: 401, 2019: 143, 2018: 127, 2020: 131, 2016: 332, 2014: 210, 2013: 59, 2012: 2}
 # {2021: 65, 2023: 190, 2017: 60, 2022: 88, 2018: 49, 2015: 95, 2016: 104, 2019: 45, 2014: 42, 2020: 44, 2013: 11}
 
-print(aggregate_versions('Fortran'))
+# print(aggregate_versions('cpp'))
+
+print(get_loops())
+print(get_scheduling())
