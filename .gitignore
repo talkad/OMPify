@@ -22,3 +22,4 @@ sample_cpp*
 **/repos
 **/openmp_versions
 !requirements.txt
+!*_parsing.log

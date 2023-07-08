@@ -28,6 +28,7 @@ def parse_openmp_pragma(pragma):
         output: [('pragma', ''), ('omp', ''), ('for', ''), ('private', 'a,b,c'), ('lastprivate', 'd'), ('schedule', 'static:8')]
 
     '''
+    pragma = pragma + " "
     pattern = r'(\w+(\s*\(.*?\)|\s))'
     matches = re.findall(pattern, pragma)
     clauses = []
@@ -64,10 +65,10 @@ def update_versions(line, versions):
             
             clauses, args = clause_combination
             arg = '' if len(args)==0 else args[0]
+            key = '_'.join(clauses) + '_' + arg
 
-            for clause in clauses:
-                if any([(clause==pragma_clause and arg in pragma_args) for pragma_clause, pragma_args in parsed_pragma]):
-                    versions[ver][clause] = 1 if clause not in versions[ver] else versions[ver][clause]+1
+            if all([any([(clause==pragma_clause and arg in pragma_args) for pragma_clause, pragma_args in parsed_pragma]) for clause in clauses]):
+                versions[ver][key] = 1 if key not in versions[ver] else versions[ver][key]+1
 
 
 def get_omp_version(code, is_fortran):
@@ -95,3 +96,10 @@ def get_omp_version(code, is_fortran):
             update_versions(line, versions)
 
     return total_loop, versions
+
+
+# versions = {'ver2.5': {}, 'ver3.0':{}, 'ver3.1':{}, 'ver4.0':{}, 'ver4.5':{}, 'ver5.0':{}, 'ver5.1':{}, 'ver5.2':{}}
+# line = '#pragma omp parallel target for private  (a,b,c) lastprivate(d) do schedule(static:8) enter data'
+
+# update_versions(line, versions)
+# print(versions)

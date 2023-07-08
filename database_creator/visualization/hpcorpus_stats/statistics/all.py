@@ -6,6 +6,7 @@ import json
 import re
 
 
+
 redundant_line_comments_c = re.compile("\/\/.*")
 redundant_line_comments_fortran = re.compile("![^\$].*$|^c.*$", re.MULTILINE)
 redundant_multiline_comments_c = re.compile("\/\*.*?\*\/", re.MULTILINE|re.DOTALL)
@@ -30,6 +31,39 @@ def remove_comments(code, is_fortran):
         code = redundant_multiline_comments_c.sub("\n", code)
 
     return code
+
+
+def concat_lines(code, is_fortran):
+    '''
+    Concatenate sequential splitted lines
+
+    Parameters:
+        code: str - code textual representation
+        is_fortran: bool - whether the code is written in the Fortran language
+
+    Result:
+        clean code
+    '''
+    split_token = '&' if is_fortran else '\\' 
+    code_buffer = []
+    concat = False
+
+    for line in code.split('\n'):
+        next_concat = line.rstrip().endswith(split_token)
+        if concat:
+            if next_concat:
+                line = line.rstrip()[:-1] + " "
+
+            code_buffer[-1] = code_buffer[-1].rstrip() + " " + line
+        else:            
+            if next_concat:
+                line = line.rstrip()[:-1] + " "
+
+            code_buffer.append(line)
+
+        concat = next_concat
+
+    return '\n'.join(code_buffer)
 
 
 def is_for(line, is_fortran):
@@ -70,101 +104,6 @@ def is_omp_pragma(line, is_fortran):
 
 
 
-def update_versions(line, versions, is_fortran):
-    '''
-    Determine the version of OpenMP pragma 
-
-    Parameters:
-        code: str - line of code
-        versions: dict - amount of each clause (per version)
-        is_fortran: bool - whether the code is written in the Fortran language
-
-    Return:
-        None (updates the versions dictionary)
-    '''
-    line = line.lstrip()
-    #     version 5
-    clauses = [clause for clause in ['requiers','loop', 'order(concurrent)', 'scan', 'inscan',  'mutexinoutset'] if clause in line]
-    if 'atomic' in line and 'hint' in line:
-        clauses.append('atomic_hint')
-    if 'taskwait' in line and 'depend' in line:
-        clauses.append('taskwait_depend')
-    if 'task' in line:
-        clauses += ['task_'+clause for clause in ['detach', 'affinity', 'in_reduction'] if clause in line]
-
-    for clause in clauses:
-        versions['5'][clause] = 1 if clause not in versions['5'] else versions['5'][clause]+1
-
-    #     version 4.5
-    clauses = [clause for clause in ['linear', 'simdlen', 'target', 'taskloop'] if clause in line]
-    if 'task' in line and 'priority' in line:
-        clauses.append('task_priority')
-    if 'target' in line:
-        clauses += ['target_'+clause for clause in ['private', 'nowait', 'depend', 'firstprivate', 'defaultmap'] if clause in line]
-    
-    for clause in clauses:
-        versions['4.5'][clause] = 1 if clause not in versions['4.5'] else versions['4.5'][clause]+1
-
-    #     version 4
-    clauses = [clause for clause in ['cancel', 'taskgroup', 'proc_bind', 'simd'] if clause in line]
-    if 'task' in line and 'depend' in line:
-        clauses.append('task_depend')
-
-    for clause in clauses:
-        versions['4'][clause] = 1 if clause not in versions['4'] else versions['4'][clause]+1
-
-    #     version 3
-    clauses = [clause for clause in ['task', 'taskwait', 'schedule(auto)', 'taskyield'] if clause in line]
-    if 'task' in line:
-        clauses += ['task_'+clause for clause in ['final', 'mergeable'] if clause in line]
-    if 'atomic' in line:
-        clauses += ['atomic_'+clause for clause in ['read', 'write', 'capture', 'update'] if clause in line]
-    
-    for clause in clauses:
-        versions['3'][clause] = 1 if clause not in versions['3'] else versions['3'][clause]+1
-
-    #     version 2.5
-    clauses = [clause for clause in [' private', 'section', 'barrier', 'nowait', 'critical', 'flush', 'single', 'master', 'firstprivate', 'lastprivate', 'shared', 'reduction', ' if', 'num_threads', 'collapse'] if clause in line]
-    
-    if 'schedule' in line:
-        clauses += ['schedule_'+clause for clause in ['static', 'dynamic'] if clause in line]
-
-    if (is_fortran and ' do' in line) or (not is_fortran and ' for' in line):
-        clauses += ['for']
-
-    if 'parallel' in line and (is_fortran and ' do' in line) or (not is_fortran and ' for' in line):
-        clauses += ['parallel_for']
-
-    for clause in clauses:
-        versions['2'][clause] = 1 if clause not in versions['2'] else versions['2'][clause]+1
-
-
-
-def get_omp_version(code, is_fortran):
-    '''
-    Get the clauses versions found in a given code
-
-    Parameters:
-        code: str - code textual representation
-        versions: dict - amount of each clause (per version)
-        is_fortran: bool - whether the code is written in the Fortran language
-
-    Return:
-        Amount of for loops and OpenMP version statistics
-    '''
-    total_loop = 0
-    versions = {'2': {}, '3':{}, '4':{}, '4.5':{}, '5':{}}
-
-    for line in code.split('\n'):
-
-        if is_for(line, is_fortran):
-            total_loop += 1
-
-        if is_omp_pragma(line, is_fortran):
-            update_versions(line, versions, is_fortran)
-
-    return total_loop, versions
-
 
 paradigms = {
     'CUDA': [r'^\W*#\W*include.*[^a-zA-Z]cuda\.h.*$', r'^.*cudaMalloc\(.*$', r'^.*cudaFree\(.*$', r'^.*cudaMemcpy\(.*$', r'^.*cudaMemset\(.*$'],
@@ -200,37 +139,103 @@ def get_parallel_paradigms(code):
     return matched_paradigms
 
 
-def concat_lines(code, is_fortran):
+
+clauses_per_version = {
+    'ver2.5': [(['parallel'],[]), (['sections'],[]), (['section'],[]), (['single'],[]), (['workshare'],[]), (['for'],[]), (['do'],[]), (['parallel', 'for'],[]), (['parallel', 'do'],[]), (['parallel', 'sections'],[]), (['parallel', 'workshare'],[]), (['master'],[]), (['critical'],[]), (['barrier'],[]), (['atomic'],[]), (['flush'],[]), (['ordered'],[]), (['threadprivate'],[]), (['default'],[]), (['shared'],[]), (['private'],[]), (['firstprivate'],[]), (['lastprivate'],[]), (['reduction'],[]), (['copyin'],[]), (['copyprivate'],[]), (['num_threads'],[]), (['schedule'],[]), (['schedule'],['static']), (['schedule'],['dynamic']), (['schedule'],['guided']), (['schedule'],['runtime']), (['nowait'],[])],
+    'ver3.0': [(['task'],[]), (['taskwait'],[]), (['schedule'],['auto']), (['atomic', 'read'],[]), (['atomic', 'write'],[]), (['atomic', 'update'],[]), (['atomic', 'capture'],[])],
+    'ver3.1': [(['taskyield'],[]), (['collapse'],[])],
+    'ver4.0': [(['simd'],[]), (['simdlen'],[]), (['declare', 'simd'],[]), (['target'],[]), (['target', 'data'],[]), (['target', 'update'],[]), (['declare', 'target'],[]), (['teams'],[]), (['distribute'],[]), (['distribute', 'simd'],[]), (['target', 'teams'],[]), (['teams', 'distribute'],[]), (['teams', 'distribute', 'simd'],[]), (['target', 'teams', 'distribute'],[]), (['target', 'teams', 'distribute', 'simd'],[]), (['taskgroup'],[]), (['cancel'],[]), (['cancellation'],[]), (['map'],[]), (['declare', 'reduction'],[]), (['proc_bind'],[])],
+    'ver4.5': [(['taskloop'],[]), (['taskloop', 'simd'],[]), (['target', 'enter', 'data'],[]), (['target', 'exit', 'data'],[]), (['depend'],[]), (['linear'],[]), (['defaultmap'],[]), (['if'],[])],
+    'ver5.0': [(['declare', 'variant'],[]), (['requires'],[]), (['distribute', 'loop'],[]), (['loop'],[]), (['scan'],[]), (['allocate'],[]), (['taskloop', 'simd'],[]), (['parallel', 'loop'],[]), (['parallel', 'master'],[]), (['master', 'taskloop'],[]), (['master', 'taskloop', 'simd'],[]), (['parallel', 'master', 'taskloop'],[]), (['parallel', 'master', 'taskloop', 'simd'],[]), (['teams', 'loop'],[]), (['parallel', 'target'],[]), (['target', 'parallel', 'loop'],[]), (['target', 'simd'],[]), (['target', 'teams', 'loop'],[]), (['deobj'],[]), (['task_reduction'],[]), (['in_reduction'],[]), (['copyprivate'],[]), (['declare', 'mapper'],[])],
+    'ver5.1': [(['dispatch'],[]), (['assume'],[]), (['nothing'],[]), (['error'],[]), (['masked'],[]), (['scope'],[]), (['tile'],[]), (['unroll'],[]), (['interop'],[]), (['parallel', 'masked'],[]), (['masked', 'taskloop'],[]), (['masked', 'taskloop', 'simd'],[]), (['parallel', 'masked', 'taskloop', 'simd'],[])],
+    'ver5.2': [(['destroy'],[]), (['is_device_ptr'],[]), (['use_device_ptr'],[]), (['has_device_ptr'],[]), (['use_device_addr'],[]), (['initializer'],[]), (['inclusive'],[]), (['exclusive'],[]), (['enter'],[]), (['link'],[]), (['to'],[]), (['from'],[]), (['uniform'],[]), (['aligned'],[]), (['align'],[]), (['allocator'],[]), (['allocators'],[]), (['use_allocators'],[]), (['when'],[]), (['otherwise'],[]), (['metadirective'],[]), (['begin', 'metadirective'],[]), (['match'],[]), (['adjust_args'],[]), (['append_args'],[]), (['begin', 'declare', 'variant'],[]), (['novariants'],[]), (['nocontext'],[]), (['begin', 'declare', 'target'],[]), (['indirect'],[]), (['at'],[]), (['assumes'],[]), (['begin', 'assumes'],[]), (['severity'],[]), (['message'],[]), (['sizes'],[]), (['full'],[]), (['partial'],[]), (['nontemporal'],[]), (['safelen'],[]), (['filter'],[]), (['dist_schedule'],[]), (['bind'],[]), (['untied'],[]), (['mergeable'],[]), (['final'],[]), (['priority'],[]), (['grainsize'],[]), (['num_tasks'],[]), (['device_type'],[]), (['device'],[]), (['thread_limit'],[]), (['init'],[]), (['use'],[]), (['hint'],[]), (['nogroup'],[]), (['doacross'],[]), (['nogroup'],[])]
+}
+
+
+def parse_openmp_pragma(pragma):
     '''
-    Concatenate sequential splitted lined
+    parse OpenMP pragma into meaningful representation
+
+    Parameters:
+        pragma: str - string indicating the pragma
+    Result:
+        A list containing tuples representing the clause and their arguments
+
+    Example:
+        input: '#pragma omp for private  (a,b,c) lastprivate(d) schedule(static:8)'
+        output: [('pragma', ''), ('omp', ''), ('for', ''), ('private', 'a,b,c'), ('lastprivate', 'd'), ('schedule', 'static:8')]
+
+    '''
+    pragma = pragma + " "
+    pattern = r'(\w+(\s*\(.*?\)|\s))'
+    matches = re.findall(pattern, pragma)
+    clauses = []
+    
+    for match in matches:
+        clause = match[0].strip()
+
+        if '(' in clause:
+            clause = clause[:clause.find('(')].strip()
+            args = match[1].strip()[1:-1]
+            clauses.append((clause, args))
+        else:
+            clauses.append((clause, ''))
+    
+    return clauses
+
+
+def update_versions(line, versions):
+    '''
+    Determine the version of OpenMP pragma 
+
+    Parameters:
+        code: str - line of code
+        versions: dict - amount of each clause (per version)
+
+    Return:
+        None (updates the versions dictionary)
+    '''
+    line = line.lstrip()
+    parsed_pragma = parse_openmp_pragma(line)
+    print(parsed_pragma)
+
+    for ver, clauses_combination in clauses_per_version.items():
+        for clause_combination in clauses_combination:
+            
+            clauses, args = clause_combination
+            arg = '' if len(args)==0 else args[0]
+            key = '_'.join(clauses) + '_' + arg
+
+            if all([any([(clause==pragma_clause and arg in pragma_args) for pragma_clause, pragma_args in parsed_pragma]) for clause in clauses]):
+                versions[ver][key] = 1 if key not in versions[ver] else versions[ver][key]+1
+
+
+def get_omp_version(code, is_fortran):
+    '''
+    Get the clauses versions found in a given code
 
     Parameters:
         code: str - code textual representation
+        versions: dict - amount of each clause (per version)
         is_fortran: bool - whether the code is written in the Fortran language
 
-    Result:
-        clean code
+    Return:
+        Amount of for loops and OpenMP version statistics
     '''
-    split_token = '&' if is_fortran else '\\' 
-    code_buffer = []
-    concat = False
+    total_loop = 0
+
+    versions = {'ver2.5': {}, 'ver3.0':{}, 'ver3.1':{}, 'ver4.0':{}, 'ver4.5':{}, 'ver5.0':{}, 'ver5.1':{}, 'ver5.2':{}}
 
     for line in code.split('\n'):
-        next_concat = line.rstrip().endswith(split_token)
-        if concat:
-            if next_concat:
-                line = line.rstrip()[:-1] + " "
 
-            code_buffer[-1] = code_buffer[-1].rstrip() + " " + line
-        else:            
-            if next_concat:
-                line = line.rstrip()[:-1] + " "
+        if is_for(line, is_fortran):
+            total_loop += 1
 
-            code_buffer.append(line)
+        if is_omp_pragma(line, is_fortran):
+            update_versions(line, versions)
 
-        concat = next_concat
+    return total_loop, versions
 
-    return '\n'.join(code_buffer)
 
 
 
@@ -267,16 +272,15 @@ def iterate_jsons(dir, vars, is_fortran=False):
                 code = remove_comments(code, is_fortran)
                 code = concat_lines(code, is_fortran)
 
-                # get_omp_version(code, versions, is_fortran)
                 ### Parallel Paradigms ###
-                paradigms = get_parallel_paradigms(code)
+                # paradigms = get_parallel_paradigms(code)
 
-                if repo_name not in par_paradigms:
-                    par_paradigms[repo_name] = {'CUDA': False, 'OpenCL': False, 'OpenACC': False, 'SYCL': False, 
-                                          'TBB': False, 'Cilk': False, 'OpenMP': False, 'MPI': False}
+                # if repo_name not in par_paradigms:
+                #     par_paradigms[repo_name] = {'CUDA': False, 'OpenCL': False, 'OpenACC': False, 'SYCL': False, 
+                #                           'TBB': False, 'Cilk': False, 'OpenMP': False, 'MPI': False}
 
-                for paradigm in paradigms:
-                    par_paradigms[repo_name][paradigm] = True
+                # for paradigm in paradigms:
+                #     par_paradigms[repo_name][paradigm] = True
                 ### Parallel Paradigms ###
 
 
@@ -284,7 +288,7 @@ def iterate_jsons(dir, vars, is_fortran=False):
                 total_loop, versions = get_omp_version(code.lower(), is_fortran)
 
                 if repo_name not in omp_versions:
-                    omp_versions[repo_name] = {'total_loop': 0, 'vers': {'2': {}, '3':{}, '4':{}, '4.5':{}, '5':{}} }
+                    omp_versions[repo_name] = {'total_loop': 0, 'vers':  {'ver2.5': {}, 'ver3.0':{}, 'ver3.1':{}, 'ver4.0':{}, 'ver4.5':{}, 'ver5.0':{}, 'ver5.1':{}, 'ver5.2':{}} }
 
                 omp_versions[repo_name]['total_loop'] += total_loop
 
@@ -294,10 +298,10 @@ def iterate_jsons(dir, vars, is_fortran=False):
                                                                                 omp_versions[repo_name]['vers'][ver][clause] + amount
                 ### OpenMP versions ###
     
-    with open('{}_paradigms.json'.format(dir), 'w') as f:
-        f.write(json.dumps(par_paradigms))
+    # with open('{}_paradigms.json'.format(dir), 'w') as f:
+    #     f.write(json.dumps(par_paradigms))
 
-    with open('{}_versions.json'.format(dir), 'w') as f:
+    with open('{}_versions_correct.json'.format(dir), 'w') as f:
         f.write(json.dumps(omp_versions))
 
 
