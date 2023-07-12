@@ -164,3 +164,22 @@ python main.py --stats
 ```
 output:
 ![image](https://user-images.githubusercontent.com/48416212/194878405-4261c503-328b-46b1-883c-5b8dda06d7a3.png)
+
+
+
+
+
+## Further Explanation
+
+### HPCorpus Creation
+The creation of the HPCorpus can be performed using the `parse_llvm.py` file located in the `database_creator/parsers/HPCorpus_parser` directory. This script is responsible for parsing LLVM code representations and generating the HPCorpus dataset.
+
+### Tokenizer Functionality
+The tokenizer functionality is implemented in the `tokenizer.py` file located in the `tokenizer` folder. This file contains the necessary code for tokenizing all code representations, including textual code, Abstract Syntax Tree (AST), and Data Flow Graph (DFG).
+
+### Loading HPCorpus Data
+To load the data from the HPCorpus, you can utilize the `generator.py` file located in the `database_creator/parsers/HPCorpus_parser` directory. This file provides a convenient way to load the different representations of the HPCorpus dataset, including the original code, replaced-code, AST, and DFG.
+
+To access the various representations, you can use the functions and methods provided in the `generator.py` file. These functions will allow you to retrieve the desired data for further processing and analysis.
+
+
