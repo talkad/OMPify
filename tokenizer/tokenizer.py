@@ -10,18 +10,18 @@ from transformers import GPT2Tokenizer
 from abc import ABC, abstractmethod
 
 # sys.path.extend(['.','/home/talkad/Downloads/thesis/data_gathering_script/database_creator/parsers/HPCorpus_parser'])
-sys.path.extend(['.','/home/talkad/OpenMPdb/database_creator/parsers/HPCorpus_parser'])
+sys.path.extend(['.','/home/talkad/OpenMPdb/database_creator/parsers'])
 
-import parse_tools, preprocess
-import convert_representation as cr
-from convert_representation import code2xsbt, code2dfg, code2ast
+from HPCorpus_parser import parse_tools, preprocess
+from HPCorpus_parser import convert_representation as cr
+import fortranTokenizer as ftok
 
 
 
 class Tokenizer(ABC):
 
     @abstractmethod
-    def tokenize(self, s: str, replaced: bool = False, lang: str = 'c') -> List[str]:
+    def tokenize(self, s: str, lang: str = 'c') -> List[str]:
         '''
             convert string into sequence tokens
 
@@ -64,29 +64,25 @@ class Tokompiler(Tokenizer):
     '''
         Compiler oriented tokenization
     '''
-    def tokenize(self, s: str, replaced: bool = False, lang: str = 'c') -> List[str]:
+    def tokenize(self, s: str, lang: str = 'c') -> List[str]:
         if len(s.strip()) == 0:
             return []
 
-        # if replaced:
-        #     s = cr.generate_replaced(s, num_generator=cr.generate_random_numbers, lang=lang)
+        s = cr.generate_replaced(s, num_generator=cr.generate_random_numbers, lang=lang)
+
         if lang == 'fortran':
-            tokens = s.split()   # not the best solution, but sufficient one     
+            tokens = ftok.tokenize(s)    
         else:
-            tokens = ctok.tokenize(s, lang=lang, syntax_error="ignore")
+            tokens = list(map(lambda token: token.text, 
+                              ctok.tokenize(s, lang=lang, syntax_error="ignore")))
 
         updated_tokens = []
         for token in tokens:
-            try:
-                str_token = token.text.strip()
-            except:
-                str_token = 'TOKEN'
+            str_token = token.text.strip()
 
-            if replaced and any([str_token.startswith(prefix) for prefix in cr.replaced_prefixes.values()]):
+            if any([str_token.startswith(prefix) for prefix in cr.replaced_prefixes.values()]):
                 updated_tokens += list(str_token.split('_'))
-            else:
-                updated_tokens.append(str_token)
-                                    
+                  
         return updated_tokens
 
     def encode(self, s: str) ->  List[int]:
@@ -103,10 +99,9 @@ class TokenizerBPE(Tokenizer):
     def __init__(self):
         self.tokenizer = AutoTokenizer.from_pretrained('NTUYG/DeepSCC-RoBERTa')
 
-    def tokenize(self, s: str, replaced: bool = False, lang: str = 'c') -> List[str]:
+    def tokenize(self, s: str, lang: str = 'c') -> List[str]:
 
-        if replaced:
-            s = parse_tools.generate_replaced(s, num_generator=parse_tools.generate_random_numbers, lang=lang)
+        s = parse_tools.generate_replaced(s, num_generator=parse_tools.generate_random_numbers, lang=lang)
 
         tokens = self.tokenizer.tokenize(s)
         updated_tokens = []
@@ -136,20 +131,17 @@ class ASTokenizer(Tokenizer):
     '''
         convert AST representation into sequence XSBT
     '''
-    def tokenize(self, s: str, replaced: bool = False, lang: str = 'c') -> List[str]:
-        ast = code2xsbt(s, lang=lang)
-        # ast = code2ast(s, lang=lang)
+    def tokenize(self, s: str, lang: str = 'c') -> List[str]:
+        # ast = code2xsbt(s, lang=lang)
+        ast = cr.code2ast(s, lang=lang)
         ast = ast.split()
         updated_ast = []
 
-        if replaced:
-            for node in ast:
-                if any([node.startswith(prefix) for prefix in cr.replaced_prefixes.values()]):
-                    updated_ast += node.split('_')
-                else:
-                    updated_ast.append(node)
-        else:
-            updated_ast = ast
+        for node in ast:
+            if any([node.startswith(prefix) for prefix in cr.replaced_prefixes.values()]):
+                updated_ast += node.split('_')
+            else:
+                updated_ast.append(node)
 
         return updated_ast
 
@@ -164,16 +156,13 @@ class DFGTokenizer(Tokenizer):
     '''
         convert DFG representation into sequence of tokens
     '''
-    def tokenize(self, s: str, replaced: bool = False, lang: str = 'c') -> List[str]:
-        dfg = code2dfg(s, lang=lang)
+    def tokenize(self, s: str, lang: str = 'c') -> List[str]:
+        dfg = cr.code2dfg(s, lang=lang)
         updated_dfg = []
 
-        if replaced:
-            for cnt in dfg:
-                sample = (tuple(cnt[0].split('_')), cnt[1], cnt[2], [tuple(var.split('_')) for var in cnt[3]], cnt[4])
-                updated_dfg.append(sample)
-        else:
-            updated_dfg = dfg
+        for cnt in dfg:
+            sample = (tuple(cnt[0].split('_')), cnt[1], cnt[2], [tuple(var.split('_')) for var in cnt[3]], cnt[4])
+            updated_dfg.append(sample)
 
         return updated_dfg
 
