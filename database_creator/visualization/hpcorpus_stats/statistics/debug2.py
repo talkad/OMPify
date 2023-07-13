@@ -31,14 +31,14 @@ if __name__ == '__main__':
     with open('/homes/talkad/OMPify/database_creator/visualization/hpcorpus_stats/statistics/ENV.json', 'r') as f:
         vars = json.loads(f.read())
 
-    # files_per_repo('Fortran', vars)
+    files_per_repo('c', vars)
 
-    with open('/homes/talkad/OMPify/Fortran.json', 'r') as f:
-        repos = json.loads(f.read())
+    # with open('/homes/talkad/OMPify/Fortran.json', 'r') as f:
+    #     repos = json.loads(f.read())
 
-        print(len(repos))
+    #     print(len(repos))
 
-        print(sum(repos.values()))
+    #     print(sum(repos.values()))
 
 
 # samples without the 'content' entry

@@ -72,6 +72,13 @@ def node2code(code, node):
     return func_name, func
 
 
+def print_tree(node):
+    print(node.type, node.text)
+
+    for child in node.children:
+        print_tree(child)
+
+
 def get_functions(code, node):
     # print(node.type, node.text)
     if node.type in ['function_definition', 'subroutine', 'function']:

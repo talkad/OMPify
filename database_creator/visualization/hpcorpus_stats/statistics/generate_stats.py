@@ -80,16 +80,59 @@ def get_paradigms_over_time(paradigm_list, metadata_filepath, avoid_fork=True, k
     return repos_over_time
 
 
+
+def get_paradigms_over_time_span(paradigm_list, metadata_filepath, avoid_fork=True):
+    '''
+    Get the number of repositories that used different parallelization APIs per month.
+    '''
+    repos_over_time = {}
+    total = 0
+    metadata = get_repo_metadata(metadata_filepath)
+
+    with open('analyzed_data/total_paradigms.json', 'r') as f:
+        paradigm_per_repo = json.loads(f.read())
+
+        for repo, paradigms in paradigm_per_repo.items():
+            if repo in metadata and all([val for paradigm ,val in paradigms.items() if paradigm in paradigm_list]):
+                total += 1
+
+                if avoid_fork and metadata[repo]['fork']:
+                    continue
+                
+                
+                dt_object = metadata[repo]['creation_time']
+                s_year, s_month = dt_object.year, dt_object.month
+
+                dt_object = metadata[repo]['update_time']
+                e_year, e_month = dt_object.year, dt_object.month
+
+                for year in range(s_year, e_year+1):
+                    b_month = 1 if year > s_year else s_month
+                    t_month = 12 if year < e_year else e_month
+                    for month in range(b_month, t_month+1):
+
+                        if year not in repos_over_time:
+                            repos_over_time[year] = {}
+
+                        if month not in repos_over_time[year]:
+                            repos_over_time[year][month] = 0
+
+                        repos_over_time[year][month] += 1
+
+    return repos_over_time
+
+
+
 def get_total_repos_over_time(metadata_filepath):
     '''
     Figure 2
 
     Get the total usage of HPCorpus repositories
     '''
-    paradigm_per_year = {'creation_time': {}, 'update_time': {}}
+    paradigm_per_year = {'update_time': {}}  # {'creation_time': {}, 'update_time': {}}
 
     for key in paradigm_per_year:
-        paradigm_over_time = get_paradigms_over_time([], metadata_filepath, avoid_fork=False, key=key)
+        paradigm_over_time = get_paradigms_over_time_span([], metadata_filepath, avoid_fork=False)
 
         for year in paradigm_over_time:
             paradigm_per_year[key][year] = sum(paradigm_over_time[year].values())
@@ -305,20 +348,37 @@ def aggregate_versions(lang):
 # tal no fork = 189903
 
 
+import matplotlib.pyplot as plt
 
+data = {
+    2015: 951239, 2016: 1135787, 2017: 1211123, 2018: 1142240, 2019: 1014709,
+    2020: 883852, 2021: 755321, 2022: 570691, 2023: 144616, 2014: 642959,
+    2012: 234136, 2013: 423753, 2010: 51136, 2011: 117137, 2009: 18678,
+    2008: 2561
+}
 
+# Sort the data by year in ascending order
+sorted_data = sorted(data.items())
+
+# Extract the sorted years and values
+years, values = zip(*sorted_data)
+
+# Plot the data
+plt.plot(years, values)
+plt.savefig('aaaa.jpeg')
 
 # print(aggregate_paradigms('analyzed_data/hpcorpus.timestamps.csv'))
 # Amount of valid repos: 189903
 # Amount of repos not exist in metadata: 51193
 # Amount of forked repos: 28858
 # {'CUDA': 879, 'OpenCL': 956, 'OpenACC': 61, 'SYCL': 24, 'TBB': 374, 'Cilk': 97, 'OpenMP': 3881, 'MPI': 2115}
+# {'CUDA': 879, 'OpenCL': 956, 'OpenACC': 61, 'SYCL': 24, 'TBB': 374, 'Cilk': 97, 'OpenMP': 3881, 'MPI': 2340}
 
 
-print(cumulative_openmp('analyzed_data/hpcorpus.timestamps.csv'))
+# print(cumulative_openmp('analyzed_data/hpcorpus.timestamps.csv'))
 
 
-# print(get_paradigms_per_year('analyzed_data/hpcorpus.timestamps.csv'))
+# print(get_omp_mpi_usage('analyzed_data/hpcorpus.timestamps.csv'))
 
 
 
@@ -379,5 +439,29 @@ print(cumulative_openmp('analyzed_data/hpcorpus.timestamps.csv'))
 
 
 
+# func = lambda time:time['update_time'].year + time['update_time'].month/12 - time['creation_time'].year - time['creation_time'].month/12
+# total = 0
+# time_span = 0
+
+# for repo, time in get_repo_metadata('analyzed_data/hpcorpus.timestamps.csv').items():
+#     time_span += func(time)
+#     total += 1
+
+# print(time_span / total)
+
+
+
+
+repos = {}
+
+
+for repo, time in get_repo_metadata('analyzed_data/hpcorpus.timestamps.csv').items():
+    a = time['update_time']
+    if a.year <= 2012:
+        repos[repo] = str(a)
+
+
+with open('before2012.json', 'w') as f:
+    f.write(json.dumps(repos))
 
 

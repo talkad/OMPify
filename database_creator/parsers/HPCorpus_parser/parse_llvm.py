@@ -1,8 +1,9 @@
 import os
 import json
 from tqdm import tqdm
-import dask
-import dask.bag as db
+# import dask
+# import dask.bag as db
+import concurrent.futures
 import preprocess
 import parse_tools 
 import shutil
@@ -13,12 +14,9 @@ from subprocess import Popen, PIPE
 import random
 import string
 
-download_path = '/mnt/c/Users/tal74/Downloads/'
-folders = ['cpp1','cpp2','cpp3','cpp4','cpp5']
 
-
-logging.basicConfig(filename='llvm.log', format='%(asctime)s - %(levelname)s - %(name)s -   %(message)s',datefmt='%d/%m/%Y %H:%M:%S',level=logging.INFO)
-logger = logging.getLogger(__name__)
+# logging.basicConfig(filename='llvm.log', format='%(asctime)s - %(levelname)s - %(name)s -   %(message)s',datefmt='%d/%m/%Y %H:%M:%S',level=logging.INFO)
+# logger = logging.getLogger(__name__)
 
 
 C_TO_IR_COMMAND = lambda filename: ["clang", "-c", "-emit-llvm", "-S", "-g1", "-Oz", filename, "-std=c17", "-Xclang", "-disable-O0-optnone", "-Wno-narrowing"]
@@ -94,17 +92,28 @@ class LLVMParser:
         '''
 
         def parse_json(json_file):             
-
+            # logger.info(f'start parsing file {json_file}')
+            dataset = []
             # read json and create process the data
             with open(os.path.join(self.data_dir, json_file), 'r') as f:
                 for line in tqdm(f):
-                    js = json.loads(line.strip())
+
+                    try:
+                        js = json.loads(line.strip())
+                    except:
+                        continue
 
                     if 'content' not in js:
                         continue
                     
                     repo = js['repo_name'].split('/')
                     file = js['path']
+                    
+                    # Similarly to Codex and CodeParrot, very large (>1MB) and very short (<100 tokens) files were filtered out
+                    # avoid memory issues
+                    num_tokens = len(js['content'].split())
+                    if num_tokens < 100 or num_tokens > 10**6:
+                        continue
 
                     funcs = []
                     try:
@@ -113,10 +122,10 @@ class LLVMParser:
                         # The C code beneath the tree-sitter throws a memory exception when attempting to allocate memory for excessively long code.
                         continue
 
-                    if not funcs: # if there are no functions
+                    if not funcs: # i6f there are no functions
                         continue
 
-                    dataset = []
+                    num_functions = len(funcs)
 
                     for curr_idx, func in enumerate(funcs):
                         func_name, func_code = func
@@ -124,15 +133,15 @@ class LLVMParser:
                         # logger.info(f'parse function {func_name} at {repo} - {file}')
 
                         # append all function declaration into the current function code
-                        # code = ''
-                        # for _, other_func in funcs[:curr_idx]+funcs[curr_idx+1:]:
-                        #     decl = preprocess.get_func_declaration(other_func)
+                        code = ''
+                        for _, other_func in funcs[:curr_idx]+funcs[curr_idx+1:]:
+                            decl = preprocess.get_func_declaration(other_func)
 
-                        #     if len(decl.split('\n')) > 2:
-                        #         continue
+                            if len(decl.split('\n')) > 2:
+                                continue
 
-                        #     code += decl + '\n'
-                        # code += func_code
+                            code += decl + '\n'
+                        code += func_code
 
                         mem_usage = self.get_mem_usage(func_code)
                         # llvm = self.get_llvm_ir(code, lang)
@@ -141,33 +150,36 @@ class LLVMParser:
                                         'repo': repo[1],
                                         'path': file,
                                         'function': func_name,
-                                        'code': func_code,
+                                        'code': code,
+                                        'num_func_defs': num_functions-1,
                                         'llvm': '', # llvm,
                                         'hash': preprocess.get_hash(func_code),
                                         'memory': mem_usage
                         })
 
-                    # write the dataset into json
-                    with open(os.path.join(self.save_dir, f"{preprocess.get_filename(json_file)}_{preprocess.get_filename(file.split('/')[-1])}.json"), 'w') as data_f:
-                        for sample in dataset:
-                            data_f.write(json.dumps(sample) + '\n')
+
+                # write the dataset into json
+                with open(os.path.join(self.save_dir, f"{preprocess.get_filename(json_file)}.jsonl"), 'w') as data_f:
+                    for sample in dataset:
+                        data_f.write(json.dumps(sample) + '\n')
             
+        
         samples = os.listdir(self.data_dir)
-        for sample in tqdm(samples):
+
+        for sample in tqdm(samples[400:500]):
             parse_json(sample)
+
+        # with concurrent.futures.ThreadPoolExecutor(max_workers=160) as executor:
+        #     executor.map(parse_json, samples)
+
         # samples = os.listdir(self.data_dir)
         # samples_bag = db.from_sequence(samples)
         # processed_data = samples_bag.map(parse_json)
         # processed_data.compute()
 
 
-parser = LLVMParser('/mnt/c/Users/tal74/Downloads/c_0', '/home/talkad/OpenMPdb/database_creator/asd/c', lang='c')
+parser = LLVMParser('/tier2/bgu/bigQuery_repos/cpp', '/tier2/bgu/HPCorpus/cpp', lang='cpp')
+
+# parser = LLVMParser('/tier2/bgu/bigQuery_repos/Fortran', '/tier2/bgu/HPCorpus/Fortran', lang='fortran')
 parser.iterate_corpus()
 
-
-
-# Fortran - done
-# cpp - [1, ]
-# c - 12 / 41 c_0
-# 2130it [00:17, 136.60it/sfree(): invalid size
-# Aborted[00:21, 98.67it/s]
