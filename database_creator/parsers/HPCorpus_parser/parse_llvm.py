@@ -125,35 +125,33 @@ class LLVMParser:
                     if not funcs: # i6f there are no functions
                         continue
 
-                    num_functions = len(funcs)
-
                     for curr_idx, func in enumerate(funcs):
                         func_name, func_code = func
                         func_code = preprocess.remove_comments(func_code, lang=self.lang)
                         # logger.info(f'parse function {func_name} at {repo} - {file}')
 
                         # append all function declaration into the current function code
-                        code = ''
+                        func_defs = ''
                         for _, other_func in funcs[:curr_idx]+funcs[curr_idx+1:]:
                             decl = preprocess.get_func_declaration(other_func)
 
                             if len(decl.split('\n')) > 2:
                                 continue
 
-                            code += decl + '\n'
-                        code += func_code
+                            func_defs += decl + '\n'
 
                         mem_usage = self.get_mem_usage(func_code)
                         # llvm = self.get_llvm_ir(code, lang)
+                        func_hash = preprocess.get_hash(func_code)
 
                         dataset.append({'username': repo[0],
                                         'repo': repo[1],
                                         'path': file,
                                         'function': func_name,
-                                        'code': code,
-                                        'num_func_defs': num_functions-1,
+                                        'code': func_code,
+                                        'func_defs': func_defs,
                                         'llvm': '', # llvm,
-                                        'hash': preprocess.get_hash(func_code),
+                                        'hash': func_hash,
                                         'memory': mem_usage
                         })
 
