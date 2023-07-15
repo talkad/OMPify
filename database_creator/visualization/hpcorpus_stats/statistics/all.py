@@ -285,6 +285,7 @@ def iterate_jsons(dir, vars, is_fortran=False):
 
 
                 ### OpenMP versions ###
+                print('repo :{}'.format(repo_name))
                 total_loop, versions = get_omp_version(code.lower(), is_fortran)
 
                 if repo_name not in omp_versions:
@@ -311,4 +312,4 @@ if __name__ == '__main__':
     with open('/homes/talkad/OMPify/database_creator/visualization/hpcorpus_stats/statistics/ENV.json', 'r') as f:
         vars = json.loads(f.read())
 
-    iterate_jsons('Fortran', vars, is_fortran=True)
+    iterate_jsons('cpp', vars, is_fortran=False)

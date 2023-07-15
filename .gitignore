@@ -23,3 +23,5 @@ sample_cpp*
 **/openmp_versions
 !requirements.txt
 !*_parsing.log
+!tokenizer/
+!hpcorpus_stats/

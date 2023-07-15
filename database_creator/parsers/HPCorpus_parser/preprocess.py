@@ -3,7 +3,7 @@ import hashlib
 import parse_tools
 
 redundant_line_comments_c = re.compile("\/\/.*")
-redundant_line_comments_fortran = re.compile("!.*$|^c.*$", re.MULTILINE)
+redundant_line_comments_fortran = re.compile("!.*$|^c.*$|^C.*$|^d.*$|^D.*$|^\*.*$", re.MULTILINE)
 redundant_multiline_comments_c = re.compile("\/\*.*?\*\/", re.MULTILINE|re.DOTALL)
 redundant_includes_c = re.compile("^\W*#\W*include.*$", re.MULTILINE)
 redundant_includes_fortran = re.compile("^\W*use\W+.*$", re.MULTILINE)

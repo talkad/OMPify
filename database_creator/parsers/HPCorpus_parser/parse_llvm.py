@@ -166,7 +166,7 @@ class LLVMParser:
         
         samples = os.listdir(self.data_dir)
 
-        for sample in tqdm(samples[400:500]):
+        for sample in tqdm(samples):
             parse_json(sample)
 
         # with concurrent.futures.ThreadPoolExecutor(max_workers=160) as executor:
@@ -178,8 +178,8 @@ class LLVMParser:
         # processed_data.compute()
 
 
-parser = LLVMParser('/tier2/bgu/bigQuery_repos/cpp', '/tier2/bgu/HPCorpus/cpp', lang='cpp')
+# parser = LLVMParser('/tier2/bgu/bigQuery_repos/cpp', '/tier2/bgu/HPCorpus/cpp', lang='cpp')
 
-# parser = LLVMParser('/tier2/bgu/bigQuery_repos/Fortran', '/tier2/bgu/HPCorpus/Fortran', lang='fortran')
+parser = LLVMParser('/tier2/bgu/bigQuery_repos/Fortran', '/tier2/bgu/HPCorpus/Fortran', lang='fortran')
 parser.iterate_corpus()
 

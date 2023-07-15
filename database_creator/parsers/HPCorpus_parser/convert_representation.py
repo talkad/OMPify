@@ -154,6 +154,8 @@ def get_identifiers(node, kind=''):
     # print(node.type, ':', node.text)
     if node.type == 'identifier':
         return ([],[],[(node.text, node.start_byte, node.end_byte)],[],[],[],[],[]) if kind=='func' else ([],[(node.text, node.start_byte, node.end_byte)],[],[],[],[],[],[]) if kind=='arr' else ([(node.text, node.start_byte, node.end_byte)],[],[],[],[],[],[],[])
+    elif node.type == 'name' and kind == 'func':
+        return ([],[],[(node.text, node.start_byte, node.end_byte)],[],[],[],[],[])
     elif node.type == 'field_identifier':
         return ([],[],[],[(node.text, node.start_byte, node.end_byte)],[],[],[],[])
     elif node.type == 'type_identifier':
@@ -168,7 +170,7 @@ def get_identifiers(node, kind=''):
     vars, arrays, funcs, fields, types, numbers, chars, strings = [], [], [], [], [], [], [], []
     for child in node.children:
         va, ar, fu, fi, ty, nu, ch, st = get_identifiers(child, kind=('arr' if child.type == 'array_declarator' else
-                                                  'func' if child.type in ['call_expression', 'function_declarator'] else
+                                                  'func' if child.type in ['call_expression', 'function_declarator', 'subroutine_statement'] else
                                                   '' if child.type in ['parameter_declaration', 'argument_list', 'field_expression', 'parameter_list', 'compound_statement'] else
                                                   'field' if child.type == 'field_identifier' else
                                                    kind if len(kind)>0 else  ''))
@@ -250,7 +252,16 @@ def generate_replaced(code, num_generator=generate_random_numbers, lang='c'):
         updated_code = update_var_names(tree.root_node, num_generator)
     except ValueError as e: # N cannot be larger than 1000.
         print(e)
+    except RecursionError as e:
+        print(e)
 
     return updated_code
 
+# code = """
+#  SUBROUTINE SLATM6( TYPE, N, A, LDA, B, X, LDX, Y, LDY, ALPHA,
+#      $                   BETA, WX, WY, S, DIF )
 
+#      END SUBROUTINE
+# """
+
+# print(generate_replaced(code, lang='fortran'))

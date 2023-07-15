@@ -10,7 +10,7 @@ from transformers import GPT2Tokenizer
 from abc import ABC, abstractmethod
 
 # sys.path.extend(['.','/home/talkad/Downloads/thesis/data_gathering_script/database_creator/parsers/HPCorpus_parser'])
-sys.path.extend(['.','/home/talkad/OpenMPdb/database_creator/parsers'])
+sys.path.extend(['.','/homes/talkad/OMPify/database_creator/parsers','/homes/talkad/OMPify/database_creator/parsers/HPCorpus_parser'])
 
 from HPCorpus_parser import parse_tools, preprocess
 from HPCorpus_parser import convert_representation as cr
@@ -69,19 +69,28 @@ class Tokompiler(Tokenizer):
             return []
 
         s = cr.generate_replaced(s, num_generator=cr.generate_random_numbers, lang=lang)
+        if not s:
+            return []   # replacement failed
 
         if lang == 'fortran':
+            s = s.lower()
             tokens = ftok.tokenize(s)    
         else:
-            tokens = list(map(lambda token: token.text, 
-                              ctok.tokenize(s, lang=lang, syntax_error="ignore")))
+            try:
+                tokens = list(map(lambda token: token.text, 
+                                ctok.tokenize(s, lang=lang, syntax_error="ignore")))
+            except Exception as e:
+                print('ctok error: ', e)
+                return []
 
         updated_tokens = []
         for token in tokens:
-            str_token = token.text.strip()
+            str_token = token.strip()
 
             if any([str_token.startswith(prefix) for prefix in cr.replaced_prefixes.values()]):
                 updated_tokens += list(str_token.split('_'))
+            else:
+                updated_tokens.append(str_token)
                   
         return updated_tokens
 

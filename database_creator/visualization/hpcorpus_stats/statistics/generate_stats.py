@@ -348,24 +348,7 @@ def aggregate_versions(lang):
 # tal no fork = 189903
 
 
-import matplotlib.pyplot as plt
 
-data = {
-    2015: 951239, 2016: 1135787, 2017: 1211123, 2018: 1142240, 2019: 1014709,
-    2020: 883852, 2021: 755321, 2022: 570691, 2023: 144616, 2014: 642959,
-    2012: 234136, 2013: 423753, 2010: 51136, 2011: 117137, 2009: 18678,
-    2008: 2561
-}
-
-# Sort the data by year in ascending order
-sorted_data = sorted(data.items())
-
-# Extract the sorted years and values
-years, values = zip(*sorted_data)
-
-# Plot the data
-plt.plot(years, values)
-plt.savefig('aaaa.jpeg')
 
 # print(aggregate_paradigms('analyzed_data/hpcorpus.timestamps.csv'))
 # Amount of valid repos: 189903
@@ -452,16 +435,31 @@ plt.savefig('aaaa.jpeg')
 
 
 
-repos = {}
+# repos = {}
 
 
-for repo, time in get_repo_metadata('analyzed_data/hpcorpus.timestamps.csv').items():
-    a = time['update_time']
-    if a.year <= 2012:
-        repos[repo] = str(a)
+# for repo, time in get_repo_metadata('analyzed_data/hpcorpus.timestamps.csv').items():
+#     a = time['update_time']
+#     if a.year <= 2012:
+#         repos[repo] = str(a)
 
 
-with open('before2012.json', 'w') as f:
-    f.write(json.dumps(repos))
+# with open('before2012.json', 'w') as f:
+#     f.write(json.dumps(repos))
 
 
+
+# print(get_paradigm_per_year(['OpenMP'], 'analyzed_data/hpcorpus.timestamps.csv', key='update_time'))
+
+import matplotlib.pyplot as plt
+
+data = {2023: 1093, 2016: 388, 2020: 217, 2022: 526, 2021: 267, 2015: 407, 2019: 191, 2014: 249, 2018: 199, 2013: 72, 2017: 272}
+
+years = list(data.keys())
+values = list(data.values())
+
+plt.bar(years, values)
+plt.xlabel('Year')
+plt.ylabel('Amount')
+plt.title('OpenMP usage')
+plt.savefig('aaa.jpeg')
