@@ -105,10 +105,12 @@ class Tokompiler(Tokenizer):
     def encode(self, s: str, lang: str = 'c') ->  List[int]:
         tokens = self.tokenize(s, lang=lang)
         ids = [self.encoder[token] if token in self.encoder else self.encoder["OOV"] for token in tokens]
+
         return ids
 
     def decode(self, t: List[int]) -> str:
         tokens = ' '.join([self.decoder[id] for id in t])
+
         return tokens
 
 
@@ -141,10 +143,12 @@ class TokenizerBPE(Tokenizer):
         return updated_tokens
 
     def encode(self, s: str, lang: str = 'c') ->  List[int]:
-        return []
+        s = parse_tools.generate_replaced(s, num_generator=parse_tools.generate_random_numbers, lang=lang)
+
+        return self.tokenizer.encode(s)
 
     def decode(self, t: List[int]) -> str:
-        return ''
+        return self.tokenizer.decode(t)
 
 
 class ASTokenizer(Tokenizer):
