@@ -5,8 +5,7 @@ import sys
 import json
 import os
 from typing import List
-from transformers import AutoTokenizer
-from transformers import GPT2Tokenizer
+from transformers import AutoTokenizer, GPT2Tokenizer
 from abc import ABC, abstractmethod
 
 # sys.path.extend(['.','/home/talkad/Downloads/thesis/data_gathering_script/database_creator/parsers/HPCorpus_parser'])
@@ -33,12 +32,13 @@ class Tokenizer(ABC):
         pass
 
     @abstractmethod
-    def encode(self, s: str) ->  List[int]:
+    def encode(self, s: str, lang: str = 'c') ->  List[int]:
         '''
             encode given string to ids
 
             Parameters:
                 s: String - input string to be tokenized
+                lang: String - programming language of @param:s
 
             Result:
                 list of token ids
@@ -64,6 +64,14 @@ class Tokompiler(Tokenizer):
     '''
         Compiler oriented tokenization
     '''
+
+    def __init__(self, vocab_path: str = '/homes/talkad/OMPify/tokenizer/vocabs/tokenizer_vocab/tokompiler_vocab.json'):
+        with open(vocab_path, 'r') as f:
+            vocab = json.loads(f.read())
+
+        self.encoder = {key:int(val) for key, val in vocab.items()}
+        self.decoder = {val:key for key, val in self.encoder.items()}
+
     def tokenize(self, s: str, lang: str = 'c') -> List[str]:
         if len(s.strip()) == 0:
             return []
@@ -94,11 +102,14 @@ class Tokompiler(Tokenizer):
                   
         return updated_tokens
 
-    def encode(self, s: str) ->  List[int]:
-        return []
+    def encode(self, s: str, lang: str = 'c') ->  List[int]:
+        tokens = self.tokenize(s, lang=lang)
+        ids = [self.encoder[token] if token in self.encoder else self.encoder["OOV"] for token in tokens]
+        return ids
 
     def decode(self, t: List[int]) -> str:
-        return ''
+        tokens = ' '.join([self.decoder[id] for id in t])
+        return tokens
 
 
 class TokenizerBPE(Tokenizer):
@@ -106,7 +117,7 @@ class TokenizerBPE(Tokenizer):
         GPT2 BPE tokenization
     '''
     def __init__(self):
-        self.tokenizer = AutoTokenizer.from_pretrained('NTUYG/DeepSCC-RoBERTa')
+        self.tokenizer = GPT2Tokenizer.from_pretrained('gpt2')
 
     def tokenize(self, s: str, lang: str = 'c') -> List[str]:
 
@@ -129,7 +140,7 @@ class TokenizerBPE(Tokenizer):
 
         return updated_tokens
 
-    def encode(self, s: str) ->  List[int]:
+    def encode(self, s: str, lang: str = 'c') ->  List[int]:
         return []
 
     def decode(self, t: List[int]) -> str:
@@ -154,7 +165,7 @@ class ASTokenizer(Tokenizer):
 
         return updated_ast
 
-    def encode(self, s: str) ->  List[int]:
+    def encode(self, s: str, lang: str = 'c') ->  List[int]:
         return []
 
     def decode(self, t: List[int]) -> str:
@@ -175,9 +186,10 @@ class DFGTokenizer(Tokenizer):
 
         return updated_dfg
 
-    def encode(self, s: str) ->  List[int]:
+    def encode(self, s: str, lang: str = 'c') ->  List[int]:
         return []
 
     def decode(self, t: List[int]) -> str:
         return ''
     
+
