@@ -1,6 +1,6 @@
 #!/bin/bash
-#PBS -N parse_hpcorpus_f
-#PBS -l nodes=1:ppn=160
+#PBS -N clean_cpp
+#PBS -l nodes=1:ppn=50
 
 # module load my_module
 
@@ -8,6 +8,6 @@
 source activate ompify_env2
 
 cd /homes/talkad/OMPify/database_creator/parsers/HPCorpus_parser
-python parse_llvm.py
+python hpcorpus_clean.py
 
 conda deactivate

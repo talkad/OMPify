@@ -156,8 +156,9 @@ class ASTokenizer(Tokenizer):
         convert AST representation into sequence XSBT
     '''
     def tokenize(self, s: str, lang: str = 'c') -> List[str]:
-        # ast = code2xsbt(s, lang=lang)
-        ast = cr.code2ast(s, lang=lang)
+        ast = cr.code2xsbt(s, lang=lang)
+        # ast = cr.code2ast(s, lang=lang)
+
         ast = ast.split()
         updated_ast = []
 

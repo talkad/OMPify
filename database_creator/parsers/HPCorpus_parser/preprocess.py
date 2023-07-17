@@ -116,7 +116,21 @@ def get_func_calls(node, func_call=False):
 	return func_calls
 
 
-def extract_code_struct(code, traverse_func=get_functions, lang='c'):
+# def extract_code_struct(code, traverse_func=get_functions, lang='c'):
+#     parser = parse_tools.parsers[lang]
+
+#     tree = parser.parse(bytes(code, 'utf8'))
+
+#     try:
+#         result = traverse_func(code, tree.root_node)
+#     except Exception as e:
+#         print('extraction error: ', e)
+#         result = []
+
+#     return result
+
+
+def extract_code_struct(code, lang, result_dict, traverse_func=get_functions):
     parser = parse_tools.parsers[lang]
 
     tree = parser.parse(bytes(code, 'utf8'))
@@ -127,7 +141,7 @@ def extract_code_struct(code, traverse_func=get_functions, lang='c'):
         print('extraction error: ', e)
         result = []
 
-    return result
+    result_dict['result'] = result
 
 
 def get_filename(filename):

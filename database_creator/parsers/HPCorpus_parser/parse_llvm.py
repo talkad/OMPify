@@ -13,6 +13,7 @@ import subprocess
 from subprocess import Popen, PIPE
 import random
 import string
+import multiprocessing
 
 
 # logging.basicConfig(filename='llvm.log', format='%(asctime)s - %(levelname)s - %(name)s -   %(message)s',datefmt='%d/%m/%Y %H:%M:%S',level=logging.INFO)
@@ -116,11 +117,16 @@ class LLVMParser:
                         continue
 
                     funcs = []
-                    try:
-                        funcs = preprocess.extract_code_struct(js['content'], lang=self.lang)
-                    except:    
-                        # The C code beneath the tree-sitter throws a memory exception when attempting to allocate memory for excessively long code.
-                        continue
+
+                    # The C code beneath the tree-sitter throws a memory exception when attempting to allocate memory for excessively long code.
+                    manager = multiprocessing.Manager()
+                    result_dict = manager.dict()
+                    process = multiprocessing.Process(target=preprocess.extract_code_struct, args=(js['content'], self.lang, result_dict))
+
+                    process.start()
+                    process.join()
+                    if 'result' in result_dict:
+                        funcs = result_dict['result']
 
                     if not funcs: # i6f there are no functions
                         continue
@@ -165,6 +171,7 @@ class LLVMParser:
         samples = os.listdir(self.data_dir)
 
         for sample in tqdm(samples):
+            print(sample)
             parse_json(sample)
 
         # with concurrent.futures.ThreadPoolExecutor(max_workers=160) as executor:
@@ -176,8 +183,9 @@ class LLVMParser:
         # processed_data.compute()
 
 
-# parser = LLVMParser('/tier2/bgu/bigQuery_repos/cpp', '/tier2/bgu/HPCorpus/cpp', lang='cpp')
+parser = LLVMParser('/tier2/bgu/bigQuery_repos/c', '/tier2/bgu/HPCorpus/c', lang='c')
 
-parser = LLVMParser('/tier2/bgu/bigQuery_repos/Fortran', '/tier2/bgu/HPCorpus/Fortran', lang='fortran')
+# parser = LLVMParser('/tier2/bgu/bigQuery_repos/Fortran', '/tier2/bgu/HPCorpus/Fortran', lang='fortran')
 parser.iterate_corpus()
+
 

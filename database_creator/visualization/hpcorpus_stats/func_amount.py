@@ -1,17 +1,28 @@
 import os
 from tqdm import tqdm
+import json
 
-dir = '/home/talkad/OpenMPdb/database_creator/asd/c'
-files = os.listdir(dir)
-func_amount = 0
+hpcorpus_dir = '/tier2/bgu/HPCorpus_preprocess'  # '/tier2/bgu/HPCorpus'
+dirs  = ['Fortran', 'c', 'cpp']
 
-for file in tqdm(files):
-    with open(os.path.join(dir, file), 'r') as f:
-        for line in f:
-            func_amount += 1
+dirs  = ['c']
 
-print('functions amount: ', func_amount)
+for lang in dirs:
+    total_funcs = 0
 
-# fortran : 369820
-# cpp: x 5
-# c: 2158080 x 10 x 3
+    dir_path = os.path.join(hpcorpus_dir, lang)
+
+    for js_file in tqdm(os.listdir(dir_path)):
+        js_path = os.path.join(dir_path, js_file)
+
+        with open(js_path, 'r') as f:
+            for line in f:
+                total_funcs += 1
+
+    print(f'lang {lang} num of funcs {total_funcs}')
+
+
+# lang Fortran num of funcs 359272   |  282122
+# lang c num of funcs 87817591
+# lang cpp num of funcs 68233984
+
