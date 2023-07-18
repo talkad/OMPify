@@ -22,7 +22,7 @@ for lang in dirs:
     print(f'lang {lang} num of funcs {total_funcs}')
 
 
-# lang Fortran num of funcs 359272   |  282122
+# lang Fortran num of funcs 359272   |  282122    =  78.52%
 # lang c num of funcs 87817591
 # lang cpp num of funcs 68233984
 

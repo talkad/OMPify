@@ -1,6 +1,6 @@
 #!/bin/bash
 #PBS -N clean_cpp
-#PBS -l nodes=1:ppn=50
+#PBS -l nodes=1:ppn=1
 
 # module load my_module
 
