@@ -2,10 +2,10 @@ import os
 from tqdm import tqdm
 import json
 
-hpcorpus_dir = '/tier2/bgu/HPCorpus_preprocess'  # '/tier2/bgu/HPCorpus'
+hpcorpus_dir = '/tier2/bgu/HPCorpus'
 dirs  = ['Fortran', 'c', 'cpp']
 
-dirs  = ['c']
+dirs  = ['cpp']
 
 for lang in dirs:
     total_funcs = 0
@@ -23,6 +23,6 @@ for lang in dirs:
 
 
 # lang Fortran num of funcs 359272   |  282122    =  78.52%
-# lang c num of funcs 87817591
-# lang cpp num of funcs 68233984
+# lang c num of funcs 87817591       |  25667699  =  29.22%
+# lang cpp num of funcs 68233984     |  33724011  =  53.15%
 
