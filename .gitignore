@@ -17,8 +17,6 @@ git_metadata.sh
 *.pickle
 **/temp_folder*
 sample_cpp*
-**/HPCorpus
-**/asd
 **/repos
 **/openmp_versions
 !requirements.txt
