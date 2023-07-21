@@ -38,6 +38,9 @@ LANG_PHP = 'php'
 LANG_JAVASCRIPT = 'javascript'
 LANG_RUBY = 'ruby'
 LANG_C_SHARP = 'c_sharp'
+LANG_C = 'c'
+LANG_CPP = 'cpp'
+LANG_FORTRAN = 'fortran'
 
 # BART model mode
 MODEL_MODE_CLS = 'bart_cls'
