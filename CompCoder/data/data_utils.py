@@ -3,10 +3,9 @@ import json
 import os
 import logging
 from tqdm import tqdm
-from asts import parse_tools
+from .asts import parse_tools, convert_representation as cr
 import enums
-import asts.convert_representation as cr
-from asts.tokenizer import Tokompiler
+from .asts.tokenizer import Tokompiler
 
 
 logger = logging.getLogger(__name__)

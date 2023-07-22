@@ -1,7 +1,8 @@
 
 from torch.utils.data.dataloader import DataLoader
 from torch.utils.data.dataset import Dataset
-from transformers import Seq2SeqTrainer, Trainer
+# from transformers import Seq2SeqTrainer, Trainer
+import transformers
 
 import argparse
 from typing import Optional
@@ -9,7 +10,7 @@ from typing import Optional
 from data.data_collator import collate_fn
 
 
-class CodeTrainer(Seq2SeqTrainer):
+class CodeTrainer(transformers.Seq2SeqTrainer):
 
     def __init__(self, main_args: argparse.Namespace, code_vocab, ast_vocab, nl_vocab, task, **kwargs):
         super(CodeTrainer, self).__init__(**kwargs)
@@ -65,7 +66,7 @@ class CodeTrainer(Seq2SeqTrainer):
         self.task = task
 
 
-class CodeCLSTrainer(Trainer):
+class CodeCLSTrainer(transformers.Trainer):
 
     def __init__(self, main_args: argparse.Namespace, code_vocab, ast_vocab, nl_vocab, task, **kwargs):
         super(CodeCLSTrainer, self).__init__(**kwargs)

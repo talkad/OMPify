@@ -6,3 +6,4 @@
 **/repos
 **/openmp_versions
 !requirements.txt
+**/outputs

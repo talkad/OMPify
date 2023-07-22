@@ -1,0 +1,19 @@
+****************************************************************************************************
+Initializing pre-training environments
+Pre-training tasks: mass
+----------------------------------------------------------------------------------------------------
+Loading and parsing datasets
+Traceback (most recent call last):
+  File "/homes/talkad/OMPify/CompCoder/main.py", line 116, in <module>
+    main(main_args)
+  File "/homes/talkad/OMPify/CompCoder/main.py", line 24, in main
+    model, vocab = pre_train(args=args)
+  File "/homes/talkad/OMPify/CompCoder/pre_train.py", line 56, in pre_train
+    dataset = init_dataset(args=args, mode=enums.TRAINING_MODE_PRE_TRAIN)
+  File "/homes/talkad/OMPify/CompCoder/data/dataset.py", line 167, in init_dataset
+    dataset = CodeDataset(args=args,
+  File "/homes/talkad/OMPify/CompCoder/data/dataset.py", line 48, in __init__
+    self.paths, self.languages, self.sources, self.codes, self.asts = load_dataset_from_dir(dataset_dir=self.dataset_dir)
+  File "/homes/talkad/OMPify/CompCoder/data/data_utils.py", line 188, in load_dataset_from_dir
+    for file in os.listdir(dataset_dir):
+FileNotFoundError: [Errno 2] No such file or directory: '../../dataset/pre_train'

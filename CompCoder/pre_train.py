@@ -46,6 +46,7 @@ def pre_train(args,
 
     logger.info('*' * 100)
     logger.info('Initializing pre-training environments')
+    logger.info(f'Pre-training tasks: {args.pre_train_tasks}')
 
     # --------------------------------------------------
     # datasets

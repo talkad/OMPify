@@ -1,8 +1,8 @@
 import re
 import random
-from dfg_parser import extract_dataflow
-from ast_parser import generate_statement_xsbt
-import parse_tools
+from .dfg_parser import extract_dataflow
+from .ast_parser import generate_statement_xsbt
+from .parse_tools import parse
 
 
 RE_NUMBERS = re.compile(r"(?<![_a-zA-Z])\b[0-9]+(?:\.[0-9]+)?(?:f)?\b(?![0-9.-])")
@@ -39,7 +39,7 @@ def code2xsbt(code, lang='c'):
     '''
     Convert code to XSBT (Structured Based Traversal as presented in SPT-Code)
     '''
-    tree = parse_tools.parse(code, lang=lang)
+    tree = parse(code, lang=lang)
     node = tree.root_node
     xsbt_str = generate_statement_xsbt(node, lang)
 

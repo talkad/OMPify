@@ -1,4 +1,4 @@
-from parse_tools import parse
+from .parse_tools import parse
 
 
 def iterate_tree(node):

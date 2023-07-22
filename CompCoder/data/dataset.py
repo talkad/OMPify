@@ -8,7 +8,7 @@ import pickle
 import random
 
 import enums
-from .data_utils import load_dataset_from_dir, parse_for_translation
+from .data_utils import load_dataset_from_dir, parse_for_pragma_gen
 from data.vocab import Vocab
 
 logger = logging.getLogger(__name__)
@@ -54,8 +54,8 @@ class CodeDataset(Dataset):
             self.dataset_dir = os.path.join(self.dataset_dir, task)
 
             # xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx update
-            # code translation
-            if task == enums.TASK_TRANSLATION:
+            # pragma generation
+            if task == enums.TASK_PRAGMA:
                 assert split in ['train', 'valid', 'test']
                 assert language in ['java-c_sharp', 'c_sharp-java']
                 source_lang, target_lang = language.split('-')
@@ -67,7 +67,7 @@ class CodeDataset(Dataset):
                                            c_sharp_path if target_lang == 'c_sharp' else java_path)
                 self.paths['source'] = source_path
                 self.paths['target'] = target_path
-                self.codes, self.asts, self.names, self.targets = parse_for_translation(
+                self.codes, self.asts, self.names, self.targets = parse_for_pragma_gen(
                     source_path=source_path,
                     source_lang=args.translation_source_language,
                     target_path=target_path,
