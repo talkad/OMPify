@@ -124,7 +124,7 @@ def pre_train(args,
                         is_encoder_decoder=True,
                         decoder_start_token_id=Vocab.START_VOCAB.index(Vocab.SOS_TOKEN),
                         forced_eos_token_id=Vocab.START_VOCAB.index(Vocab.EOS_TOKEN),
-                        max_length=100,
+                        max_length=100,  # limit decoder output
                         min_length=1,
                         num_beams=args.beam_width,
                         num_labels=2)

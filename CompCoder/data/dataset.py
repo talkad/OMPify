@@ -8,10 +8,7 @@ import pickle
 import random
 
 import enums
-from .data_utils import load_dataset_from_dir, \
-    parse_for_summarization, parse_for_translation, parse_for_search, parse_for_clone, parse_for_completion, \
-    parse_for_bug_fix
-from eval.bleu.google_bleu import avg_bleu
+from .data_utils import load_dataset_from_dir, parse_for_translation
 from data.vocab import Vocab
 
 logger = logging.getLogger(__name__)
@@ -48,33 +45,17 @@ class CodeDataset(Dataset):
 
         # load pre-training dataset
         if self.mode == 'pre_train':
-            self.paths, self.languages, self.sources, self.codes, self.asts, self.names, self.codes_wo_name, \
-                self.names_wo_name, self.only_names, self.docs = load_dataset_from_dir(dataset_dir=self.dataset_dir)
+            self.paths, self.languages, self.sources, self.codes, self.asts = load_dataset_from_dir(dataset_dir=self.dataset_dir)
             self.size = len(self.codes)
         # load fine-tuning dataset
         else:
             assert split
             logger.info(f'  Loading {split} set')
             self.dataset_dir = os.path.join(self.dataset_dir, task)
-            # code summarization
-            if task == enums.TASK_SUMMARIZATION:
-                assert language, '\'Language\' must be specific if downstream task is code summarization'
-                assert split in ['train', 'valid', 'test']
-                self.dataset_dir = os.path.join(self.dataset_dir, language, split)
 
-                self.source_path = os.path.join(self.dataset_dir, 'source.code')
-                self.code_path = os.path.join(self.dataset_dir, 'token.code')
-                self.nl_path = os.path.join(self.dataset_dir, 'token.docstring')
-
-                self.paths, self.codes, self.asts, self.names, self.nls = parse_for_summarization(
-                    source_path=self.source_path,
-                    code_path=self.code_path,
-                    nl_path=self.nl_path,
-                    lang=language)
-                assert len(self.codes) == len(self.asts) == len(self.names) == len(self.nls)
-                self.size = len(self.codes)
+            # xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx update
             # code translation
-            elif task == enums.TASK_TRANSLATION:
+            if task == enums.TASK_TRANSLATION:
                 assert split in ['train', 'valid', 'test']
                 assert language in ['java-c_sharp', 'c_sharp-java']
                 source_lang, target_lang = language.split('-')
@@ -94,66 +75,7 @@ class CodeDataset(Dataset):
 
                 assert len(self.codes) == len(self.asts) == len(self.names) == len(self.targets)
                 self.size = len(self.codes)
-            # code search
-            elif task == enums.TASK_SEARCH:
-                assert language, '``Language`` must be specific if downstream task is code search'
-                assert split in ['codebase', 'train', 'valid', 'test']
-                self.dataset_dir = os.path.join(self.dataset_dir, language)
-                self.paths['file'] = os.path.join(self.dataset_dir, f'{split}.jsonl')
-
-                if split == 'codebase':
-                    self.urls, self.codes, self.asts, self.names = parse_for_search(dataset_dir=self.dataset_dir,
-                                                                                    lang=language,
-                                                                                    split=split)
-                    assert len(self.urls), len(self.codes) == len(self.asts) == len(self.names)
-                    self.size = len(self.urls)
-                elif split == 'train':
-                    self.codes, self.asts, self.names, self.nls = parse_for_search(dataset_dir=self.dataset_dir,
-                                                                                   lang=language,
-                                                                                   split=split)
-                    assert len(self.codes) == len(self.asts) == len(self.names) == len(self.nls)
-                    self.size = len(self.codes)
-                else:
-                    self.urls, self.nls = parse_for_search(dataset_dir=self.dataset_dir, lang=language, split=split)
-                    self.size = len(self.urls)
-            # code clone detection
-            elif task == enums.TASK_CLONE_DETECTION:
-                assert split in ['train', 'valid', 'test']
-                assert clone_mapping
-                path = os.path.join(self.dataset_dir, f'{split}.txt')
-                self.paths['file'] = path
-                self.codes_1, self.asts_1, self.names_1, \
-                    self.codes_2, self.asts_2, self.names_2, self.labels = parse_for_clone(path=path,
-                                                                                           mapping=clone_mapping)
-                assert len(self.codes_1) == len(self.asts_1) == len(self.names_1) \
-                       == len(self.codes_2) == len(self.asts_2) == len(self.names_2) == len(self.labels)
-                self.size = len(self.codes_1)
-            # completion
-            elif task == enums.TASK_COMPLETION:
-                assert split in ['train', 'valid', 'test']
-                source_path = os.path.join(self.dataset_dir, f'data.TargetType.seq.{split}.source.txt')
-                target_path = os.path.join(self.dataset_dir, f'data.TargetType.seq.{split}.target.txt')
-                self.paths['source'] = source_path
-                self.paths['target'] = target_path
-                self.codes, self.asts, self.names, self.targets = parse_for_completion(source_path=source_path,
-                                                                                       target_path=target_path)
-                assert len(self.codes) == len(self.asts) == len(self.names) == len(self.targets)
-                self.size = len(self.codes)
-            # bug fix
-            elif task == enums.TASK_BUG_FIX:
-                assert split in ['train', 'valid', 'test']
-                # language here stands for dataset scale
-                assert language in ['small', 'medium']
-                self.dataset_dir = os.path.join(self.dataset_dir, language)
-                buggy_path = os.path.join(self.dataset_dir, f'{split}.buggy-fixed.buggy')
-                fixed_path = os.path.join(self.dataset_dir, f'{split}.buggy-fixed.fixed')
-                self.paths['buggy'] = buggy_path
-                self.paths['fixed'] = fixed_path
-                self.codes, self.asts, self.names, self.targets = parse_for_bug_fix(buggy_path=buggy_path,
-                                                                                    fixed_path=fixed_path)
-                assert len(self.codes) == len(self.asts) == len(self.names) == len(self.targets)
-                self.size = len(self.codes)
-
+           
     def __getitem__(self, index):
         # cap
         if self.task == enums.TASK_CODE_AST_PREDICTION:
@@ -175,69 +97,10 @@ class CodeDataset(Dataset):
             input_tokens = code_tokens[:mask_start] + [Vocab.MSK_TOKEN] + code_tokens[mask_start + mask_len:]
             return ' '.join(input_tokens), self.asts[index], self.names[index], ' '.join(mask_tokens)
 
-            # source = self.sources[index]
-            # code = self.codes[index]
-            # lang = self.languages[index]
-            #
-            # matches = re.finditer(r"\b\S", source)
-            # indices = [m.start(0) for m in matches]
-            # if len(indices) <= 2 * self.args.next_code_prediction_min_start_token:
-            #     indices = indices[len(indices) // 2:]
-            # else:
-            #     indices = indices[self.args.next_code_prediction_min_start_token:]
-            # while True:
-            #     index = random.sample(indices, 1)[0]
-            #     if index < self.args.max_code_len:
-            #         break
-            # former_source = source[:index]
-            #
-            # try:
-            #     former_code, latter_code = align_source_code(former_source=former_source, code=code)
-            # except Exception:
-            #     former_code = tokenize_source(former_source, lang=lang)
-            #     latter_code = regular_tokenize(source[index:])
-            #
-            # latter_code_tokens = latter_code.split(' ')
-            # if len(latter_code_tokens) > self.args.next_code_prediction_max_len:
-            #     latter_code_tokens = latter_code_tokens[:self.args.next_code_prediction_max_len]
-            #     latter_code = ' '.join(latter_code_tokens)
-            #
-            # return former_code, self.asts[index], self.names[index], latter_code
-        # mnp
-        elif self.task == enums.TASK_METHOD_NAME_PREDICTION:
-            return self.codes_wo_name[index], self.asts[index], self.names_wo_name[index], self.names[index]
-        # summarization
-        elif self.task == enums.TASK_SUMMARIZATION:
-            return self.codes[index], self.asts[index], self.names[index], self.nls[index]
-            # return self.codes[index], None, None, self.nls[index]
         # translation
         elif self.task == enums.TASK_TRANSLATION:
             return self.codes[index], self.asts[index], self.names[index], self.targets[index]
-        # search
-        elif self.task == enums.TASK_SEARCH:
-            if self.split == 'codebase':
-                return self.split, self.urls[index], self.codes[index], self.asts[index], self.names[index]
-            elif self.split == 'train':
-                pos_nl = self.nls[index]
-                while True:
-                    neg_index = random.randint(0, self.size - 1)
-                    neg_nl = self.nls[neg_index]
-                    if avg_bleu(references=[pos_nl.split()], candidates=[neg_nl.split()]) < 0.5:
-                        break
-                return self.split, self.codes[index], self.asts[index], self.names[index], pos_nl, neg_nl
-            else:
-                return self.split, self.urls[index], self.nls[index]
-        # clone detection
-        elif self.task == enums.TASK_CLONE_DETECTION:
-            return self.codes_1[index], self.asts_1[index], self.names_1[index], \
-                   self.codes_2[index], self.asts_2[index], self.names_2[index], self.labels[index]
-        # code completion
-        elif self.task == enums.TASK_COMPLETION:
-            return self.codes[index], self.asts[index], self.names[index], self.targets[index]
-        # bug fix
-        elif self.task == enums.TASK_BUG_FIX:
-            return self.codes[index], self.asts[index], self.names[index], self.targets[index]
-
+        
     def __len__(self):
         return self.size
 
@@ -347,47 +210,4 @@ def save_all_datasets(args):
                              language=lang,
                              split=split,
                              load_if_saved=False)
-    # # translation
-    # for lang in ['java-c_sharp', 'c_sharp-java']:
-    #     for split in ['train', 'valid', 'test']:
-    #         logger.info('*' * 100)
-    #         logger.info(f'Translation - {lang} - {split}')
-    #         _ = init_dataset(args=args,
-    #                          mode=enums.TRAINING_MODE_FINE_TUNE,
-    #                          task=enums.TASK_TRANSLATION,
-    #                          language=lang,
-    #                          split=split,
-    #                          load_if_saved=False)
-    # # clone
-    # from .data_utils import load_clone_mapping
-    # code_mapping = load_clone_mapping(args.dataset_root)
-    # for split in ['train', 'valid', 'test']:
-    #     logger.info('*' * 100)
-    #     logger.info(f'Clone - {split}')
-    #     _ = init_dataset(args=args,
-    #                      mode=enums.TRAINING_MODE_FINE_TUNE,
-    #                      task=enums.TASK_CLONE_DETECTION,
-    #                      split=split,
-    #                      clone_mapping=code_mapping,
-    #                      load_if_saved=False)
-    # # # search
-    # for lang in [enums.LANG_JAVA, enums.LANG_GO, enums.LANG_PHP, enums.LANG_PYTHON, enums.LANG_RUBY,
-    #              enums.LANG_JAVASCRIPT]:
-    #     for split in ['codebase', 'train', 'valid', 'test']:
-    #         logger.info('*' * 100)
-    #         logger.info(f'Search - {lang} - {split}')
-    #         _ = init_dataset(args=args,
-    #                          mode=enums.TRAINING_MODE_FINE_TUNE,
-    #                          task=enums.TASK_SEARCH,
-    #                          language=lang,
-    #                          split=split,
-    #                          load_if_saved=False)
-    # # completion
-    # for split in ['train', 'valid', 'test']:
-    #     logger.info('*' * 100)
-    #     logger.info(f'Completion - {split}')
-    #     _ = init_dataset(args=args,
-    #                      mode=enums.TRAINING_MODE_FINE_TUNE,
-    #                      task=enums.TASK_COMPLETION,
-    #                      split=split,
-    #                      load_if_saved=False)
+    

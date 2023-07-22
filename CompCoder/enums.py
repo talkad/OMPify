@@ -8,12 +8,11 @@ TASK_MASS = 'mass'
 TASK_METHOD_NAME_PREDICTION = 'mng'
 
 PRE_TRAIN_TASKS = [
-    TASK_CODE_AST_PREDICTION,
-    TASK_MASS,
-    TASK_METHOD_NAME_PREDICTION
+    TASK_MASS
 ]
 
 # downstream task names
+TASK_PRAGMA = 'pragma_generation'
 TASK_SUMMARIZATION = 'summarization'
 TASK_TRANSLATION = 'translation'
 TASK_SEARCH = 'search'
@@ -22,6 +21,7 @@ TASK_COMPLETION = 'completion'
 TASK_BUG_FIX = 'bug_fix'
 
 ALL_DOWNSTREAM_TASKS = [
+    TASK_PRAGMA,
     TASK_SUMMARIZATION,
     TASK_TRANSLATION,
     TASK_SEARCH,
@@ -31,13 +31,6 @@ ALL_DOWNSTREAM_TASKS = [
 ]
 
 # programming language
-LANG_JAVA = 'java'
-LANG_PYTHON = 'python'
-LANG_GO = 'go'
-LANG_PHP = 'php'
-LANG_JAVASCRIPT = 'javascript'
-LANG_RUBY = 'ruby'
-LANG_C_SHARP = 'c_sharp'
 LANG_C = 'c'
 LANG_CPP = 'cpp'
 LANG_FORTRAN = 'fortran'
