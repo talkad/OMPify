@@ -20,6 +20,7 @@ def pre_train(args,
               trained_model: Union[BartForClassificationAndGeneration, str] = None,
               trained_vocab: Union[Tuple[Vocab, Vocab, Vocab], str] = None):
     tasks = args.pre_train_tasks
+
     if tasks is None:
         logger.warning('Was specified for pre-training, but got pre-training tasks to None, '
                        'will default to {}'.format(','.join(enums.PRE_TRAIN_TASKS)))
@@ -62,6 +63,7 @@ def pre_train(args,
         logger.info('The size of trimmed pre-train set: {}'.format(len(dataset)))
     logger.info('Datasets loaded and parsed successfully')
 
+
     # --------------------------------------------------
     # vocabs
     # --------------------------------------------------
@@ -70,17 +72,27 @@ def pre_train(args,
         logger.info('Loading vocabularies from files')
         code_vocab = load_vocab(vocab_root=trained_vocab, name=args.code_vocab_name)
         ast_vocab = load_vocab(vocab_root=trained_vocab, name=args.ast_vocab_name)
-        nl_vocab = load_vocab(vocab_root=trained_vocab, name=args.nl_vocab_name)
     else:
         logger.info('Building vocabularies')
-        # code vocab
-        code_vocab = init_vocab(vocab_save_dir=args.vocab_save_dir,
-                                name=args.code_vocab_name,
-                                method=args.code_tokenize_method,
-                                vocab_size=args.code_vocab_size,
-                                datasets=[dataset.codes],
-                                ignore_case=True,
-                                save_root=args.vocab_root)
+
+        if args.no_replaced:
+            # code vocab
+            code_vocab = init_vocab(vocab_save_dir=args.vocab_save_dir,
+                                    name=args.code_vocab_name,
+                                    method=args.code_tokenize_method,
+                                    vocab_size=args.code_vocab_size,
+                                    datasets=[dataset.codes],
+                                    ignore_case=True,
+                                    save_root=args.vocab_root)
+        else:
+            # replaced code vocab
+            code_vocab = init_vocab(vocab_save_dir=args.vocab_save_dir,
+                                    name=args.ast_vocab_name,
+                                    method='comp',
+                                    datasets=[dataset.dfg],
+                                    save_root=args.vocab_root,
+                                    index_offset=len(code_vocab)+len(ast_vocab))
+            
         # ast vocab
         ast_vocab = init_vocab(vocab_save_dir=args.vocab_save_dir,
                                name=args.ast_vocab_name,
@@ -89,16 +101,26 @@ def pre_train(args,
                                save_root=args.vocab_root,
                                index_offset=len(code_vocab))
         
+        # dfg vocab
+        dfg_vocab = init_vocab(vocab_save_dir=args.vocab_save_dir,
+                               name=args.ast_vocab_name,
+                               method='comp',
+                               datasets=[dataset.dfg],
+                               save_root=args.vocab_root,
+                               index_offset=len(code_vocab)+len(ast_vocab))
+        
     logger.info(f'The size of code vocabulary: {len(code_vocab)}')
     logger.info(f'The size of ast vocabulary: {len(ast_vocab)}')
+    logger.info(f'The size of ast vocabulary: {len(dfg_vocab)}')
     logger.info('Vocabularies built successfully')
+
 
     # --------------------------------------------------
     # Model
     # --------------------------------------------------
     logger.info('-' * 100)
     logger.info('Building model')
-    config = BartConfig(vocab_size=len(code_vocab) + len(ast_vocab) + len(nl_vocab),
+    config = BartConfig(vocab_size=len(code_vocab) + len(ast_vocab),
                         max_position_embeddings=512,
                         encoder_layers=args.n_layer,
                         encoder_ffn_dim=args.d_ff,
@@ -126,6 +148,7 @@ def pre_train(args,
     table = layer_wise_parameters(model)
     logger.debug('Layer-wised trainable parameters:\n{}'.format(table))
     logger.info('Model built successfully')
+
 
     # --------------------------------------------------
     # pre-train
@@ -175,13 +198,13 @@ def pre_train(args,
             trainer = CodeCLSTrainer(main_args=args,
                                      code_vocab=code_vocab,
                                      ast_vocab=ast_vocab,
-                                     nl_vocab=nl_vocab,
+                                     nl_vocab=None,
                                      task=task,
                                      model=model,
                                      args=training_args,
                                      data_collator=None,
                                      train_dataset=dataset,
-                                     tokenizer=nl_vocab,
+                                     tokenizer=None,
                                      model_init=None,
                                      compute_metrics=None,
                                      callbacks=[LogStateCallBack()])
@@ -232,13 +255,13 @@ def pre_train(args,
             trainer = CodeTrainer(main_args=args,
                                   code_vocab=code_vocab,
                                   ast_vocab=ast_vocab,
-                                  nl_vocab=nl_vocab,
+                                  nl_vocab=None,
                                   task=task,
                                   model=model,
                                   args=training_args,
                                   data_collator=None,
                                   train_dataset=dataset,
-                                  tokenizer=nl_vocab,
+                                  tokenizer=None,
                                   model_init=None,
                                   compute_metrics=None,
                                   callbacks=[LogStateCallBack()])
@@ -255,52 +278,6 @@ def pre_train(args,
             logger.info(f'Pre-training task {task} finished')
             trainer.save_model(os.path.join(args.model_root, task))
 
-        elif task == enums.TASK_METHOD_NAME_PREDICTION:
-            # set model mode
-            logger.info('-' * 100)
-            model.set_model_mode(enums.MODEL_MODE_GEN)
-            # --------------------------------------------------
-            # trainer
-            # --------------------------------------------------
-            logger.info('-' * 100)
-            logger.info('Initializing the running configurations')
-            training_args = Seq2SeqTrainingArguments(output_dir=os.path.join(args.pre_train_output_root, task),
-                                                     overwrite_output_dir=True,
-                                                     do_train=True,
-                                                     per_device_train_batch_size=args.batch_size,
-                                                     gradient_accumulation_steps=1,
-                                                     learning_rate=args.learning_rate,
-                                                     weight_decay=args.lr_decay_rate,
-                                                     max_grad_norm=args.grad_clipping_norm,
-                                                     num_train_epochs=30,
-                                                     lr_scheduler_type=SchedulerType.LINEAR,
-                                                     warmup_steps=args.warmup_steps,
-                                                     logging_dir=os.path.join(args.tensor_board_root, task),
-                                                     logging_strategy=IntervalStrategy.STEPS,
-                                                     logging_steps=args.logging_steps,
-                                                     save_strategy=IntervalStrategy.NO,
-                                                     seed=args.random_seed,
-                                                     fp16=args.fp16,
-                                                     dataloader_drop_last=False,
-                                                     run_name=args.model_name,
-                                                     load_best_model_at_end=True,
-                                                     ignore_data_skip=False,
-                                                     label_smoothing_factor=args.label_smoothing,
-                                                     report_to=['tensorboard'],
-                                                     dataloader_pin_memory=True)
-            trainer = CodeTrainer(main_args=args,
-                                  code_vocab=code_vocab,
-                                  ast_vocab=ast_vocab,
-                                  nl_vocab=nl_vocab,
-                                  task=task,
-                                  model=model,
-                                  args=training_args,
-                                  data_collator=None,
-                                  train_dataset=dataset,
-                                  tokenizer=nl_vocab,
-                                  model_init=None,
-                                  compute_metrics=None,
-                                  callbacks=[LogStateCallBack()])
             logger.info('Running configurations initialized successfully')
 
             # --------------------------------------------------
@@ -314,4 +291,4 @@ def pre_train(args,
 
     logger.info('Pre-training finished')
 
-    return model, (code_vocab, ast_vocab, nl_vocab)
+    return model, (code_vocab, ast_vocab, None)

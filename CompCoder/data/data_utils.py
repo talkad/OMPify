@@ -88,14 +88,14 @@ def parse_json_file(file, lang):
         lang (str): Source code language
 
     Returns:
-        (list[str], list[str]):
+        (list[str]):
             - List of source codes
-            - List of tokenized codes
+            - List of replaced codes
 
     """
-    tokenizer = Tokompiler()
+    # tokenizer = Tokompiler()
     sources = []
-    codes = []
+    replaced = []
 
     with open(file, encoding='utf-8') as f:
         for line in f.readlines():
@@ -103,18 +103,16 @@ def parse_json_file(file, lang):
             source = data['code'].strip()
             source = remove_comments(source, lang)
 
-            # xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-            # ast = parse_tools.parse(source, lang)
-            # replaced_code = cr.generate_replaced(ast)
-            code = ' '.join(tokenizer.tokenize(trim_spaces(source), lang=lang))
+            ast = parse_tools.parse(source, lang)
+            replaced_code = cr.generate_replaced(ast)
 
-            if not code:   # parsing failed
+            if not replaced_code:   # parsing failed
                 continue
 
             sources.append(source)
-            codes.append(code)
+            replaced.append(replaced_code)
 
-    return sources, codes
+    return sources, replaced
 
 
 def iter_all_files(base):
@@ -132,7 +130,7 @@ def iter_all_files(base):
             yield os.path.join(root, f)
 
 
-def iter_pre_train_dataset_files(lang_dir, lang):
+def iter_pre_train_dataset_files(args, lang_dir, lang):
     """
     Get files for pre-training, all files with extension ``jsonl`` will be included.
 
@@ -144,12 +142,12 @@ def iter_pre_train_dataset_files(lang_dir, lang):
         list[str]: List of paths of files
 
     """
-    if lang in [enums.LANG_C, enums.LANG_CPP, enums.LANG_FORTRAN]:
+    if lang in args.langs:
         return [file for file in iter_all_files(base=lang_dir) if file.endswith('.jsonl')]
     return []
 
 
-def load_pre_train_dataset(file, lang):
+def load_pre_train_dataset(args, file, lang):
     """
     Load json dataset from given file.
 
@@ -160,15 +158,15 @@ def load_pre_train_dataset(file, lang):
     Returns:
         (list[str], list[str], list[str], list[str], list[str]):
             - List of source code strings
-            - List of tokenized code strings
+            - List of replaced code strings
 
     """
-    if lang in [enums.LANG_C, enums.LANG_CPP, enums.LANG_FORTRAN]:
-        sources, codes = parse_json_file(file, lang=lang)
-        return sources, codes
+    if lang in args.langs:
+        sources, replaced = parse_json_file(file, lang=lang)
+        return sources, replaced
 
 
-def load_dataset_from_dir(dataset_dir):
+def load_dataset_from_dir(args, dataset_dir):
     """
     Load all files in the given dir, only for pre-training.
 
@@ -176,19 +174,16 @@ def load_dataset_from_dir(dataset_dir):
         dataset_dir (str): Root directory
 
     Returns:
-        (dict, list[str], list[str], list[str], List[str]):
+        (dict, list[str], list[str]):
             - Dict of paths: key is the dataset group, value is the path
             - List of str: languages for each line
             - List of str: source code
-            - List of str: tokenized code string
-            - List of ast: linearized ast string
-
     """
     paths = {}
     languages = []
     all_sources = []
-    all_asts = []
-    all_codes = []
+    all_replaced = []
+
     for file in os.listdir(dataset_dir):
 
         path = os.path.join(dataset_dir, file)
@@ -202,25 +197,25 @@ def load_dataset_from_dir(dataset_dir):
             paths[lang] = dataset_files
             n_sample = 0
             for dataset_file_path in dataset_files:
-                sources, codes = load_pre_train_dataset(file=dataset_file_path, lang=lang)
+                sources, replaced = load_pre_train_dataset(args, file=dataset_file_path, lang=lang)
 
                 new_sources = []
-                new_codes = []
+                new_replaced = []
                 asts = []
-                for source, code in tqdm(zip(sources, codes),desc=f'Parsing {os.path.basename(dataset_file_path)}',
+                for source, code in tqdm(zip(sources, replaced),desc=f'Parsing {os.path.basename(dataset_file_path)}',
                                                              leave=False,
                                                              total=len(sources)):
                     try:
                         ast = cr.code2xsbt(source, lang=lang)
   
                         new_sources.append(source)
-                        new_codes.append(code)
+                        new_replaced.append(code)
                         asts.append(ast)
                     except Exception:
                         continue
 
                 all_sources += new_sources
-                all_codes += new_codes
+                all_replaced += new_replaced
                 all_asts += asts
 
                 n_line = len(new_sources)
@@ -231,8 +226,8 @@ def load_dataset_from_dir(dataset_dir):
 
             logger.info(f'  {lang} dataset size: {n_sample}')
 
-    assert len(languages) == len(all_sources) == len(all_codes)
-    return paths, languages, all_sources, all_codes, all_asts
+    assert len(languages) == len(all_sources) == len(new_replaced)
+    return paths, languages, all_sources, new_replaced, all_asts
 
 
 def trim_spaces(string):

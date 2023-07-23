@@ -23,10 +23,10 @@ class Vocab(object):
     UNK_TOKEN = '[UNK]'  # unknown token
     MSK_TOKEN = '[MSK]'  # mask token
     SEP_TOKEN = '[SEP]'  # sentence separator token
-    # CLS_TOKEN = '[CLS]'     # classification placeholder
+    CLS_TOKEN = '[CLS]'  # classification placeholder
 
     # default special symbols, if need additional symbols, use init parameter 'additional_special_symbols'
-    START_VOCAB = [PAD_TOKEN, SOS_TOKEN, EOS_TOKEN, UNK_TOKEN, MSK_TOKEN, SEP_TOKEN]
+    START_VOCAB = [CLS_TOKEN, PAD_TOKEN, SOS_TOKEN, EOS_TOKEN, UNK_TOKEN, MSK_TOKEN, SEP_TOKEN]
 
     # post-processors
     # bert processor: add SOS at the beginning and SEP at the end of sequence
@@ -67,8 +67,8 @@ class Vocab(object):
             index_offset (int): Optional, the index offset when encoding and decoding.
 
         """
-        assert method in ['word', 'bpe'], \
-            'Tokenize method not supported, given {}, expect \'word\' or \'bpe\''.format(method)
+        assert method in ['word', 'bpe', 'comp'], \
+            'Tokenize method not supported, given {}, expect \'word\', \'bpe\' or \'comp\''.format(method)
 
         self.name = name
         self.method = method
@@ -83,7 +83,7 @@ class Vocab(object):
             self.index_offset = None
 
         # tokenizer and trainer
-        if method == 'word':
+        if method in ['word', 'comp']:
             tokenize_class = WordLevel
             trainer_class = WordLevelTrainer
         else:
@@ -107,12 +107,19 @@ class Vocab(object):
         self.tokenizer.normalizer = normalizer
 
         # train tokenizer
-        if isinstance(datasets[0], str):
-            self.tokenizer.train(files=datasets, trainer=trainer)
-        elif isinstance(datasets[0], list):
-            self.tokenizer.train_from_iterator(iterator=datasets, trainer=trainer)
+        if method == 'comp':
+            #load pre-defined vocab
+            with open('CompCoder/data/asts/vocabs/tokenizer_vocab/vocab.txt', 'r') as f:
+                tokens = f.readlines()
+                self.tokenizer.get_vocab().add_tokens(tokens)
+            
         else:
-            raise TypeError('The type of datasets is not support, expect list of paths or list of lines')
+            if isinstance(datasets[0], str):
+                self.tokenizer.train(files=datasets, trainer=trainer)
+            elif isinstance(datasets[0], list):
+                self.tokenizer.train_from_iterator(iterator=datasets, trainer=trainer)
+            else:
+                raise TypeError('The type of datasets is not support, expect list of paths or list of lines')
 
         # pad idx
         self.pad_token_id = self.get_pad_index()

@@ -9,6 +9,12 @@ import enums
 class RuntimeArguments:
     """Arguments for runtime."""
 
+    langs: str = field(
+        default=','.join(enums.ALL_LANGS),
+        metadata={'help': 'Programming languages, split by commas, '
+                          'for example (default) {}'.format(','.join(enums.ALL_LANGS))}
+    )
+
     do_pre_train: bool = field(
         default=False,
         metadata={'action': 'store_true',
@@ -34,13 +40,13 @@ class RuntimeArguments:
     )
 
     task: str = field(
-        default='summarization',
+        default='translation',
         metadata={'help': 'Downstream task',
                   'choices': enums.ALL_DOWNSTREAM_TASKS}
     )
 
     trained_vocab: str = field(
-        default='',   #'../pre_trained/vocabs/',
+        default='../pre_trained/vocabs/',
         metadata={'help': 'Directory of trained vocabs'}
     )
 
@@ -147,14 +153,14 @@ class PreprocessingArguments:
         metadata={'help': 'Maximum size of code vocab'}
     )
 
-    nl_vocab_size: int = field(
-        default=30000,
-        metadata={'help': 'Maximum size of nl vocab'}
-    )
-
     code_vocab_name: str = field(
         default='code',
         metadata={'help': 'Name of the code vocab'}
+    )
+
+    replaced_code_vocab_name: str = field(
+        default='replaced_code',
+        metadata={'help': 'Name of the replaced code vocab'}
     )
 
     ast_vocab_name: str = field(
@@ -162,12 +168,17 @@ class PreprocessingArguments:
         metadata={'help': 'Name of the ast vocab'}
     )
 
-    nl_vocab_name: str = field(
-        default='nl',
-        metadata={'help': 'Name of the nl vocab'}
+    dfg_vocab_name: str = field(
+        default='dfg',
+        metadata={'help': 'Name of the dfg vocab'}
     )
 
     max_code_len: int = field(
+        default=256,
+        metadata={'help': 'Maximum length of code sequence'}
+    )
+
+    max_replaced_code_len: int = field(
         default=256,
         metadata={'help': 'Maximum length of code sequence'}
     )
@@ -177,21 +188,21 @@ class PreprocessingArguments:
         metadata={'help': 'Maximum length of ast sequence'}
     )
 
-    max_nl_len: int = field(
+    max_dfg_len: int = field(
         default=64,
-        metadata={'help': 'Maximum length of the nl sequence'}
+        metadata={'help': 'Maximum length of the dfg sequence'}
     )
 
     code_tokenize_method: str = field(
         default='bpe',
         metadata={'help': 'Tokenize method of code',
-                  'choices': ['word', 'bpe']}
+                  'choices': ['word', 'bpe', 'comp']}
     )
 
-    nl_tokenize_method: str = field(
-        default='bpe',
-        metadata={'help': 'Tokenize method of nl',
-                  'choices': ['word', 'bpe']}
+    no_replaced: bool = field(
+        default=False,
+        metadata={'action': 'store_true',
+                  'help': 'Whether to use original or replaced code'}
     )
 
     no_ast: bool = field(
@@ -200,10 +211,10 @@ class PreprocessingArguments:
                   'help': 'Whether to eliminate AST from input'}
     )
 
-    no_nl: bool = field(
+    no_dfg: bool = field(
         default=False,
         metadata={'action': 'store_true',
-                  'help': 'Whether to eliminate natural language from input'}
+                  'help': 'Whether to eliminate DFG from input'}
     )
 
 
@@ -286,16 +297,6 @@ class TaskArguments:
         metadata={'help': 'Ratio between number of masked tokens and number of total tokens, in MASS'}
     )
 
-    summarization_language: str = field(
-        default='java',
-        metadata={'help': 'Language of the source code in code summarization, also the directory of the dataset dir'}
-    )
-
-    completion_max_len: int = field(
-        default=32,
-        metadata={'help': 'Max length of code to completion'}
-    )
-
     translation_source_language: str = field(
         default='java',
         metadata={'help': 'Source language of the code translation',
@@ -308,16 +309,6 @@ class TaskArguments:
                   'choices': ['java', 'c_sharp']}
     )
 
-    search_language: str = field(
-        default='java',
-        metadata={'help': 'Language of the source code in code search, also the directory of the dataset dir'}
-    )
-
-    bug_fix_scale: str = field(
-        default='small',
-        metadata={'help': 'Scale of the bug fix dataset.',
-                  'choices': ['small', 'medium']}
-    )
 
 
 def transfer_arg_name(name):

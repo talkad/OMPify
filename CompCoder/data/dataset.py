@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 
 class CodeDataset(Dataset):
 
-    def __init__(self, args, dataset_name, mode, task=None, language=None, split=None, clone_mapping=None):
+    def __init__(self, args, dataset_name, mode, task=None, language=None, split=None):
         """
         Initialization definition.
 
@@ -29,7 +29,6 @@ class CodeDataset(Dataset):
                 future support ['completion', 'search', 'clone', 'summarization', 'translation']
             language (str): Only for downstream fine-tuning
             split (str): Only for downstream fine-tuning, support ['train', 'valid', 'test', 'codebase']
-            clone_mapping (dict[int, str]): Mapping from code id to source code string, use only for clone detection
 
         """
         super(CodeDataset, self).__init__()
@@ -45,7 +44,7 @@ class CodeDataset(Dataset):
 
         # load pre-training dataset
         if self.mode == 'pre_train':
-            self.paths, self.languages, self.sources, self.codes, self.asts = load_dataset_from_dir(dataset_dir=self.dataset_dir)
+            self.paths, self.languages, self.sources, self.replaced, self.asts = load_dataset_from_dir(args, dataset_dir=self.dataset_dir)
             self.size = len(self.codes)
         # load fine-tuning dataset
         else:
@@ -77,6 +76,7 @@ class CodeDataset(Dataset):
                 self.size = len(self.codes)
            
     def __getitem__(self, index):
+        print(f'task {self.task}')
         # cap
         if self.task == enums.TASK_CODE_AST_PREDICTION:
             is_ast = random.random() < 0.5
@@ -132,8 +132,7 @@ class CodeDataset(Dataset):
         return torch.utils.data.Subset(self, indices)
 
 
-def init_dataset(args, mode, task=None, language=None, split=None, clone_mapping=None,
-                 load_if_saved=True) -> CodeDataset:
+def init_dataset(args, mode, task=None, language=None, split=None, load_if_saved=True) -> CodeDataset:
     """
     Find dataset, if the dataset is saved, load and return, else initialize and return.
 
@@ -145,7 +144,6 @@ def init_dataset(args, mode, task=None, language=None, split=None, clone_mapping
             future support ['completion', 'search', 'clone', 'summarization', 'translation']
         language (str): Only for downstream fine-tuning
         split (str): Only for downstream fine-tuning, support ['train', 'valid', 'test', 'codebase(only for search)']
-        clone_mapping (dict[int, str]): Mapping from code id to source code string, use only for clone detection
         load_if_saved (bool): Whether to load the saved instance if it exists, default to True
 
     Returns:
@@ -169,8 +167,7 @@ def init_dataset(args, mode, task=None, language=None, split=None, clone_mapping
                           mode=mode,
                           task=task,
                           language=language,
-                          split=split,
-                          clone_mapping=clone_mapping)
+                          split=split)
     dataset.save()
     return dataset
 
