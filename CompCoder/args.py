@@ -40,7 +40,7 @@ class RuntimeArguments:
     )
 
     trained_vocab: str = field(
-        default='../pre_trained/vocabs/',
+        default='',   #'../pre_trained/vocabs/',
         metadata={'help': 'Directory of trained vocabs'}
     )
 
@@ -103,7 +103,7 @@ class DatasetArguments:
     """Arguments for dataset loading."""
 
     dataset_root: str = field(
-        default='../../dataset/',
+        default='/tier2/bgu/HPCorpus_final',
         metadata={'help': 'Root of the dataset'}
     )
 

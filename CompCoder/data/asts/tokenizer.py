@@ -57,7 +57,7 @@ class Tokompiler(Tokenizer):
         Compiler oriented tokenization
     '''
 
-    def __init__(self, vocab_path: str = '/homes/talkad/OMPify/tokenizer/vocabs/tokenizer_vocab/tokompiler_vocab.json'):
+    def __init__(self, vocab_path: str = '/homes/talkad/OMPify/CompCoder/data/asts/vocabs/tokenizer_vocab/tokompiler_vocab.json'):
         with open(vocab_path, 'r') as f:
             vocab = json.loads(f.read())
 
@@ -68,16 +68,16 @@ class Tokompiler(Tokenizer):
         if not s or len(s.strip()) == 0:
             return []
 
-        if lang == 'fortran':
-            s = s.lower()
-            tokens = ftok.tokenize(s)    
-        else:
-            try:
+        try:
+            if lang == 'fortran':
+                s = s.lower()
+                tokens = ftok.tokenize(s)    
+            else:
                 tokens = list(map(lambda token: token.text, 
                                 ctok.tokenize(s, lang=lang, syntax_error="ignore")))
-            except Exception as e:
-                print('ctok error: ', e)
-                return []
+        except Exception as e:
+            # print('tokenizer error: ', e)
+            return []
 
         updated_tokens = []
         for token in tokens:

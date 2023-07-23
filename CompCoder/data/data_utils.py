@@ -103,11 +103,15 @@ def parse_json_file(file, lang):
             source = data['code'].strip()
             source = remove_comments(source, lang)
 
-            ast = parse_tools.parse(source, lang)
-            replaced_code = cr.generate_replaced(ast)
-            code = ' '.join(tokenizer.tokenize(trim_spaces(replaced_code), lang=lang))
+            # xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+            # ast = parse_tools.parse(source, lang)
+            # replaced_code = cr.generate_replaced(ast)
+            code = ' '.join(tokenizer.tokenize(trim_spaces(source), lang=lang))
 
-            sources.append(replaced_code)
+            if not code:   # parsing failed
+                continue
+
+            sources.append(source)
             codes.append(code)
 
     return sources, codes

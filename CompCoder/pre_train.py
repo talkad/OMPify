@@ -81,24 +81,15 @@ def pre_train(args,
                                 datasets=[dataset.codes],
                                 ignore_case=True,
                                 save_root=args.vocab_root)
-        # nl vocab
-        nl_vocab = init_vocab(vocab_save_dir=args.vocab_save_dir,
-                              name=args.nl_vocab_name,
-                              method=args.nl_tokenize_method,
-                              vocab_size=args.nl_vocab_size,
-                              datasets=[dataset.names, dataset.docs] if hasattr(dataset, 'docs') else [dataset.names],
-                              ignore_case=True,
-                              save_root=args.vocab_root,
-                              index_offset=len(code_vocab))
         # ast vocab
         ast_vocab = init_vocab(vocab_save_dir=args.vocab_save_dir,
                                name=args.ast_vocab_name,
                                method='word',
                                datasets=[dataset.asts],
                                save_root=args.vocab_root,
-                               index_offset=len(code_vocab) + len(nl_vocab))
+                               index_offset=len(code_vocab))
+        
     logger.info(f'The size of code vocabulary: {len(code_vocab)}')
-    logger.info(f'The size of nl vocabulary: {len(nl_vocab)}')
     logger.info(f'The size of ast vocabulary: {len(ast_vocab)}')
     logger.info('Vocabularies built successfully')
 
