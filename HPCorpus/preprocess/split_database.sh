@@ -7,6 +7,9 @@ output_file_2="/tier2/bgu/HPCorpus_final/fine_tune/cpp/dataset_cpp.jsonl"
 # Get the total number of lines in the input file
 total_lines=$(wc -l < "$input_file")
 
+# cpp 33724011 total_uniq.jsonl
+# c   25667699 total_uniq.jsonl
+
 echo "$total_lines"
 
 # Calculate the number of lines for 80% and 20%

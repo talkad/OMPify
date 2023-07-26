@@ -1,5 +1,6 @@
 import torch.utils.data
 from transformers import BartConfig, Seq2SeqTrainingArguments, IntervalStrategy, SchedulerType, TrainingArguments
+import pickle
 
 import logging
 import os
@@ -12,6 +13,8 @@ from utils.general import count_params, human_format, layer_wise_parameters
 from utils.trainer import CodeTrainer, CodeCLSTrainer
 from utils.callbacks import LogStateCallBack
 from models.bart import BartForClassificationAndGeneration
+
+from data.asts.lexicalization import lexicalize
 
 logger = logging.getLogger(__name__)
 
@@ -70,26 +73,39 @@ def pre_train(args,
     logger.info('-' * 100)
     if trained_vocab:
         logger.info('Loading vocabularies from files')
-        code_vocab = load_vocab(vocab_root=trained_vocab, name=args.code_vocab_name)
+
+        if args.no_replaced:
+            code_vocab = load_vocab(vocab_root=trained_vocab, name=args.code_vocab_name)
+        else:
+            code_vocab = load_vocab(vocab_root=trained_vocab, name=args.replaced_code_vocab_name)
+
         ast_vocab = load_vocab(vocab_root=trained_vocab, name=args.ast_vocab_name)
     else:
         logger.info('Building vocabularies')
 
         if args.no_replaced:
+            # dataset = list(map(lambda code: lexicalize(code), dataset.sources))
+            # with open('code_dataset.pkl', "wb") as f:
+            #     pickle.dump(dataset, f)
+
+            with open('code_dataset.pkl', "rb") as f:
+                code_dataset = pickle.load(f)
+
+            code_dataset = code_dataset[:int(len(code_dataset)*0.05)]
             # code vocab
             code_vocab = init_vocab(vocab_save_dir=args.vocab_save_dir,
                                     name=args.code_vocab_name,
                                     method=args.code_tokenize_method,
                                     vocab_size=args.code_vocab_size,
-                                    datasets=[dataset.codes],
+                                    datasets=list(map(lambda code: code.split(' '), code_dataset)),
                                     ignore_case=True,
                                     save_root=args.vocab_root)
         else:
             # replaced code vocab
             code_vocab = init_vocab(vocab_save_dir=args.vocab_save_dir,
-                                    name=args.ast_vocab_name,
+                                    name=args.replaced_code_vocab_name,
                                     method='comp',
-                                    datasets=[dataset.dfg],
+                                    datasets=[], #list(map(lambda code: lexicalize(code), dataset.replaced)),
                                     save_root=args.vocab_root,
                                     index_offset=len(code_vocab)+len(ast_vocab))
             
@@ -101,17 +117,19 @@ def pre_train(args,
                                save_root=args.vocab_root,
                                index_offset=len(code_vocab))
         
-        # dfg vocab
-        dfg_vocab = init_vocab(vocab_save_dir=args.vocab_save_dir,
-                               name=args.ast_vocab_name,
-                               method='comp',
-                               datasets=[dataset.dfg],
-                               save_root=args.vocab_root,
-                               index_offset=len(code_vocab)+len(ast_vocab))
+        # # dfg vocab
+        # dfg_vocab = init_vocab(vocab_save_dir=args.vocab_save_dir,
+        #                        name=args.ast_vocab_name,
+        #                        method='comp',
+        #                        datasets=[dataset.dfg],
+        #                        save_root=args.vocab_root,
+        #                        index_offset=len(code_vocab)+len(ast_vocab))
+
+    return
         
     logger.info(f'The size of code vocabulary: {len(code_vocab)}')
     logger.info(f'The size of ast vocabulary: {len(ast_vocab)}')
-    logger.info(f'The size of ast vocabulary: {len(dfg_vocab)}')
+    # logger.info(f'The size of ast vocabulary: {len(dfg_vocab)}')
     logger.info('Vocabularies built successfully')
 
 

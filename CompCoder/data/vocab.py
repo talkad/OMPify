@@ -115,6 +115,7 @@ class Vocab(object):
             
         else:
             if isinstance(datasets[0], str):
+                print(datasets[0])
                 self.tokenizer.train(files=datasets, trainer=trainer)
             elif isinstance(datasets[0], list):
                 self.tokenizer.train_from_iterator(iterator=datasets, trainer=trainer)

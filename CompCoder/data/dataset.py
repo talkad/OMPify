@@ -45,7 +45,7 @@ class CodeDataset(Dataset):
         # load pre-training dataset
         if self.mode == 'pre_train':
             self.paths, self.languages, self.sources, self.replaced, self.asts = load_dataset_from_dir(args, dataset_dir=self.dataset_dir)
-            self.size = len(self.codes)
+            self.size = len(self.sources)
         # load fine-tuning dataset
         else:
             assert split

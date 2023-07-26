@@ -7,3 +7,4 @@
 **/openmp_versions
 !requirements.txt
 **/outputs
+!vocab.txt

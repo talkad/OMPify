@@ -46,7 +46,7 @@ class RuntimeArguments:
     )
 
     trained_vocab: str = field(
-        default='../pre_trained/vocabs/',
+        default='', #'../pre_trained/vocabs/',
         metadata={'help': 'Directory of trained vocabs'}
     )
 

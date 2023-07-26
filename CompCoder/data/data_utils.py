@@ -183,6 +183,7 @@ def load_dataset_from_dir(args, dataset_dir):
     languages = []
     all_sources = []
     all_replaced = []
+    all_asts = []
 
     for file in os.listdir(dataset_dir):
 
@@ -191,7 +192,7 @@ def load_dataset_from_dir(args, dataset_dir):
             continue
 
         lang = file
-        dataset_files = iter_pre_train_dataset_files(path, lang=lang)
+        dataset_files = iter_pre_train_dataset_files(args, path, lang=lang)
         if len(dataset_files) > 0:
             logger.info(f'  Language: {lang}')
             paths[lang] = dataset_files
@@ -227,7 +228,7 @@ def load_dataset_from_dir(args, dataset_dir):
             logger.info(f'  {lang} dataset size: {n_sample}')
 
     assert len(languages) == len(all_sources) == len(new_replaced)
-    return paths, languages, all_sources, new_replaced, all_asts
+    return paths, languages, all_sources, all_replaced, all_asts
 
 
 def trim_spaces(string):
