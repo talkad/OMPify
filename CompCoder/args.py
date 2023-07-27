@@ -46,12 +46,12 @@ class RuntimeArguments:
     )
 
     trained_vocab: str = field(
-        default='', #'../pre_trained/vocabs/',
+        default='/home/1010/talkad/Downloads/HPCorpus_final/vocab_saved',
         metadata={'help': 'Directory of trained vocabs'}
     )
 
     trained_model: str = field(
-        default='../pre_trained/models/all/',
+        default='/home/1010/talkad/Downloads/pre_trained/models/all/',
         metadata={'help': 'Directory of trained model'}
     )
 
@@ -109,7 +109,7 @@ class DatasetArguments:
     """Arguments for dataset loading."""
 
     dataset_root: str = field(
-        default='/tier2/bgu/HPCorpus_final',
+        default='/home/1010/talkad/Downloads/HPCorpus_final',
         metadata={'help': 'Root of the dataset'}
     )
 

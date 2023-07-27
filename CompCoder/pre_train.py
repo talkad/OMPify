@@ -124,8 +124,6 @@ def pre_train(args,
         #                        datasets=[dataset.dfg],
         #                        save_root=args.vocab_root,
         #                        index_offset=len(code_vocab)+len(ast_vocab))
-
-    return
         
     logger.info(f'The size of code vocabulary: {len(code_vocab)}')
     logger.info(f'The size of ast vocabulary: {len(ast_vocab)}')
@@ -293,17 +291,6 @@ def pre_train(args,
             # model device
             logger.info('Device: {}'.format(next(model.parameters()).device))
             mass_result = trainer.train()
-            logger.info(f'Pre-training task {task} finished')
-            trainer.save_model(os.path.join(args.model_root, task))
-
-            logger.info('Running configurations initialized successfully')
-
-            # --------------------------------------------------
-            # train
-            # --------------------------------------------------
-            logger.info('-' * 100)
-            logger.info(f'Start pre-training task: {task}')
-            mnp_result = trainer.train()
             logger.info(f'Pre-training task {task} finished')
             trainer.save_model(os.path.join(args.model_root, task))
 
