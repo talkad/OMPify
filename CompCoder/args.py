@@ -46,7 +46,7 @@ class RuntimeArguments:
     )
 
     trained_vocab: str = field(
-        default='/home/1010/talkad/Downloads/HPCorpus_final/vocab_saved',
+        default='', # '/home/1010/talkad/Downloads/HPCorpus_final/vocab_saved',
         metadata={'help': 'Directory of trained vocabs'}
     )
 

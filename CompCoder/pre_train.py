@@ -14,7 +14,6 @@ from utils.trainer import CodeTrainer, CodeCLSTrainer
 from utils.callbacks import LogStateCallBack
 from models.bart import BartForClassificationAndGeneration
 
-from data.asts.lexicalization import lexicalize
 
 logger = logging.getLogger(__name__)
 
@@ -75,29 +74,22 @@ def pre_train(args,
         logger.info('Loading vocabularies from files')
 
         if args.no_replaced:
-            code_vocab = load_vocab(vocab_root=trained_vocab, name=args.code_vocab_name)
+            code_vocab = load_vocab(vocab_root=trained_vocab, name='code.bpe.50000.None') #name=args.code_vocab_name)
         else:
             code_vocab = load_vocab(vocab_root=trained_vocab, name=args.replaced_code_vocab_name)
 
-        ast_vocab = load_vocab(vocab_root=trained_vocab, name=args.ast_vocab_name)
+        ast_vocab = load_vocab(vocab_root=trained_vocab, name='ast.word.None.50000') #name=args.ast_vocab_name)
     else:
         logger.info('Building vocabularies')
 
         if args.no_replaced:
-            # dataset = list(map(lambda code: lexicalize(code), dataset.sources))
-            # with open('code_dataset.pkl', "wb") as f:
-            #     pickle.dump(dataset, f)
 
-            with open('code_dataset.pkl', "rb") as f:
-                code_dataset = pickle.load(f)
-
-            code_dataset = code_dataset[:int(len(code_dataset)*0.05)]
             # code vocab
             code_vocab = init_vocab(vocab_save_dir=args.vocab_save_dir,
                                     name=args.code_vocab_name,
                                     method=args.code_tokenize_method,
                                     vocab_size=args.code_vocab_size,
-                                    datasets=list(map(lambda code: code.split(' '), code_dataset)),
+                                    datasets=list(map(lambda code: code.split(), dataset.source_tokens)),
                                     ignore_case=True,
                                     save_root=args.vocab_root)
         else:
@@ -105,7 +97,7 @@ def pre_train(args,
             code_vocab = init_vocab(vocab_save_dir=args.vocab_save_dir,
                                     name=args.replaced_code_vocab_name,
                                     method='comp',
-                                    datasets=[], #list(map(lambda code: lexicalize(code), dataset.replaced)),
+                                    datasets=[],
                                     save_root=args.vocab_root,
                                     index_offset=len(code_vocab)+len(ast_vocab))
             
@@ -214,7 +206,7 @@ def pre_train(args,
             trainer = CodeCLSTrainer(main_args=args,
                                      code_vocab=code_vocab,
                                      ast_vocab=ast_vocab,
-                                     nl_vocab=None,
+                                     dfg_vocab=None,
                                      task=task,
                                      model=model,
                                      args=training_args,
@@ -252,7 +244,7 @@ def pre_train(args,
                                                      learning_rate=args.learning_rate,
                                                      weight_decay=args.lr_decay_rate,
                                                      max_grad_norm=args.grad_clipping_norm,
-                                                     num_train_epochs=30,
+                                                     num_train_epochs=10,
                                                      lr_scheduler_type=SchedulerType.LINEAR,
                                                      warmup_steps=args.warmup_steps,
                                                      logging_dir=os.path.join(args.tensor_board_root, task),
@@ -271,16 +263,29 @@ def pre_train(args,
             trainer = CodeTrainer(main_args=args,
                                   code_vocab=code_vocab,
                                   ast_vocab=ast_vocab,
-                                  nl_vocab=None,
+                                  dfg_vocab=None,
                                   task=task,
                                   model=model,
                                   args=training_args,
                                   data_collator=None,
                                   train_dataset=dataset,
-                                  tokenizer=None,
+                                  tokenizer=code_vocab,
                                   model_init=None,
                                   compute_metrics=None,
                                   callbacks=[LogStateCallBack()])
+            
+            ##### DEBUG #####
+            # print('-'*100)
+            # loader = trainer.get_train_dataloader()
+            # print(len(trainer.train_dataset))
+            # print(trainer.main_args.batch_size)
+            
+            # for batch in loader:
+            #     print(batch)
+            #     break
+            # return
+            ##### DEBUG #####
+            
             logger.info('Running configurations initialized successfully')
 
             # --------------------------------------------------

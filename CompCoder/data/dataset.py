@@ -44,7 +44,7 @@ class CodeDataset(Dataset):
 
         # load pre-training dataset
         if self.mode == 'pre_train':
-            self.paths, self.languages, self.sources, self.replaced, self.asts = load_dataset_from_dir(args, dataset_dir=self.dataset_dir)
+            self.paths, self.languages, self.sources, self.source_tokens, self.replaced, self.replaced_tokens, self.asts = load_dataset_from_dir(args, dataset_dir=self.dataset_dir)
             self.size = len(self.sources)
         # load fine-tuning dataset
         else:
@@ -55,51 +55,58 @@ class CodeDataset(Dataset):
             # xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx update
             # pragma generation
             if task == enums.TASK_PRAGMA:
-                assert split in ['train', 'valid', 'test']
-                assert language in ['java-c_sharp', 'c_sharp-java']
-                source_lang, target_lang = language.split('-')
-                java_path = f'{split}.java-cs.txt.java'
-                c_sharp_path = f'{split}.java-cs.txt.cs'
-                source_path = os.path.join(self.dataset_dir,
-                                           c_sharp_path if source_lang == 'c_sharp' else java_path)
-                target_path = os.path.join(self.dataset_dir,
-                                           c_sharp_path if target_lang == 'c_sharp' else java_path)
-                self.paths['source'] = source_path
-                self.paths['target'] = target_path
-                self.codes, self.asts, self.names, self.targets = parse_for_pragma_gen(
-                    source_path=source_path,
-                    source_lang=args.translation_source_language,
-                    target_path=target_path,
-                    target_lang=args.translation_target_language)
+                pass
+                # assert split in ['train', 'valid', 'test']
+                # assert language in ['java-c_sharp', 'c_sharp-java']
+                # source_lang, target_lang = language.split('-')
+                # java_path = f'{split}.java-cs.txt.java'
+                # c_sharp_path = f'{split}.java-cs.txt.cs'
+                # source_path = os.path.join(self.dataset_dir,
+                #                            c_sharp_path if source_lang == 'c_sharp' else java_path)
+                # target_path = os.path.join(self.dataset_dir,
+                #                            c_sharp_path if target_lang == 'c_sharp' else java_path)
+                # self.paths['source'] = source_path
+                # self.paths['target'] = target_path
+                # self.codes, self.asts, self.names, self.targets = parse_for_pragma_gen(
+                #     source_path=source_path,
+                #     source_lang=args.translation_source_language,
+                #     target_path=target_path,
+                #     target_lang=args.translation_target_language)
 
-                assert len(self.codes) == len(self.asts) == len(self.names) == len(self.targets)
-                self.size = len(self.codes)
+                # assert len(self.codes) == len(self.asts) == len(self.names) == len(self.targets)
+                # self.size = len(self.codes)
            
     def __getitem__(self, index):
-        print(f'task {self.task}')
+
         # cap
         if self.task == enums.TASK_CODE_AST_PREDICTION:
             is_ast = random.random() < 0.5
             if is_ast:
-                return self.codes[index], self.asts[index], self.names[index], 1
+                return self.source_tokens[index], self.replaced_tokens[index], self.asts[index], 1
             else:
                 other_ast = self.asts[random.randint(0, self.size - 1)]
                 while other_ast == self.asts[index]:
                     other_ast = self.asts[random.randint(0, self.size - 1)]
-                return self.codes[index], other_ast, self.names[index], 0
+                return self.source_tokens[index], self.replaced_tokens[index], other_ast, 0
         # mass
         elif self.task == enums.TASK_MASS:
+            
+            if self.args.no_replaced:
+                codes = self.source_tokens
+            else:
+                codes = self.replaced_tokens
 
-            code_tokens = self.codes[index].split()
+            code_tokens = codes[index].split()
             mask_len = int(self.args.mass_mask_ratio * len(code_tokens))
             mask_start = random.randint(0, len(code_tokens) - mask_len)
             mask_tokens = code_tokens[mask_start: mask_start + mask_len]
             input_tokens = code_tokens[:mask_start] + [Vocab.MSK_TOKEN] + code_tokens[mask_start + mask_len:]
-            return ' '.join(input_tokens), self.asts[index], self.names[index], ' '.join(mask_tokens)
+            return ' '.join(input_tokens), self.asts[index], ' '.join(mask_tokens)
 
         # translation
         elif self.task == enums.TASK_TRANSLATION:
-            return self.codes[index], self.asts[index], self.names[index], self.targets[index]
+            pass
+            # return self.codes[index], self.asts[index], self.names[index], self.targets[index]
         
     def __len__(self):
         return self.size
@@ -188,23 +195,3 @@ def print_paths(paths):
         else:
             logger.info(f'  {key}: {value}')
 
-
-def save_all_datasets(args):
-    # logger.info('*' * 100)
-    # logger.info('Pre-training dataset')
-    # _ = init_dataset(args=args,
-    #                  mode=enums.TRAINING_MODE_PRE_TRAIN,
-    #                  load_if_saved=False)
-    # summarization
-    for lang in [enums.LANG_JAVA, enums.LANG_GO, enums.LANG_PHP, enums.LANG_PYTHON, enums.LANG_RUBY,
-                 enums.LANG_JAVASCRIPT]:
-        for split in ['train', 'valid', 'test']:
-            logger.info('*' * 100)
-            logger.info(f'Summarization - {lang} - {split}')
-            _ = init_dataset(args=args,
-                             mode=enums.TRAINING_MODE_FINE_TUNE,
-                             task=enums.TASK_SUMMARIZATION,
-                             language=lang,
-                             split=split,
-                             load_if_saved=False)
-    

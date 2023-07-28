@@ -234,7 +234,7 @@ dfg_function={
 #load parsers
 parsers={}        
 for lang in dfg_function:
-    LANGUAGE = Language('/homes/talkad/OMPify/database_creator/parsers/HPCorpus_parser/my-languages.so', lang)
+    LANGUAGE = Language('/home/1010/talkad/OMPify/database_creator/parsers/HPCorpus_parser/my-languages.so', lang)
     # LANGUAGE = Language('./my-languages.so', lang)
     parser = Parser()
     parser.set_language(LANGUAGE) 

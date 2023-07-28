@@ -57,7 +57,7 @@ class Tokompiler(Tokenizer):
         Compiler oriented tokenization
     '''
 
-    def __init__(self, vocab_path: str = '/homes/talkad/OMPify/CompCoder/data/asts/vocabs/tokenizer_vocab/tokompiler_vocab.json'):
+    def __init__(self, vocab_path: str = '/home/1010/talkad/OMPify/CompCoder/data/asts/vocabs/tokenizer_vocab/tokompiler_vocab.json'):
         with open(vocab_path, 'r') as f:
             vocab = json.loads(f.read())
 

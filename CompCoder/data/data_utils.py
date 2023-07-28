@@ -6,10 +6,11 @@ from tqdm import tqdm
 from .asts import parse_tools, convert_representation as cr
 import enums
 from .asts.tokenizer import Tokompiler
-
+from data.asts.lexicalization import lexicalize
 
 logger = logging.getLogger(__name__)
 
+STRING_MATCHING_PATTERN = re.compile(r'([bruf]*)(\"\"\"|\'\'\'|\"|\')(?:(?!\2)(?:\\.|[^\\]))*\2')
 NON_SPACE_MATCHING_PATTERN = re.compile(r'\S')
 
 redundant_line_comments_c = re.compile("\/\/.*")
@@ -79,6 +80,20 @@ def remove_comments(code, lang):
     return code
 
 
+def replace_string_literal(source):
+    """
+    Replace the string literal in source code with ``<STR>``.
+
+    Args:
+        source (str): Source code in string
+
+    Returns:
+        str: Code after replaced
+
+    """
+    return re.sub(pattern=STRING_MATCHING_PATTERN, repl='___STR', string=source)
+
+
 def parse_json_file(file, lang):
     """
     Parse a dataset file where each line is a json string representing a sample.
@@ -108,6 +123,8 @@ def parse_json_file(file, lang):
 
             if not replaced_code:   # parsing failed
                 continue
+            
+            source = replace_string_literal(source)
 
             sources.append(source)
             replaced.append(replaced_code)
@@ -182,7 +199,9 @@ def load_dataset_from_dir(args, dataset_dir):
     paths = {}
     languages = []
     all_sources = []
+    all_source_tokens = []
     all_replaced = []
+    all_replaced_tokens = []
     all_asts = []
 
     for file in os.listdir(dataset_dir):
@@ -201,7 +220,9 @@ def load_dataset_from_dir(args, dataset_dir):
                 sources, replaced = load_pre_train_dataset(args, file=dataset_file_path, lang=lang)
 
                 new_sources = []
+                new_source_tokens = []
                 new_replaced = []
+                new_replaced_tokens = []
                 asts = []
                 for source, code in tqdm(zip(sources, replaced),desc=f'Parsing {os.path.basename(dataset_file_path)}',
                                                              leave=False,
@@ -210,13 +231,20 @@ def load_dataset_from_dir(args, dataset_dir):
                         ast = cr.code2xsbt(source, lang=lang)
   
                         new_sources.append(source)
+                        new_source_tokens.append(lexicalize(source, lang=lang))
+
                         new_replaced.append(code)
+                        new_replaced_tokens.append(lexicalize(code, lang=lang))
+
                         asts.append(ast)
                     except Exception:
                         continue
 
                 all_sources += new_sources
+                all_source_tokens += new_source_tokens
+
                 all_replaced += new_replaced
+                all_replaced_tokens += new_replaced_tokens
                 all_asts += asts
 
                 n_line = len(new_sources)
@@ -228,7 +256,7 @@ def load_dataset_from_dir(args, dataset_dir):
             logger.info(f'  {lang} dataset size: {n_sample}')
 
     assert len(languages) == len(all_sources) == len(new_replaced)
-    return paths, languages, all_sources, all_replaced, all_asts
+    return paths, languages, all_sources, all_source_tokens, all_replaced, all_replaced_tokens, all_asts
 
 
 def trim_spaces(string):

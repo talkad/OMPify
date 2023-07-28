@@ -1,11 +1,12 @@
 #!/bin/bash
-#PBS -N train_model
-#PBS -l nodes=1:ppn=1
+#SBATCH --job-name=pretrain_fortran        # Job name (you can choose any name)
+#SBATCH --partition=hpci-h100              # Specify the partition or queue name
+#SBATCH --nodes=1                          # Number of nodes to request
+
 
 source activate ompify_env2
 
 cd /homes/talkad/OMPify/CompCoder
-
 
 python main.py \
         --langs fortran \
@@ -18,6 +19,9 @@ python main.py \
         --no-dfg \
         --model-name pre_train_fortran_mass \
         --fp16
+        
+        # --fp16 \
         # --cuda-visible-devices 0,1,2,3 \
 
 conda deactivate
+

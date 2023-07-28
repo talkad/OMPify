@@ -372,7 +372,7 @@ def load_vocab(vocab_root, name) -> Vocab:
         Vocab: Loaded vocab instance
 
     """
-    with open(os.path.join(vocab_root, name, '{}.pk'.format(name)), mode='rb') as f:
+    with open(os.path.join(vocab_root, '{}.pk'.format(name)), mode='rb') as f:
         obj = pickle.load(f)
     assert isinstance(obj, Vocab)
     return obj

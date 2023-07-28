@@ -64,6 +64,7 @@ if __name__ == '__main__':
     main_args.use_cuda = torch.cuda.is_available()
     main_args.parallel = torch.cuda.device_count() > 1
 
+
     # set random seed
     if main_args.random_seed > 0:
         random.seed(main_args.random_seed)
