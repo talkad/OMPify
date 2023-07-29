@@ -7,11 +7,12 @@ source activate ompify_env2
 cd /homes/talkad/OMPify/CompCoder
 
 
-python main.py \
+python ../../OMPify/CompCoder/main.py \
         --langs fortran \
         --do-pre-train \
         --pre-train-tasks mass \
-        --batch-size 64 \
+        --n-epoch 5 \
+        --batch-size 32 \
         --eval-batch-size 64 \
         --no-replaced \
         --no-ast \
