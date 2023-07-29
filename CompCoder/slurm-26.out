@@ -1,0 +1,41 @@
+****************************************************************************************************
+Initializing pre-training environments
+Pre-training tasks: mass
+----------------------------------------------------------------------------------------------------
+Loading and parsing datasets
+Trying to load saved binary pickle file from: /home/1010/talkad/Downloads/HPCorpus_final/dataset_saved/pre_train.pk
+Dataset instance loaded from: /home/1010/talkad/Downloads/HPCorpus_final/dataset_saved/pre_train.pk
+Dataset loaded from these files:
+  fortran: /home/1010/talkad/Downloads/HPCorpus_final/pre_train/fortran/dataset_fortran.jsonl
+The size of pre_training set: 225548
+Datasets loaded and parsed successfully
+----------------------------------------------------------------------------------------------------
+Building vocabularies
+Trying to load saved binary pickle file from: /home/1010/talkad/Downloads/HPCorpus_final/vocab_saved/replaced_code.comp.None.None.pk
+Trying to load saved binary pickle file from: /home/1010/talkad/Downloads/HPCorpus_final/vocab_saved/ast.word.None.1178.pk
+The size of code vocabulary: 1178
+The size of ast vocabulary: 152
+Vocabularies built successfully
+----------------------------------------------------------------------------------------------------
+Building model
+Model trainable parameters: 201M
+Model built successfully
+----------------------------------------------------------------------------------------------------
+Pre-training task: MASS
+----------------------------------------------------------------------------------------------------
+BART mode switched to bart_gen
+----------------------------------------------------------------------------------------------------
+Initializing the running configurations
+Using amp fp16 backend
+Running configurations initialized successfully
+----------------------------------------------------------------------------------------------------
+Start pre-training task: mass
+Device: cuda:0
+***** Running training *****
+  Num examples = 225548
+  Num Epochs = 5
+  Instantaneous batch size per device = 32
+  Total train batch size (w. parallel, distributed & accumulation) = 256
+  Gradient Accumulation steps = 1
+  Total optimization steps = 35245
+  0%|          | 0/35245 [00:00<?, ?it/s]  0%|          | 1/35245 [00:11<117:19:08, 11.98s/it]  0%|          | 2/35245 [00:13<58:15:00,  5.95s/it]   0%|          | 3/35245 [00:15<40:53:26,  4.18s/it]  0%|          | 4/35245 [00:17<32:38:07,  3.33s/it]  0%|          | 5/35245 [00:20<28:45:57,  2.94s/it]  0%|          | 6/35245 [00:22<26:43:36,  2.73s/it]  0%|          | 7/35245 [00:23<22:52:46,  2.34s/it]  0%|          | 8/35245 [00:25<20:41:02,  2.11s/it]

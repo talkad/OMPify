@@ -1,6 +1,9 @@
 import re
+import os
+from tqdm import tqdm
 from parse_tools import parse
 import preprocess
+import json
 
 
 def parse_openmp_pragma(pragma):
@@ -36,7 +39,7 @@ def parse_openmp_pragma(pragma):
 
 
 class OMP_Extractor():
-    def __init__(self, lang):
+    def __init__(self, lang='c'):
         self.lang = lang
 
         self.samples = []
@@ -92,43 +95,60 @@ class OMP_Extractor():
 
 
 
+class DatasetCreatorOMP:
+    def __init__(self, data_dir, save_dir, lang='c'):
+        self.data_dir = data_dir
+        self.save_dir = save_dir
+        self.lang = lang
+
+        self.extractor = OMP_Extractor(lang=self.lang)
+        
+    def iterate_corpus(self):
+        '''
+        Iterate over the HPCorpus and for each function save the following representations:
+            1. code
+            2. hash
+            3. openmp pragma
+        '''
+
+        def parse_json(json_file):             
+            dataset = []
+
+            with open(os.path.join(self.data_dir, json_file), 'r') as f:
+                for line in tqdm(f):
+
+                    try:
+                        js = json.loads(line.strip())
+                    except:
+                        continue
+
+                    if 'content' not in js:
+                        continue
+                    
+                    samples = self.extractor.extract_for_loops(js['content'])
+
+                    for loop, target in samples:
+
+                        dataset.append({'username': loop,
+                                        'hash': preprocess.get_hash(loop),
+                                        'memory': target
+                        })
+                    
+                    self.extractor.reset()
 
 
+                # write the dataset into json
+                with open(os.path.join(self.save_dir, f"{preprocess.get_filename(json_file)}.jsonl"), 'w') as data_f:
+                    for sample in dataset:
+                        data_f.write(json.dumps(sample) + '\n')
+            
+        
+        samples = os.listdir(self.data_dir)
 
-extractor = OMP_Extractor(lang='c')
-
-
-code = """
-int main() {
-    int num_threads = 4;
-
-    omp_set_num_threads(num_threads);
-
-    int n = 16; 
-
-    #pragma omp target teams distribute parallel for simd
-    for (int i = 0; i < n; i++) {
-        int thread_id = omp_get_thread_num();
-        printf("Thread %d: Iteration %d\n", thread_id, i);
-    }
+        for sample in tqdm(samples):
+            print(sample)
+            parse_json(sample)
 
 
-    #pragma omp parallel for num_threads(4)
-    {
-        printf("hello world");
-    }
-
-    while(1) {
-    #pragma omp parallel for target 
-     for (int i = 0; i < n; i++) {
-        int thread_id = omp_get_thread_num();
-        printf("Thread %d: Iteration %d\n", thread_id, i);
-        }
-    }
-
-    return 0;
-}
-"""
-
-for sample in extractor.extract_for_loops(code):
-    print(sample)
+parser = DatasetCreatorOMP('/tier2/bgu/bigQuery_repos/c', '/tier2/bgu/HPCorpus/c', lang='c')
+parser.iterate_corpus()

@@ -98,8 +98,7 @@ def pre_train(args,
                                     name=args.replaced_code_vocab_name,
                                     method='comp',
                                     datasets=[],
-                                    save_root=args.vocab_root,
-                                    index_offset=len(code_vocab)+len(ast_vocab))
+                                    save_root=args.vocab_root)
             
         # ast vocab
         ast_vocab = init_vocab(vocab_save_dir=args.vocab_save_dir,
@@ -280,6 +279,7 @@ def pre_train(args,
             # print(len(trainer.train_dataset))
             # print(trainer.main_args.batch_size)
             
+            # print(trainer.train_dataset[0])
             # for batch in loader:
             #     print(batch)
             #     break

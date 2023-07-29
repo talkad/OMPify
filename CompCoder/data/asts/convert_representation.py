@@ -12,7 +12,7 @@ RE_STR = re.compile(r"\"(?:\\.|[^\\\"])*\"")
 RE_STR_MULTI_LINE = re.compile(r"\"(?:\\.|[^\"\\])*?\"")
 
 
-VAR, ARR, FUNC, STRUCT, FIELD, TYPE, NUM, CHAR, STR = 1, 2, 3, 4, 5, 6, 7, 8, 9
+VAR, ARR, FUNC, STRUCT, FIELD, TYPE, NUM, CHAR, STR, ARG = 1, 2, 3, 4, 5, 6, 7, 8, 9, 10
 replaced_prefixes = { VAR: 'var_',
                       ARR: 'arr_',
                       FUNC: 'func_',
@@ -21,7 +21,8 @@ replaced_prefixes = { VAR: 'var_',
                       TYPE: 'type_',
                       NUM: 'num_',
                       CHAR: 'char_',
-                      STR: 'str_'             
+                      STR: 'str_',
+                      ARG: 'arg_'             
                     }
 
 
@@ -127,33 +128,35 @@ def get_identifiers(node, kind=''):
         Return:
             list for each replaced variable kind (variable, array, function)
     '''
-    # print(node.type, ':', node.text)
+    # print(node.type, node.text)
     if node.type == 'identifier':
-        return ([],[],[(node.text, node.start_byte, node.end_byte)],[],[],[],[],[]) if kind=='func' else ([],[(node.text, node.start_byte, node.end_byte)],[],[],[],[],[],[]) if kind=='arr' else ([(node.text, node.start_byte, node.end_byte)],[],[],[],[],[],[],[])
+        # print('--', kind, node.text)
+        return  ([(node.text, node.start_byte, node.end_byte)],[],[],[],[],[],[],[],[]) if kind=='args' else ([],[],[],[(node.text, node.start_byte, node.end_byte)],[],[],[],[],[]) if kind=='func' else ([],[],[(node.text, node.start_byte, node.end_byte)],[],[],[],[],[],[]) if kind=='arr' else ([],[(node.text, node.start_byte, node.end_byte)],[],[],[],[],[],[],[])
     elif node.type == 'name' and kind == 'func':
-        return ([],[],[(node.text, node.start_byte, node.end_byte)],[],[],[],[],[])
+        return ([],[],[],[(node.text, node.start_byte, node.end_byte)],[],[],[],[],[])
     elif node.type == 'field_identifier':
-        return ([],[],[],[(node.text, node.start_byte, node.end_byte)],[],[],[],[])
+        return ([],[],[],[],[(node.text, node.start_byte, node.end_byte)],[],[],[],[])
     elif node.type == 'type_identifier':
-        return ([],[],[],[],[(node.text, node.start_byte, node.end_byte)],[],[],[])
+        return ([],[],[],[],[],[(node.text, node.start_byte, node.end_byte)],[],[],[])
     elif node.type == 'number_literal':
-        return ([],[],[],[],[],[(node.text, node.start_byte, node.end_byte)],[],[])
+        return ([],[],[],[],[],[],[(node.text, node.start_byte, node.end_byte)],[],[])
     elif node.type == 'char_literal':
-        return ([],[],[],[],[],[],[(node.text, node.start_byte, node.end_byte)],[])
+        return ([],[],[],[],[],[],[],[(node.text, node.start_byte, node.end_byte)],[])
     elif node.type == 'string_literal':
-        return ([],[],[],[],[],[],[],[(node.text, node.start_byte, node.end_byte)])
+        return ([],[],[],[],[],[],[],[],[(node.text, node.start_byte, node.end_byte)])
 
-    vars, arrays, funcs, fields, types, numbers, chars, strings = [], [], [], [], [], [], [], []
+    args, vars, arrays, funcs, fields, types, numbers, chars, strings = [], [], [], [], [], [], [], [], []
     for child in node.children:
-        va, ar, fu, fi, ty, nu, ch, st = get_identifiers(child, kind=('arr' if child.type == 'array_declarator' else
+        arg, va, ar, fu, fi, ty, nu, ch, st = get_identifiers(child, kind=('arr' if child.type == 'array_declarator' else
+                                                  'args' if child.type in ['parameters', 'parameter_list', 'parameter_declaration'] else
                                                   'func' if child.type in ['call_expression', 'function_declarator', 'subroutine_statement'] else
-                                                  '' if child.type in ['parameter_declaration', 'argument_list', 'field_expression', 'parameter_list', 'compound_statement'] else
+                                                  '' if child.type in ['argument_list', 'field_expression', 'compound_statement'] else
                                                   'field' if child.type == 'field_identifier' else
                                                    kind if len(kind)>0 else  ''))
 
-        vars, arrays, funcs, fields, types, numbers, chars, strings = vars+va, arrays+ar, funcs+fu, fields+fi, types+ty, numbers+nu, chars+ch, strings+st
+        args, vars, arrays, funcs, fields, types, numbers, chars, strings = args+arg, vars+va, arrays+ar, funcs+fu, fields+fi, types+ty, numbers+nu, chars+ch, strings+st
 
-    return vars, arrays, funcs, fields, types, numbers, chars, strings
+    return args, vars, arrays, funcs, fields, types, numbers, chars, strings
 
 
 def generate_serial_numbers(N):
@@ -197,9 +200,19 @@ def replace_constants(code, replace_token, regex):
 
 def update_var_names(ast, num_generator):
     name_map = {}
-    vars, arrays, functions, fields, types, numbers, chars, strings = get_identifiers(ast)
+    args, vars, arrays, functions, fields, types, numbers, chars, strings = get_identifiers(ast)
 
-    for type, identifiers in zip([VAR, ARR, FUNC, FIELD, TYPE, NUM, CHAR, STR], [vars, arrays, functions, fields, types, numbers, chars, strings]):
+    arg_names = [arg[0] for arg in args]
+
+    new_args = [var for var in vars if var[0] in arg_names]
+    vars = [var for var in vars if var[0] not in arg_names]
+    args += new_args
+
+    new_args = [function for function in functions if function[0] in arg_names]
+    functions = [function for function in functions if function[0] not in arg_names]
+    args += new_args
+
+    for type, identifiers in zip([ARG, VAR, ARR, FUNC, FIELD, TYPE, NUM, CHAR, STR], [args, vars, arrays, functions, fields, types, numbers, chars, strings]):
         unique_vars= list(set([var[0] for var in identifiers]))
         random_numbers_vars = num_generator(len(unique_vars))
 
@@ -207,8 +220,7 @@ def update_var_names(ast, num_generator):
             name_map[var] = f'{replaced_prefixes[type]}{num}'
 
     # replace and sort the vars according to their location
-    vs = fields+vars+arrays+functions+types+numbers+chars+strings
-
+    vs = args+fields+vars+arrays+functions+types+numbers+chars+strings
     vs.sort(key=lambda tup: tup[1])
     var_mapping = [(var.decode(), name_map[var], start, end) for var, start, end in vs]
     

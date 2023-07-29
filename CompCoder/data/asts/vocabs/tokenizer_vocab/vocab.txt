@@ -1062,6 +1062,7 @@ TRUE
 _
 all
 allocatable
+arg
 arr
 auto
 bool

@@ -109,13 +109,15 @@ class Vocab(object):
         # train tokenizer
         if method == 'comp':
             #load pre-defined vocab
-            with open('CompCoder/data/asts/vocabs/tokenizer_vocab/vocab.txt', 'r') as f:
+            with open('/home/1010/talkad/OMPify/CompCoder/data/asts/vocabs/tokenizer_vocab/vocab.txt', 'r') as f:
                 tokens = f.readlines()
-                self.tokenizer.get_vocab().add_tokens(tokens)
+                self.tokenizer.add_tokens([token[:-1] for token in tokens])
+            self.tokenizer.train(files=[], trainer=trainer)
+
+            # print(self.tokenizer.get_vocab())
             
         else:
             if isinstance(datasets[0], str):
-                print(datasets[0])
                 self.tokenizer.train(files=datasets, trainer=trainer)
             elif isinstance(datasets[0], list):
                 self.tokenizer.train_from_iterator(iterator=datasets, trainer=trainer)
