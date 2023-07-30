@@ -1,5 +1,5 @@
 from .parse_tools import parse
-
+from .convert_representation import replaced_prefixes
 
 def iterate_tree(node):
     
@@ -21,12 +21,22 @@ def flatten_list(nested_list):
     return flattened_list
 
 
-def lexicalize(code, lang='c'):
+def lexicalize(code, lang='c', replaced=False):
     tree = parse(code, lang=lang)
 
     try:
         code = flatten_list(iterate_tree(tree.root_node))
     except RecursionError:
         return ''
+
+    if replaced:
+        updated_code = []
+        for token in code:
+            if any([token.startswith(prefix) for prefix in replaced_prefixes.values()]):
+                updated_code += token.split('_')
+            else:
+                updated_code.append(token)
+
+        return token
 
     return ' '.join(code)

@@ -228,16 +228,23 @@ def load_dataset_from_dir(args, dataset_dir):
                                                              leave=False,
                                                              total=len(sources)):
                     try:
+                        if not source or not code: 
+                            continue
+
                         ast = cr.code2xsbt(source, lang=lang)
-  
+
+                        if not ast:
+                            continue
+
                         new_sources.append(source)
                         new_source_tokens.append(lexicalize(source, lang=lang))
 
                         new_replaced.append(code)
-                        new_replaced_tokens.append(lexicalize(code, lang=lang))
+                        new_replaced_tokens.append(lexicalize(code, lang=lang, replaced=True))
 
                         asts.append(ast)
-                    except Exception:
+                    except Exception as e:
+                        print(e)
                         continue
 
                 all_sources += new_sources
@@ -245,6 +252,7 @@ def load_dataset_from_dir(args, dataset_dir):
 
                 all_replaced += new_replaced
                 all_replaced_tokens += new_replaced_tokens
+
                 all_asts += asts
 
                 n_line = len(new_sources)
@@ -254,8 +262,9 @@ def load_dataset_from_dir(args, dataset_dir):
                 logger.info(f'    File: {dataset_file_path}, {n_line} samples')
 
             logger.info(f'  {lang} dataset size: {n_sample}')
+            logger.info(f'  {lang} list size: {len(all_asts)}')
 
-    assert len(languages) == len(all_sources) == len(new_replaced)
+    assert len(languages) == len(all_sources) == len(new_replaced) == len(all_asts)
     return paths, languages, all_sources, all_source_tokens, all_replaced, all_replaced_tokens, all_asts
 
 

@@ -104,7 +104,7 @@ def pre_train(args,
         ast_vocab = init_vocab(vocab_save_dir=args.vocab_save_dir,
                                name=args.ast_vocab_name,
                                method='word',
-                               datasets=[dataset.asts],
+                               datasets=list(map(lambda ast: ast.split(), dataset.asts)),
                                save_root=args.vocab_root,
                                index_offset=len(code_vocab))
         

@@ -27,23 +27,22 @@ def collate_fn(batch, args, task, code_vocab, ast_vocab, dfg_vocab):
     model_inputs = {}
     # cap
     if task == enums.TASK_CODE_AST_PREDICTION:
-        pass
-        # code_raw, ast_raw, name_raw, is_ast = map(list, zip(*batch))
+        code_raw, ast_raw, is_ast = map(list, zip(*batch))
 
-        # model_inputs['input_ids'], model_inputs['attention_mask'] = get_concat_batch_inputs(
-        #     code_raw=code_raw,
-        #     code_vocab=code_vocab,
-        #     max_code_len=args.max_code_len,
-        #     ast_raw=ast_raw,
-        #     ast_vocab=ast_vocab,
-        #     max_ast_len=args.max_ast_len,
-        #     nl_raw=name_raw,
-        #     nl_vocab=nl_vocab,
-        #     max_nl_len=args.max_nl_len,
-        #     no_ast=args.no_ast,
-        #     no_nl=args.no_nl
-        # )
-        # model_inputs['labels'] = torch.tensor(is_ast, dtype=torch.long)
+        model_inputs['input_ids'], model_inputs['attention_mask'] = get_concat_batch_inputs(
+            code_raw=code_raw,
+            code_vocab=code_vocab,
+            max_code_len=args.max_code_len,
+            ast_raw=ast_raw,
+            ast_vocab=ast_vocab,
+            max_ast_len=args.max_ast_len,
+            dfg_raw=[],
+            dfg_vocab=dfg_vocab,
+            max_dfg_len=args.max_dfg_len,
+            no_ast=args.no_ast,
+            no_dfg=args.no_dfg
+        )
+        model_inputs['labels'] = torch.tensor(is_ast, dtype=torch.long)
     # mass
     elif task == enums.TASK_MASS:
         code_raw, ast_raw, target_raw = map(list, zip(*batch))
@@ -170,7 +169,7 @@ def get_concat_batch_inputs(code_raw, code_vocab, max_code_len,
     if not no_ast:
         ast_inputs, ast_padding_mask = get_batch_inputs(batch=ast_raw,
                                                         vocab=ast_vocab,
-                                                        processor=Vocab.sep_processor,
+                                                        processor=Vocab.eos_processor if no_dfg else Vocab.sep_processor,
                                                         max_len=max_ast_len)
     else:
         ast_inputs, ast_padding_mask = None, None

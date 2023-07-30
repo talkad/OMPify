@@ -25,8 +25,7 @@ class CodeDataset(Dataset):
             dataset_name (str): Name of the dataset
             mode (str): Training mode, ``pre_train`` or ``fine_tune``
             task (str): Dataset mode, support pre-training tasks: ['cap', 'mass', 'mnp'],
-                and downstream fine-tuning task: ['summarization', 'translation'],
-                future support ['completion', 'search', 'clone', 'summarization', 'translation']
+                and downstream fine-tuning task: ['translation'],
             language (str): Only for downstream fine-tuning
             split (str): Only for downstream fine-tuning, support ['train', 'valid', 'test', 'codebase']
 
@@ -77,25 +76,25 @@ class CodeDataset(Dataset):
                 # self.size = len(self.codes)
            
     def __getitem__(self, index):
+        # selection of code representation
+        if self.args.no_replaced:
+            codes = self.source_tokens
+        else:
+            codes = self.replaced_tokens
 
         # cap
         if self.task == enums.TASK_CODE_AST_PREDICTION:
+            
             is_ast = random.random() < 0.5
             if is_ast:
-                return self.source_tokens[index], self.replaced_tokens[index], self.asts[index], 1
+                return codes[index], self.asts[index], 1
             else:
                 other_ast = self.asts[random.randint(0, self.size - 1)]
                 while other_ast == self.asts[index]:
                     other_ast = self.asts[random.randint(0, self.size - 1)]
-                return self.source_tokens[index], self.replaced_tokens[index], other_ast, 0
+                return codes[index], other_ast, 0
         # mass
         elif self.task == enums.TASK_MASS:
-            
-            if self.args.no_replaced:
-                codes = self.source_tokens
-            else:
-                codes = self.replaced_tokens
-
             code_tokens = codes[index].split()
             mask_len = int(self.args.mass_mask_ratio * len(code_tokens))
             mask_start = random.randint(0, len(code_tokens) - mask_len)
