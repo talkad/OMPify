@@ -21,10 +21,18 @@ int main() {
 """
 
 code = """
-#pragma omp parallel num_threads(4)
-{
-    printf("hello world");
-}
+program DoLoopExample
+    implicit none
+
+    integer :: i
+
+    ! Loop from 1 to 10
+    !$omp parallel do
+    do i = 1, 10
+        print *, "Iteration: ", i
+    end do
+
+end program DoLoopExample
 """
-node = parse(code, lang='c').root_node
+node = parse(code, lang='fortran').root_node
 preprocess.print_tree(node)

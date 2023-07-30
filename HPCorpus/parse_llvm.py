@@ -183,9 +183,9 @@ class LLVMParser:
         # processed_data.compute()
 
 
-parser = LLVMParser('/tier2/bgu/bigQuery_repos/c', '/tier2/bgu/HPCorpus/c', lang='c')
+# parser = LLVMParser('/tier2/bgu/bigQuery_repos/c', '/tier2/bgu/HPCorpus/c', lang='c')
 
-# parser = LLVMParser('/tier2/bgu/bigQuery_repos/Fortran', '/tier2/bgu/HPCorpus/Fortran', lang='fortran')
+parser = LLVMParser('/tier2/bgu/bigQuery_repos/Fortran', '/tier2/bgu/HPCorpus/Fortran', lang='fortran')
 parser.iterate_corpus()
 
 

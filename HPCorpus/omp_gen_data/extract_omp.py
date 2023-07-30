@@ -52,25 +52,28 @@ class OMP_Extractor():
         Returns true if the given pragma is omp-for
         '''
         line = pragma.lstrip().lower()
+        if 'omp ' in line:
+            print(line)
         clauses = [clause for clause, _ in parse_openmp_pragma(line)]
-
-        return all([clause in clauses for clause in ['omp', 'for']])
+        print()
+        if self.lang == 'fortran':
+            return all([clause in clauses for clause in ['omp', 'do']])
+        else:
+            return all([clause in clauses for clause in ['omp', 'for']])
 
     def detect_for(self, node):
-        children = node.children
-        num_children = len(children)
-
         pragma = ''
 
-        for child in children:
-            if child.type == 'preproc_call' and self.is_omp_for_pragma(child.text):
+        for child in node.children:
+            if ((not self.lang == 'fortran' and child.type == 'preproc_call') or \
+                (self.lang == 'fortran' and child.type == 'comment')) and self.is_omp_for_pragma(child.text):
                 pragma = child.text
             elif len(child.type) == 1:
                 pass
-            elif pragma and child.type in ['compound_statement', 'for_statement']:
+            elif pragma and child.type in ['compound_statement', 'for_statement', 'do_loop_statement']:
                 self.samples.append((child.text.decode(), pragma.decode()))
                 pragma = ''
-            elif not pragma and child.type == 'for_statement':
+            elif not pragma and child.type in ['for_statement', 'do_loop_statement']:
                 self.samples.append((child.text.decode(), ''))
                 self.detect_for(child)
             else:
@@ -117,22 +120,16 @@ class DatasetCreatorOMP:
             with open(os.path.join(self.data_dir, json_file), 'r') as f:
                 for line in tqdm(f):
 
-                    try:
-                        js = json.loads(line.strip())
-                    except:
-                        continue
-
-                    if 'content' not in js:
-                        continue
-                    
-                    samples = self.extractor.extract_for_loops(js['content'])
+                    js = json.loads(line.strip())
+                    samples = self.extractor.extract_for_loops(js['code'])
 
                     for loop, target in samples:
-
-                        dataset.append({'username': loop,
-                                        'hash': preprocess.get_hash(loop),
-                                        'memory': target
-                        })
+                        
+                        if target:
+                            dataset.append({'code': loop,
+                                            'pragma': target,
+                                            'hash': preprocess.get_hash(loop)
+                            })
                     
                     self.extractor.reset()
 
@@ -150,5 +147,5 @@ class DatasetCreatorOMP:
             parse_json(sample)
 
 
-parser = DatasetCreatorOMP('/tier2/bgu/bigQuery_repos/c', '/tier2/bgu/HPCorpus/c', lang='c')
+parser = DatasetCreatorOMP('/home/1010/talkad/Downloads/HPCorpus_final/fine_tune/fortran', '/home/1010/talkad/Downloads/OMP_Dataset/fortran', lang='fortran')
 parser.iterate_corpus()
