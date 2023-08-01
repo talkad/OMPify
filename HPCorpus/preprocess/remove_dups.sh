@@ -1,10 +1,10 @@
 #!/bin/bash
 
 # Input CSV file path
-input_file="/tier2/bgu/hash/cpp/total.csv"
+input_file="/home/1010/talkad/Downloads/hash/Fortran/total.csv"
 
 # Output file path (file without hash duplications)
-output_file="total_uniq_cpp.csv"
+output_file="total_uniq_Fortran.csv"
 
 # Check if the input file exists
 if [ ! -f "$input_file" ]; then

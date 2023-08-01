@@ -24,6 +24,9 @@ def collate_fn(batch, args, task, code_vocab, ast_vocab, dfg_vocab):
         dict: Model inputs
 
     """
+    # print(code_vocab.tokenizer.get_vocab())
+
+
     model_inputs = {}
     # cap
     if task == enums.TASK_CODE_AST_PREDICTION:
@@ -165,7 +168,8 @@ def get_concat_batch_inputs(code_raw, code_vocab, max_code_len,
                                                       vocab=code_vocab,
                                                       processor=Vocab.sep_processor,
                                                       max_len=max_code_len)
-
+    
+    print(code_inputs)
     if not no_ast:
         ast_inputs, ast_padding_mask = get_batch_inputs(batch=ast_raw,
                                                         vocab=ast_vocab,

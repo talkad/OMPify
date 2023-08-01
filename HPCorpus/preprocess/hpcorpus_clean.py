@@ -1,9 +1,11 @@
 import os
 import json
 from tqdm import tqdm
-import preprocess
 from concurrent.futures.thread import ThreadPoolExecutor
 import logging
+
+import preprocess
+
 
 logging.basicConfig(filename='clean_c.log', format='%(asctime)s - %(levelname)s - %(name)s -   %(message)s',datefmt='%d/%m/%Y %H:%M:%S',level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -53,11 +55,11 @@ def extract_hash(js_file):
     create csv files create the hash and its location
     '''
     dataset = []
-    hpcorpus_dir = '/tier2/bgu/HPCorpus_preprocess'
-    save_dir = '/tier2/bgu/hash'
+    hpcorpus_dir = '/home/1010/talkad/Downloads/Fortran_HPCorpus'
+    save_dir = '/home/1010/talkad/Downloads/hash'
     langs = ['Fortran']
 
-    lang_dir = os.path.join(hpcorpus_dir, langs[0])
+    lang_dir =  hpcorpus_dir #os.path.join(hpcorpus_dir, langs[0])
 
     js_dir = os.path.join(lang_dir, js_file)
 
@@ -65,8 +67,10 @@ def extract_hash(js_file):
 
     with open(os.path.join(js_dir), 'r') as f:
         for idx, line in enumerate(f):
-
-            js = json.loads(line.strip())
+            try:
+                js = json.loads(line.strip())
+            except Exception:
+                continue
             hash = js['hash']
 
             dataset.append(f'{idx},{hash}')   
@@ -80,8 +84,8 @@ def extract_hash(js_file):
 
 
 def unite_csv():
-    hpcorpus_dir = '/tier2/bgu/hash'
-    langs = ['cpp']
+    hpcorpus_dir = '/home/1010/talkad/Downloads/hash'
+    langs = ['Fortran']
     lang_dir = os.path.join(hpcorpus_dir, langs[0])
 
     with open(os.path.join(lang_dir, 'total.csv'), 'w') as total_f:
@@ -99,10 +103,10 @@ def unite_csv():
 
 
 def extract_uniq_samples():
-    hpcorpus_dir = '/tier2/bgu/HPCorpus_preprocess'
-    lang = 'cpp'
+    hpcorpus_dir = '/home/1010/talkad/Downloads/Fortran_HPCorpus'
+    lang = 'Fortran'
 
-    lang_dir = os.path.join(hpcorpus_dir, lang)
+    lang_dir = hpcorpus_dir # os.path.join(hpcorpus_dir, lang)
 
     with open(os.path.join(lang_dir, f'total_uniq_{lang}.csv'), 'r') as f:
         uniq_content = f.read().split('\n')
@@ -113,8 +117,9 @@ def extract_uniq_samples():
             
             if 'total' in js_file:
                 continue
-
+            # print(js_file)
             uniq_content_file = [content.split(',') for content in uniq_content if content.startswith(preprocess.get_filename(js_file))]
+            # print(uniq_content_file)
             # if len(uniq_content_file):
             #     print(uniq_content_file)
 
@@ -141,9 +146,9 @@ def extract_uniq_samples():
 
 
 
-# hpcorpus_dir = '/tier2/bgu/HPCorpus_preprocess/Fortran'
+# hpcorpus_dir = '/home/1010/talkad/Downloads/Fortran_HPCorpus'
 # samples = os.listdir(hpcorpus_dir)
-# for sample in samples:
+# for sample in tqdm(samples):
 #     extract_hash(sample)
 
 
@@ -152,3 +157,7 @@ def extract_uniq_samples():
 
 
 extract_uniq_samples()
+
+
+# extract_hash()
+# unite_csv()

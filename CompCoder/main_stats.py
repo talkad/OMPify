@@ -1,4 +1,3 @@
-import torch
 
 import argparse
 import random
@@ -10,8 +9,7 @@ import time
 from prettytable import PrettyTable
 
 from args import add_args
-from train import train
-from pre_train import pre_train
+from tokom_stats import stats
 
 
 def main(args):
@@ -20,12 +18,8 @@ def main(args):
     vocab = None
 
     if args.do_pre_train:
-        model, vocab = pre_train(args=args)
+        stats(args=args)
 
-    if args.do_fine_tune or args.only_test:
-        train(args=args,
-              trained_model=model,
-              trained_vocab=vocab)
 
 
 if __name__ == '__main__':
@@ -62,16 +56,13 @@ if __name__ == '__main__':
     if main_args.cuda_visible_devices is not None:
         os.environ['CUDA_VISIBLE_DEVICES'] = main_args.cuda_visible_devices
     os.environ['TOKENIZERS_PARALLELISM'] = 'false'
-    main_args.use_cuda = torch.cuda.is_available()
-    main_args.parallel = torch.cuda.device_count() > 1
 
 
     # set random seed
     if main_args.random_seed > 0:
         random.seed(main_args.random_seed)
         np.random.seed(main_args.random_seed)
-        torch.manual_seed(main_args.random_seed)
-        torch.cuda.manual_seed_all(main_args.random_seed)
+
 
     # logging, log to both console and file, debug level only to file
     logger = logging.getLogger()

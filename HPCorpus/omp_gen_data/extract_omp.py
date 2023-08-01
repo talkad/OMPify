@@ -20,7 +20,6 @@ def parse_openmp_pragma(pragma):
         output: [('pragma', ''), ('omp', ''), ('for', ''), ('private', 'a,b,c'), ('lastprivate', 'd'), ('schedule', 'static:8')]
 
     '''
-    pragma = pragma.decode()
     pattern = r'(\w+(\s*\(.*?\)|\s))'
     matches = re.findall(pattern, pragma)
     clauses = []
@@ -51,11 +50,9 @@ class OMP_Extractor():
         '''
         Returns true if the given pragma is omp-for
         '''
-        line = pragma.lstrip().lower()
-        if 'omp ' in line:
-            print(line)
+        line = pragma.decode().lstrip().lower()
         clauses = [clause for clause, _ in parse_openmp_pragma(line)]
-        print()
+
         if self.lang == 'fortran':
             return all([clause in clauses for clause in ['omp', 'do']])
         else:
@@ -92,8 +89,11 @@ class OMP_Extractor():
 
         '''
         node = parse(code, lang=self.lang).root_node
-
-        self.detect_for(node)
+        try:
+            self.detect_for(node)
+        except RecursionError:
+            pass
+        
         return self.samples
 
 
@@ -126,6 +126,11 @@ class DatasetCreatorOMP:
                     for loop, target in samples:
                         
                         if target:
+                            ## DEBUG ##
+                            # print('-------------')
+                            # print(target)
+                            # print(loop)
+                            ## DEBUG ##
                             dataset.append({'code': loop,
                                             'pragma': target,
                                             'hash': preprocess.get_hash(loop)

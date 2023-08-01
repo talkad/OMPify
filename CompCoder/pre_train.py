@@ -98,6 +98,7 @@ def pre_train(args,
                                     name=args.replaced_code_vocab_name,
                                     method='comp',
                                     datasets=[],
+                                    ignore_case=True,
                                     save_root=args.vocab_root)
             
         # ast vocab
@@ -273,18 +274,16 @@ def pre_train(args,
                                   compute_metrics=None,
                                   callbacks=[LogStateCallBack()])
             
-            ##### DEBUG #####
+            # #### DEBUG #####
             # print('-'*100)
             # loader = trainer.get_train_dataloader()
-            # print(len(trainer.train_dataset))
-            # print(trainer.main_args.batch_size)
             
-            # print(trainer.train_dataset[0])
+            # # print(trainer.train_dataset[0])
             # for batch in loader:
-            #     print(batch)
+            #     print(batch['input_ids'][0])
             #     break
             # return
-            ##### DEBUG #####
+            # #### DEBUG #####
             
             logger.info('Running configurations initialized successfully')
 

@@ -16,10 +16,10 @@ python main.py \
         --fp16 \
         --eval-batch-size 64 \
         --no-dfg \
-        --no-replaced \
-        --model-name pre_train_fortran_cap_mass
-        
-        # --no-replaced \
+        --model-name pre_train_fortran_cap_mass \
+        --no-replaced
+
+        # --no-ast \
 
 conda deactivate
 

@@ -82,41 +82,40 @@ class Vocab(object):
         else:
             self.index_offset = None
 
-        # tokenizer and trainer
-        if method in ['word', 'comp']:
-            tokenize_class = WordLevel
-            trainer_class = WordLevelTrainer
-        else:
-            if vocab_size is None:
-                logger.warning('It is recommended to specific the vocabulary size for BPE tokenize method')
-            tokenize_class = BPE
-            trainer_class = BpeTrainer
 
-        self.tokenizer = Tokenizer(tokenize_class(unk_token=Vocab.UNK_TOKEN))
-        if vocab_size:
-            trainer = trainer_class(special_tokens=self.__special_symbols, vocab_size=vocab_size)
-        else:
-            trainer = trainer_class(special_tokens=self.__special_symbols)
-        self.tokenizer.pre_tokenizer = Whitespace()
-
-        # normalizer
-        if ignore_case:
-            normalizer = normalizers.Sequence([NFD(), StripAccents(), Strip(), Lowercase()])
-        else:
-            normalizer = normalizers.Sequence([NFD(), StripAccents(), Strip()])
-        self.tokenizer.normalizer = normalizer
-
-        # train tokenizer
         if method == 'comp':
-            #load pre-defined vocab
-            with open('/home/1010/talkad/OMPify/CompCoder/data/asts/vocabs/tokenizer_vocab/vocab.txt', 'r') as f:
-                tokens = f.readlines()
-                self.tokenizer.add_tokens([token[:-1] for token in tokens])
-            self.tokenizer.train(files=[], trainer=trainer)
+            self.tokenizer = Tokenizer(WordLevel(unk_token=Vocab.UNK_TOKEN))
+            trainer = WordLevelTrainer(special_tokens=self.__special_symbols)
 
-            # print(self.tokenizer.get_vocab())
-            
+            with open('/home/1010/talkad/OMPify/CompCoder/data/asts/vocabs/tokenizer_vocab/vocab.txt', 'r') as f:
+                tokens = ['[PAD]', '[SOS]', '[EOS]', '[UNK]', '[MSK]', '[SEP]', '[CLS]'] + [f'##{token[:-1]}##' for token in f.readlines()]
+                self.token2id = {token:idx for idx, token in enumerate(tokens, start=1)}
+                self.id2token = {value: key for key, value in self.token2id.items()}
         else:
+            # tokenizer and trainer
+            if method =='word': 
+                tokenize_class = WordLevel
+                trainer_class = WordLevelTrainer
+            else:
+                if vocab_size is None:
+                    logger.warning('It is recommended to specific the vocabulary size for BPE tokenize method')
+                tokenize_class = BPE
+                trainer_class = BpeTrainer
+
+            self.tokenizer = Tokenizer(tokenize_class(unk_token=Vocab.UNK_TOKEN))
+            if vocab_size:
+                trainer = trainer_class(special_tokens=self.__special_symbols, vocab_size=vocab_size)
+            else:
+                trainer = trainer_class(special_tokens=self.__special_symbols)
+            self.tokenizer.pre_tokenizer = Whitespace()
+
+            # normalizer
+            if ignore_case:
+                normalizer = normalizers.Sequence([NFD(), StripAccents(), Strip(), Lowercase()])
+            else:
+                normalizer = normalizers.Sequence([NFD(), StripAccents(), Strip()])
+            self.tokenizer.normalizer = normalizer
+
             if isinstance(datasets[0], str):
                 self.tokenizer.train(files=datasets, trainer=trainer)
             elif isinstance(datasets[0], list):
@@ -124,12 +123,12 @@ class Vocab(object):
             else:
                 raise TypeError('The type of datasets is not support, expect list of paths or list of lines')
 
-        # pad idx
-        self.pad_token_id = self.get_pad_index()
+            # pad idx
+            self.pad_token_id = self.get_pad_index()
 
-        # save
-        if save_root:
-            self.save(vocab_root=save_root)
+            # save
+            if save_root:
+                self.save(vocab_root=save_root)
 
     def add_special_symbols(self, symbols: list):
         assert isinstance(symbols, list)
@@ -207,6 +206,17 @@ class Vocab(object):
             return self.get_unk_index()
         return index - self.index_offset
 
+    def encode_comp(self, code: str):
+        tokens = code.split()
+
+        ids = []
+        for token in tokens:
+            index = self.token2id[token] if token in self.token2id else self.token2id['[UNK]']
+            ids.append(index if (not self.index_offset or index < len(self.__special_symbols)) else index+self.index_offset)
+            # print(token, index if (not self.index_offset or index < len(self.__special_symbols)) else index+self.index_offset)
+
+        return  ids
+
     def encode_sequence(self, sequence: Union[str, List[str]], is_pre_tokenized=False):
         """
         Encode a sequence to corresponding ids.
@@ -246,16 +256,39 @@ class Vocab(object):
                 - encoded batch of attention masks
 
         """
-        if self.ignore_case:
-            batch = [sequence.lower() if isinstance(sequence, str) else [token.lower() for token in sequence]
-                     for sequence in batch]
-        if pad:
-            self.tokenizer.enable_padding(length=max_length)
+        
+        if self.method == 'comp':
+            if self.ignore_case:
+                batch = [sequence.lower()+' [SEP]' if isinstance(sequence, str) else [token.lower()+ ' [SEP]' for token in sequence]
+                        for sequence in batch]
+            else:
+                batch = [sequence+' [SEP]' if isinstance(sequence, str) else [token+ ' [SEP]' for token in sequence]
+                        for sequence in batch]
+
+            ids_lsts = [self.encode_comp(sequence) if isinstance(sequence, str) else [self.encode_comp(seq) for seq in sequence]
+                            for sequence in batch]
+
+            if max_length is not None:
+                ids = [ids[:max_length] + [0] * (max_length - len(ids)) if len(ids) < max_length else ids[:max_length]
+                        for ids in ids_lsts]
+            else:
+                ids = ids_lsts
+            
+            attention_mask = [[1]*len(i) for i in ids]
         else:
-            self.tokenizer.no_padding()
-        encoded_batch = self.tokenizer.encode_batch(input=batch, is_pretokenized=is_pre_tokenized)
-        ids = [[self.transfer_index(index) for index in encoded.ids] for encoded in encoded_batch]
-        attention_mask = [encoded.attention_mask for encoded in encoded_batch]
+
+            if self.ignore_case:
+                batch = [sequence.lower() if isinstance(sequence, str) else [token.lower() for token in sequence]
+                        for sequence in batch]
+
+            if pad:
+                self.tokenizer.enable_padding(length=max_length)
+            else:
+                self.tokenizer.no_padding()
+            encoded_batch = self.tokenizer.encode_batch(input=batch, is_pretokenized=is_pre_tokenized)
+            ids = [[self.transfer_index(index) for index in encoded.ids] for encoded in encoded_batch]
+            attention_mask = [encoded.attention_mask for encoded in encoded_batch]
+
         return ids, attention_mask
 
     def decode(self, ids: List[int], skip_special_tokens=True) -> str:
@@ -325,11 +358,12 @@ class Vocab(object):
         with open(os.path.join(vocab_dir, '{}.pk'.format(vocab_name)), mode='wb') as f:
             pickle.dump(self, f)
         # save tokenizer
-        self.tokenizer.save(os.path.join(vocab_dir, '{}_tokenizer.json'.format(vocab_name)))
-        # save token to id mapping as a txt file
-        with open(os.path.join(vocab_dir, '{}_mapping.txt'.format(vocab_name)), mode='w', encoding='utf-8') as f:
-            for token, index in sorted(self.tokenizer.get_vocab().items(), key=lambda item: item[1]):
-                f.write('{}\t{}\n'.format(token, index))
+        if self.method != 'comp':
+            self.tokenizer.save(os.path.join(vocab_dir, '{}_tokenizer.json'.format(vocab_name)))
+            # save token to id mapping as a txt file
+            with open(os.path.join(vocab_dir, '{}_mapping.txt'.format(vocab_name)), mode='w', encoding='utf-8') as f:
+                for token, index in sorted(self.tokenizer.get_vocab().items(), key=lambda item: item[1]):
+                    f.write('{}\t{}\n'.format(token, index))
 
     def save_pretrained(self, output_dir):
         return
@@ -344,6 +378,9 @@ class Vocab(object):
         logger.info(f'Vocab saved to {path}')
 
     def __len__(self):
+        if self.method == 'comp':
+            return len(self.token2id)
+        
         return self.tokenizer.get_vocab_size()
 
     def __contains__(self, item):

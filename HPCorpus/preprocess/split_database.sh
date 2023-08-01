@@ -1,14 +1,12 @@
 #!/bin/bash
 
-input_file="/tier2/bgu/HPCorpus_preprocess/cpp/total_uniq.jsonl"
-output_file_1="/tier2/bgu/HPCorpus_final/pre_train/cpp/dataset_cpp.jsonl"
-output_file_2="/tier2/bgu/HPCorpus_final/fine_tune/cpp/dataset_cpp.jsonl"
+input_file="/home/1010/talkad/Downloads/Fortran_HPCorpus/total_uniq.jsonl"
+output_file_1="/home/1010/talkad/Downloads/HPCorpus_final/pre_train/fortran/dataset_fortran.jsonl"
+output_file_2="/home/1010/talkad/Downloads/HPCorpus_final/fine_tune/fortran/dataset_fortran.jsonl"
 
 # Get the total number of lines in the input file
 total_lines=$(wc -l < "$input_file")
 
-# cpp 33724011 total_uniq.jsonl
-# c   25667699 total_uniq.jsonl
 
 echo "$total_lines"
 
