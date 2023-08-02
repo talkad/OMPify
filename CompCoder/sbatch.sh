@@ -16,7 +16,7 @@ python main.py \
         --fp16 \
         --eval-batch-size 64 \
         --no-dfg \
-        --model-name pre_train_fortran_cap_mass \
+        --model-name wed_pre_train_fortran_tokom_cap_mass \
         --no-replaced
 
         # --no-ast \

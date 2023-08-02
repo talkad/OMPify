@@ -102,41 +102,41 @@ class Tokompiler(Tokenizer):
         return tokens
 
 
-# class TokenizerBPE(Tokenizer):
-#     '''
-#         GPT2 BPE tokenization
-#     '''
-#     def __init__(self):
-#         self.tokenizer = GPT2Tokenizer.from_pretrained('gpt2')
+class TokenizerBPE(Tokenizer):
+    '''
+        GPT2 BPE tokenization
+    '''
+    def __init__(self):
+        self.tokenizer = GPT2Tokenizer.from_pretrained('gpt2')
 
-#     def tokenize(self, s: str, lang: str = 'c') -> List[str]:
+    def tokenize(self, s: str, lang: str = 'c') -> List[str]:
 
-#         s = parse_tools.generate_replaced(s, num_generator=parse_tools.generate_random_numbers, lang=lang)
+        s = parse_tools.generate_replaced(s, num_generator=parse_tools.generate_random_numbers, lang=lang)
 
-#         tokens = self.tokenizer.tokenize(s)
-#         updated_tokens = []
+        tokens = self.tokenizer.tokenize(s)
+        updated_tokens = []
 
-#         for token in tokens:
-#             if token.startswith('Ċ') or token.startswith('Ġ'):
-#                 updated_token = token[1:]
+        for token in tokens:
+            if token.startswith('Ċ') or token.startswith('Ġ'):
+                updated_token = token[1:]
 
-#                 if 'Ċ' in updated_token or 'Ġ' in updated_token:
-#                     continue
-#             else:
-#                 updated_token = token
+                if 'Ċ' in updated_token or 'Ġ' in updated_token:
+                    continue
+            else:
+                updated_token = token
 
-#             if updated_token:
-#                 updated_tokens.append(updated_token)
+            if updated_token:
+                updated_tokens.append(updated_token)
 
-#         return updated_tokens
+        return updated_tokens
 
-#     def encode(self, s: str, lang: str = 'c') ->  List[int]:
-#         s = parse_tools.generate_replaced(s, num_generator=parse_tools.generate_random_numbers, lang=lang)
+    def encode(self, s: str, lang: str = 'c') ->  List[int]:
+        s = parse_tools.generate_replaced(s, num_generator=parse_tools.generate_random_numbers, lang=lang)
 
-#         return self.tokenizer.encode(s)
+        return self.tokenizer.encode(s)
 
-#     def decode(self, t: List[int]) -> str:
-#         return self.tokenizer.decode(t)
+    def decode(self, t: List[int]) -> str:
+        return self.tokenizer.decode(t)
 
 
 class ASTokenizer(Tokenizer):

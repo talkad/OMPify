@@ -169,7 +169,6 @@ def get_concat_batch_inputs(code_raw, code_vocab, max_code_len,
                                                       processor=Vocab.sep_processor,
                                                       max_len=max_code_len)
     
-    print(code_inputs)
     if not no_ast:
         ast_inputs, ast_padding_mask = get_batch_inputs(batch=ast_raw,
                                                         vocab=ast_vocab,

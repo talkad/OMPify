@@ -1,7 +1,7 @@
 import re
 import random
 from .dfg_parser import extract_dataflow
-from .ast_parser import generate_statement_xsbt
+from .ast_parser import generate_statement_xsbt, generate_naive_ast
 from .parse_tools import parse
 
 
@@ -45,6 +45,17 @@ def code2xsbt(code, lang='c'):
     xsbt_str = generate_statement_xsbt(node, lang)
 
     return xsbt_str
+
+
+def code2ast(code, lang='c'):
+    '''
+    Convert code to AST
+    '''
+    tree = parse(code, lang=lang)
+    node = tree.root_node
+    ast = generate_naive_ast(node, lang)
+
+    return ast
 
 
 def prettify_xsbt(xsbt):
@@ -149,7 +160,7 @@ def get_identifiers(node, kind=''):
     for child in node.children:
         arg, va, ar, fu, fi, ty, nu, ch, st = get_identifiers(child, kind=('arr' if child.type == 'array_declarator' else
                                                   'args' if child.type in ['parameters', 'parameter_list', 'parameter_declaration'] else
-                                                  'func' if child.type in ['call_expression', 'function_declarator', 'subroutine_statement'] else
+                                                  'func' if child.type in ['call_expression', 'function_declarator', 'function_statement', 'subroutine_statement'] else
                                                   '' if child.type in ['argument_list', 'field_expression', 'compound_statement'] else
                                                   'field' if child.type == 'field_identifier' else
                                                    kind if len(kind)>0 else  ''))
