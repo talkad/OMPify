@@ -1,6 +1,7 @@
 *.txt
 *.log
 *.pkl
+*.out
 *.pickle
 **/temp_folder*
 **/repos

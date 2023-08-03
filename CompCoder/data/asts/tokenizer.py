@@ -6,7 +6,7 @@ from abc import ABC, abstractmethod
 
 from . import convert_representation as cr
 from . import fortranTokenizer as ftok
-
+from . import parse_tools
 
 
 class Tokenizer(ABC):
@@ -57,11 +57,16 @@ class Tokompiler(Tokenizer):
         Compiler oriented tokenization
     '''
 
-    def __init__(self, vocab_path: str = '/home/1010/talkad/OMPify/CompCoder/data/asts/vocabs/tokenizer_vocab/tokompiler_vocab.json'):
+    def __init__(self, vocab_path: str):
         with open(vocab_path, 'r') as f:
-            vocab = json.loads(f.read())
+            tokens = [f'##{token[:-1]}##' for token in f.readlines()]
 
-        self.encoder = {key:int(val) for key, val in vocab.items()}
+        self.special_tokens = ['[PAD]', '[SOS]', '[EOS]', '[UNK]', '[MSK]', '[SEP]', '[CLS]']
+
+        with open(vocab_path, 'r') as f:
+            tokens = ['[PAD]', '[SOS]', '[EOS]', '[UNK]', '[MSK]', '[SEP]', '[CLS]'] + tokens
+
+        self.encoder = {token:idx for idx, token in enumerate(tokens, start=1)}
         self.decoder = {val:key for key, val in self.encoder.items()}
 
     def tokenize(self, s: str, lang: str = 'c') -> List[str]:
@@ -110,8 +115,8 @@ class TokenizerBPE(Tokenizer):
         self.tokenizer = GPT2Tokenizer.from_pretrained('gpt2')
 
     def tokenize(self, s: str, lang: str = 'c') -> List[str]:
-
-        s = parse_tools.generate_replaced(s, num_generator=parse_tools.generate_random_numbers, lang=lang)
+        # ast = parse_tools.parse(s, lang=lang)
+        # s = cr.generate_replaced(ast)
 
         tokens = self.tokenizer.tokenize(s)
         updated_tokens = []
@@ -131,7 +136,7 @@ class TokenizerBPE(Tokenizer):
         return updated_tokens
 
     def encode(self, s: str, lang: str = 'c') ->  List[int]:
-        s = parse_tools.generate_replaced(s, num_generator=parse_tools.generate_random_numbers, lang=lang)
+        s = cr.generate_replaced(s, num_generator=cr.generate_random_numbers, lang=lang)
 
         return self.tokenizer.encode(s)
 
