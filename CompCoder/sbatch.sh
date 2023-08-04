@@ -24,3 +24,18 @@ python main.py \
 conda deactivate
 
 
+
+
+python main.py \
+        --langs fortran \
+        --do-pre-train \
+        --pre-train-tasks mass \
+        --n-epoch 1\
+        --learning-rate 0 \
+        --batch-size 64 \
+        --fp16 \
+        --eval-batch-size 64 \
+        --no-dfg \
+        --no-ast \
+        --no-replaced \
+        --model-name ppl_mass

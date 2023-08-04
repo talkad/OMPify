@@ -128,29 +128,35 @@ def pre_train(args,
     # --------------------------------------------------
     logger.info('-' * 100)
     logger.info('Building model')
-    config = BartConfig(vocab_size=len(code_vocab) + len(ast_vocab),
-                        max_position_embeddings=512,
-                        encoder_layers=args.n_layer,
-                        encoder_ffn_dim=args.d_ff,
-                        encoder_attention_heads=args.n_head,
-                        decoder_layers=args.n_layer,
-                        decoder_ffn_dim=args.d_ff,
-                        decoder_attention_heads=args.n_head,
-                        activation_function='gelu',
-                        d_model=args.d_model,
-                        dropout=args.dropout,
-                        use_cache=True,
-                        pad_token_id=Vocab.START_VOCAB.index(Vocab.PAD_TOKEN),
-                        bos_token_id=Vocab.START_VOCAB.index(Vocab.SOS_TOKEN),
-                        eos_token_id=Vocab.START_VOCAB.index(Vocab.EOS_TOKEN),
-                        is_encoder_decoder=True,
-                        decoder_start_token_id=Vocab.START_VOCAB.index(Vocab.SOS_TOKEN),
-                        forced_eos_token_id=Vocab.START_VOCAB.index(Vocab.EOS_TOKEN),
-                        max_length=100,  # limit decoder output
-                        min_length=1,
-                        num_beams=args.beam_width,
-                        num_labels=2)
+    # xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+    # config = BartConfig(vocab_size=len(code_vocab) + len(ast_vocab),
+    #                     max_position_embeddings=512,
+    #                     encoder_layers=args.n_layer,
+    #                     encoder_ffn_dim=args.d_ff,
+    #                     encoder_attention_heads=args.n_head,
+    #                     decoder_layers=args.n_layer,
+    #                     decoder_ffn_dim=args.d_ff,
+    #                     decoder_attention_heads=args.n_head,
+    #                     activation_function='gelu',
+    #                     d_model=args.d_model,
+    #                     dropout=args.dropout,
+    #                     use_cache=True,
+    #                     pad_token_id=Vocab.START_VOCAB.index(Vocab.PAD_TOKEN),
+    #                     bos_token_id=Vocab.START_VOCAB.index(Vocab.SOS_TOKEN),
+    #                     eos_token_id=Vocab.START_VOCAB.index(Vocab.EOS_TOKEN),
+    #                     is_encoder_decoder=True,
+    #                     decoder_start_token_id=Vocab.START_VOCAB.index(Vocab.SOS_TOKEN),
+    #                     forced_eos_token_id=Vocab.START_VOCAB.index(Vocab.EOS_TOKEN),
+    #                     max_length=100,  # limit decoder output
+    #                     min_length=1,
+    #                     num_beams=args.beam_width,
+    #                     num_labels=2)
+    # model = BartForClassificationAndGeneration(config)
+
+    config = BartConfig.from_pretrained('/home/1010/talkad/OMPify/outputs/wed_pre_train_fortran_mass_20230802_235207/models/mass/config.json')
     model = BartForClassificationAndGeneration(config)
+    model.load_state_dict(torch.load('/home/1010/talkad/OMPify/outputs/wed_pre_train_fortran_mass_20230802_235207/models/mass/pytorch_model.bin'))
+
     # log model statistic
     logger.info('Model trainable parameters: {}'.format(human_format(count_params(model))))
     table = layer_wise_parameters(model)
@@ -271,7 +277,7 @@ def pre_train(args,
                                   train_dataset=dataset,
                                   tokenizer=code_vocab,
                                   model_init=None,
-                                  compute_metrics=None,
+                                  compute_metrics=torch.nn.CrossEntropyLoss(reduction='sum'),
                                   callbacks=[LogStateCallBack()])
             
             # #### DEBUG #####
