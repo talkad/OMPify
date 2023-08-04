@@ -51,7 +51,6 @@ class CodeDataset(Dataset):
             logger.info(f'  Loading {split} set')
             self.dataset_dir = os.path.join(self.dataset_dir, task)
 
-            # xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx update
             # pragma generation
             if task == enums.TASK_PRAGMA:
                 pass

@@ -22,7 +22,6 @@ class BartForClassificationAndGeneration(BartForConditionalGeneration):
     def __init__(self, config: BartConfig, mode=None):
         super(BartForClassificationAndGeneration, self).__init__(config)
 
-        # print('our barttttttttttt xxxxxxxxxxxxxxxxxxxxxxxxxxx')
         self.mode = None
         if mode:
             self.set_model_mode(mode)
@@ -87,7 +86,6 @@ class BartForClassificationAndGeneration(BartForConditionalGeneration):
                                        neg_nl_attention_mask=neg_nl_attention_mask)
 
         elif self.mode == enums.MODEL_MODE_GEN:
-            # print('gen xxxxxxxxxxxxxxxxxxxxx')
             return self.forward_gen(input_ids=input_ids,
                                     attention_mask=attention_mask,
                                     decoder_input_ids=decoder_input_ids,
@@ -143,8 +141,6 @@ class BartForClassificationAndGeneration(BartForConditionalGeneration):
             return_dict=None
     ):
         
-        # assert labels
-        # # xxxxxxxxxxxxxxxxxxxxxxxxxxxx
         return_dict = return_dict if return_dict is not None else self.config.use_return_dict
 
         if labels is not None:
@@ -175,16 +171,13 @@ class BartForClassificationAndGeneration(BartForConditionalGeneration):
         masked_lm_loss = None
         # print(masked_lm_loss)
         if labels is not None:
-            # print('aaaaaaaaaaaaaxxxxxxxxxxxxxxxxx')
-            loss_fct = None # CrossEntropyLoss(reduction='sum')
+            loss_fct = CrossEntropyLoss(reduction='sum')
             masked_lm_loss = loss_fct(lm_logits.view(-1, self.config.vocab_size), labels.view(-1))
 
         if not return_dict:
-            # print('bbbbbbbbbbbxxxxxxxxxxxxxxxxxxxx')
             output = (lm_logits,) + outputs[1:]
             return ((masked_lm_loss,) + output) if masked_lm_loss is not None else output
 
-        # print('cccccxxxxxxxxxxxxxxxxxxxxxxxx', masked_lm_loss)
         return Seq2SeqLMOutput(
             loss=masked_lm_loss,
             logits=lm_logits,
