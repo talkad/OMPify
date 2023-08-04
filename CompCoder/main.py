@@ -12,9 +12,6 @@ from prettytable import PrettyTable
 from args import add_args
 from train import train
 from pre_train import pre_train
-# from ppl import pre_train  xxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-# 
-
 
 def main(args):
 

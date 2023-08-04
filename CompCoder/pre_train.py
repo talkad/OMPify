@@ -153,9 +153,9 @@ def pre_train(args,
     #                     num_labels=2)
     # model = BartForClassificationAndGeneration(config)
 
-    config = BartConfig.from_pretrained('/home/1010/talkad/OMPify/outputs/wed_pre_train_fortran_mass_20230802_235207/models/mass/config.json')
+    config = BartConfig.from_pretrained('/home/1010/talkad/OMPify/outputs/wed_pre_train_fortran_tokom_cap_mass_20230802_180945/models/mass/config.json')
     model = BartForClassificationAndGeneration(config)
-    model.load_state_dict(torch.load('/home/1010/talkad/OMPify/outputs/wed_pre_train_fortran_mass_20230802_235207/models/mass/pytorch_model.bin'))
+    model.load_state_dict(torch.load('/home/1010/talkad/OMPify/outputs/wed_pre_train_fortran_tokom_cap_mass_20230802_180945/models/mass/pytorch_model.bin'))
 
     # log model statistic
     logger.info('Model trainable parameters: {}'.format(human_format(count_params(model))))

@@ -80,11 +80,42 @@ def pre_train(args,
 
     print(get_lex_count(dataset.source_tokens, 'fortran'))
 
+
+    config = BartConfig.from_pretrained('/home/1010/talkad/OMPify/outputs/wed_pre_train_fortran_mass_20230802_235207/models/mass/config.json')
+    model = BartForClassificationAndGeneration(config)
+    model.load_state_dict(torch.load('/home/1010/talkad/OMPify/outputs/wed_pre_train_fortran_mass_20230802_235207/models/mass/pytorch_model.bin'))
+
+
     # 1249955746
     # dataset len = 56024
 
     # 4.482078679927921e-05
     # 1.00010933053841
+
+
+
+
+    # 1.1264629782033304
+    # >>> a = 171900 / 1249955746
+    # >>> a
+    # 0.00013752486882043582
+    # >>> b = a * 7003
+    # >>> b
+    # 0.9630866563495121
+    # >>> np.exp(b)
+    # 2.619770337136881
+
+    lex = 1249955746
+    loss = 171900
+
+    num_batch = 7003
+    ppl = np.exp(loss * num_batch / lex)
+
+    # mass = 164003.098 -> 2.506390038531169
+    # mass_cap = 178776.58927870198 -> 2.7226711097930782
+
+    # mass_tokom = 13812.332727938026 -> 1.0804579213791219
+    # mass_cap_tokom = 13817.63995899079 -> 1.0804900484993762
 
 
 
