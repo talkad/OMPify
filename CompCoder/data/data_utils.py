@@ -216,7 +216,7 @@ def load_dataset_from_dir(args, dataset_dir):
             logger.info(f'  Language: {lang}')
             paths[lang] = dataset_files
             n_sample = 0
-            for dataset_file_path in dataset_files:
+            for dataset_file_path in tqdm(dataset_files):
                 sources, replaced = load_pre_train_dataset(args, file=dataset_file_path, lang=lang)
 
                 new_sources = []

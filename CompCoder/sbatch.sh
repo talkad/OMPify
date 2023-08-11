@@ -38,4 +38,4 @@ python main.py \
         --no-dfg \
         --no-ast \
         --no-replaced \
-        --model-name ppl_mass
+        --model-name debug
