@@ -13,11 +13,9 @@ PRE_TRAIN_TASKS = [
 
 # downstream task names
 TASK_PRAGMA = 'pragma_generation'
-TASK_TRANSLATION = 'translation'
 
 ALL_DOWNSTREAM_TASKS = [
-    TASK_PRAGMA,
-    TASK_TRANSLATION
+    TASK_PRAGMA
 ]
 
 # programming language

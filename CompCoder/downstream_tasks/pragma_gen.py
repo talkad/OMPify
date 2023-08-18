@@ -17,7 +17,7 @@ from utils.trainer import CodeTrainer
 logger = logging.getLogger(__name__)
 
 
-def run_translation(
+def run_pragma_gen(
         args,
         trained_model: Union[BartForClassificationAndGeneration, str] = None,
         trained_vocab: Union[Tuple[Vocab, Vocab, Vocab], str] = None,

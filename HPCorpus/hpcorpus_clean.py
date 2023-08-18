@@ -55,8 +55,8 @@ def extract_hash(js_file):
     create csv files create the hash and its location
     '''
     dataset = []
-    hpcorpus_dir = '/home/1010/talkad/Downloads/Fortran_HPCorpus'
-    save_dir = '/home/1010/talkad/Downloads/hash'
+    hpcorpus_dir = '/home/1010/talkad/Downloads/OMP_Dataset/fortran'
+    save_dir = '/home/1010/talkad/Downloads/OMP_Dataset/fortran/hash'
     langs = ['Fortran']
 
     lang_dir =  hpcorpus_dir #os.path.join(hpcorpus_dir, langs[0])
@@ -84,7 +84,7 @@ def extract_hash(js_file):
 
 
 def unite_csv():
-    hpcorpus_dir = '/home/1010/talkad/Downloads/hash'
+    hpcorpus_dir = '/home/1010/talkad/Downloads/OMP_Dataset/fortran/hash'
     langs = ['Fortran']
     lang_dir = os.path.join(hpcorpus_dir, langs[0])
 
@@ -103,7 +103,7 @@ def unite_csv():
 
 
 def extract_uniq_samples():
-    hpcorpus_dir = '/home/1010/talkad/Downloads/Fortran_HPCorpus'
+    hpcorpus_dir = '/home/1010/talkad/Downloads/OMP_Dataset/fortran'
     lang = 'Fortran'
 
     lang_dir = hpcorpus_dir # os.path.join(hpcorpus_dir, lang)
@@ -112,13 +112,15 @@ def extract_uniq_samples():
         uniq_content = f.read().split('\n')
         # print(uniq_content)
     
-    with open(os.path.join(lang_dir, 'total_uniq.jsonl'), 'w') as total_f:
-        for js_file in tqdm(os.listdir(lang_dir)):
-            
+    with open(os.path.join(lang_dir, 'total_uniq.jsonl'), 'a') as total_f:
+        for js_file in [os.listdir(lang_dir)[7]]:#tqdm(os.listdir(lang_dir)):
+            print(js_file)
+
             if 'total' in js_file:
                 continue
-            # print(js_file)
+            
             uniq_content_file = [content.split(',') for content in uniq_content if content.startswith(preprocess.get_filename(js_file))]
+
             # print(uniq_content_file)
             # if len(uniq_content_file):
             #     print(uniq_content_file)
@@ -128,7 +130,10 @@ def extract_uniq_samples():
 
             for content in uniq_content_file:
                 # print(samples[int(content[1])])
-                total_f.write(samples[int(content[1])] + '\n')
+                try:
+                    total_f.write(samples[int(content[1])] + '\n')
+                except:
+                    print('failed', content[1])
                     
 
 
@@ -136,19 +141,13 @@ def extract_uniq_samples():
     
 
 
-# hpcorpus_dir = '/tier2/bgu/HPCorpus_preprocess/cpp'
-# samples = os.listdir(hpcorpus_dir)[:100]
-# step_size = 5
-# for i in range(0, len(samples), step_size):
-#     elements_to_process = samples[i:i+step_size]
 
-#     remove_dups(elements_to_process)
-
-
-
-# hpcorpus_dir = '/home/1010/talkad/Downloads/Fortran_HPCorpus'
+# hpcorpus_dir = '/home/1010/talkad/Downloads/OMP_Dataset/fortran'
 # samples = os.listdir(hpcorpus_dir)
 # for sample in tqdm(samples):
+#     if sample == 'hash':
+#         continue
+#     print(sample)
 #     extract_hash(sample)
 
 
@@ -158,6 +157,3 @@ def extract_uniq_samples():
 
 extract_uniq_samples()
 
-
-# extract_hash()
-# unite_csv()

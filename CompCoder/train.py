@@ -5,7 +5,7 @@ import enums
 from models.bart import BartForClassificationAndGeneration
 from data.vocab import Vocab
 
-from downstream_tasks.translation import run_translation
+from CompCoder.downstream_tasks.pragma_gen import run_translation
 
 logger = logging.getLogger(__name__)
 
@@ -56,8 +56,8 @@ def train(
         logger.info('Training from scratch')
 
     # start downstream task
-    if task == enums.TASK_TRANSLATION:
-        run_translation(args=args,
+    if task == enums.TASK_PRAGMA:
+        run_pragma_gen(args=args,
                         trained_model=trained_model,
                         trained_vocab=trained_vocab,
                         only_test=args.only_test)

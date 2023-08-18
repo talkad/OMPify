@@ -280,12 +280,18 @@ def pre_train(args,
                                   callbacks=[LogStateCallBack()])
             
             # #### DEBUG #####
+            # print(code_vocab.token2id)
             # print('-'*100)
             # loader = trainer.get_train_dataloader()
             
-            # # print(trainer.train_dataset[0])
+            # print(trainer.train_dataset[0])
             # for batch in loader:
             #     print(batch['input_ids'][0])
+            #     break
+
+            # print(trainer.train_dataset[1])
+            # for batch in loader:
+            #     print(batch['input_ids'][1])
             #     break
             # return
             # #### DEBUG #####
