@@ -35,7 +35,7 @@ def run_pragma_gen(
 
     """
     logger.info('-' * 100)
-    logger.info(f'Code translation from {args.translation_source_language} to {args.translation_target_language}')
+    logger.info(f'OpenMP pragma generation')
     # --------------------------------------------------
     # datasets
     # --------------------------------------------------
@@ -46,9 +46,7 @@ def run_pragma_gen(
     for split in splits:
         datasets[split] = init_dataset(args=args,
                                        mode=enums.TRAINING_MODE_FINE_TUNE,
-                                       task=enums.TASK_TRANSLATION,
-                                       language=
-                                       f'{args.translation_source_language}-{args.translation_target_language}',
+                                       task=enums.TASK_PRAGMA,
                                        split=split)
         logger.info(f'The size of {split} set: {len(datasets[split])}')
     if args.train_subset_ratio and 'train' in datasets:
@@ -80,6 +78,9 @@ def run_pragma_gen(
                                 datasets=[datasets['train'].codes, datasets['train'].targets],
                                 ignore_case=True,
                                 save_root=args.vocab_root)
+
+        # add new tokens
+        
         nl_vocab = init_vocab(vocab_save_dir=args.vocab_save_dir,
                               name=args.nl_vocab_name,
                               method=args.nl_tokenize_method,

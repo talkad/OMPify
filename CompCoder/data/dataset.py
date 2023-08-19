@@ -53,26 +53,13 @@ class CodeDataset(Dataset):
 
             # pragma generation
             if task == enums.TASK_PRAGMA:
-                pass
-                # assert split in ['train', 'valid', 'test']
-                # assert language in ['java-c_sharp', 'c_sharp-java']
-                # source_lang, target_lang = language.split('-')
-                # java_path = f'{split}.java-cs.txt.java'
-                # c_sharp_path = f'{split}.java-cs.txt.cs'
-                # source_path = os.path.join(self.dataset_dir,
-                #                            c_sharp_path if source_lang == 'c_sharp' else java_path)
-                # target_path = os.path.join(self.dataset_dir,
-                #                            c_sharp_path if target_lang == 'c_sharp' else java_path)
-                # self.paths['source'] = source_path
-                # self.paths['target'] = target_path
-                # self.codes, self.asts, self.names, self.targets = parse_for_pragma_gen(
-                #     source_path=source_path,
-                #     source_lang=args.translation_source_language,
-                #     target_path=target_path,
-                #     target_lang=args.translation_target_language)
+                self.source_tokens, self.replaced_tokens, self.pragma_tokens, self.replaced_pragma_tokens, self.asts = parse_for_pragma_gen(
+                    dataset_path=args.pragma_dataset_path,
+                    lang=args.lang
+                    )
 
-                # assert len(self.codes) == len(self.asts) == len(self.names) == len(self.targets)
-                # self.size = len(self.codes)
+                assert len(self.sources) == len(self.asts) == len(self.replaced) == len(self.pragma)
+                self.size = len(self.sources)
            
     def __getitem__(self, index):
         # selection of code representation
@@ -167,6 +154,7 @@ def init_dataset(args, mode, task=None, language=None, split=None, load_if_saved
             logger.info(f'Dataset instance loaded from: {path}')
             print_paths(obj.paths)
             return obj
+
     dataset = CodeDataset(args=args,
                           dataset_name=name,
                           mode=mode,

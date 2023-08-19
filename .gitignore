@@ -3,6 +3,7 @@
 *.pkl
 *.out
 *.pickle
+*.jsonl
 **/temp_folder*
 **/repos
 **/openmp_versions

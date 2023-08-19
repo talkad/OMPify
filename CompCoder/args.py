@@ -40,7 +40,7 @@ class RuntimeArguments:
     )
 
     task: str = field(
-        default='translation',
+        default='pragma_generation',
         metadata={'help': 'Downstream task',
                   'choices': enums.ALL_DOWNSTREAM_TASKS}
     )
@@ -297,18 +297,10 @@ class TaskArguments:
         metadata={'help': 'Ratio between number of masked tokens and number of total tokens, in MASS'}
     )
 
-    translation_source_language: str = field(
-        default='java',
-        metadata={'help': 'Source language of the code translation',
-                  'choices': ['java', 'c_sharp']}
-    )
-
-    translation_target_language: str = field(
-        default='c_sharp',
-        metadata={'help': 'Target language of the code translation',
-                  'choices': ['java', 'c_sharp']}
-    )
-
+    pragma_dataset_path: str = field(
+        default='',
+        metadata={'help': 'path to jsonl file dataset'}
+    ) 
 
 
 def transfer_arg_name(name):

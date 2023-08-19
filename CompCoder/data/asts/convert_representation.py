@@ -237,7 +237,7 @@ def update_var_names(ast, num_generator):
     
     updated_code, updated_mappings = replace_vars(ast.text.decode(), var_mapping)
 
-    return updated_code
+    return updated_code, updated_mappings
 
 
 def generate_replaced(tree, num_generator=generate_random_numbers):
@@ -247,10 +247,87 @@ def generate_replaced(tree, num_generator=generate_random_numbers):
     updated_code = ''
 
     try:
-        updated_code = update_var_names(tree.root_node, num_generator)
+        updated_code, mappings = update_var_names(tree.root_node, num_generator)
     except ValueError as e: # N cannot be larger than 1000.
         print(e)
     except RecursionError as e:
         print(e)
 
-    return updated_code
+    return updated_code, {k:v for k,v,_ in mappings}
+
+
+
+
+
+# code = '''mainloop:   do threeedgesnode = 1 , mesh % no_of_nodes
+#                onedarray = threeedgesnode
+#                edges = mesh % points_of_edges % searchifpresent( one , onedarray , points_per_quad , atts) 
+
+#                if ( edges     ( points_per_quad ) .ne. -1 )  cycle  
+
+#                if ( edges     ( three           ) .eq. -1 )  cycle  
+
+#                if (       any ( atts            )         )  cycle  
+
+#                do j = 1 , points_per_subdivided_edge
+#                   points_of_edge = mesh % points_of_edges % get ( points_per_edge , edges(j) )
+         
+#                   if ( points_of_edge(one) .ne. threeedgesnode ) then
+#                      points(j) = points_of_edge(one)
+               
+#                   elseif ( points_of_edge(two) .ne. threeedgesnode ) then
+#                      points(j) = points_of_edge(two)
+   
+#                   end if
+
+#                end do
+
+#                do j = 1 , points_per_subdivided_edge
+#                   onedarray = points(j)
+#                   neigh_edges = mesh % points_of_edges % searchifpresent( one , onedarray , 2 * points_per_quad ) 
+
+#                   do k = 1 , 2 * points_per_quad
+#                      if ( neigh_edges(k) .eq. -1 ) cycle 
+
+#                      points_of_edge = mesh % points_of_edges % get ( points_per_edge , neigh_edges(k) )
+
+#                      if ( (points_of_edge(one) .ne. points(j)) .and. (points_of_edge(one) .ne. threeedgesnode) ) then
+#                         point = points_of_edge(one)
+
+#                      elseif ( (points_of_edge(two) .ne. points(j)) .and. (points_of_edge(two) .ne. threeedgesnode) ) then
+#                         point = points_of_edge(two)
+
+#                      else
+#                         point = -1
+
+#                      end if
+
+#                      if ( any( points .eq. point ) ) then       
+
+#                         newsubdividededge = [ points_of_edge , threeedgesnode ] 
+
+#                         edgetoremove = [newsubdividededge(one) , newsubdividededge(two)]
+#                         pos = mesh % points_of_edges % search ( points_per_edge , edgetoremove )
+#                         call  mesh % points_of_edges % remove ( pos )
+
+#                         edgetoremove = [newsubdividededge(one) , newsubdividededge(three)]
+#                         pos = mesh % points_of_edges % search ( points_per_edge , edgetoremove )
+#                         call  mesh % points_of_edges % remove ( pos )
+
+#                         edgetoremove = [newsubdividededge(two) , newsubdividededge(three)]
+#                         pos = mesh % points_of_edges % search ( points_per_edge , edgetoremove )
+#                         call  mesh % points_of_edges % remove ( pos )
+
+#                         call mesh % points_of_edges % add ( points_per_subdivided_edge , newsubdividededge ) 
+
+#                         cycle mainloop
+
+#                      end if
+#                   end do
+#                end do
+
+#             end do   mainloop'''
+
+# import parse_tools
+# ast = parse_tools.parse(code, 'fortran')
+# print(generate_replaced(ast))

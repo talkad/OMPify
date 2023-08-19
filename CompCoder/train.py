@@ -5,7 +5,7 @@ import enums
 from models.bart import BartForClassificationAndGeneration
 from data.vocab import Vocab
 
-from CompCoder.downstream_tasks.pragma_gen import run_translation
+from downstream_tasks.pragma_gen import run_pragma_gen
 
 logger = logging.getLogger(__name__)
 

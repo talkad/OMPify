@@ -1,9 +1,11 @@
 import re
 import os
+import sys
 from tqdm import tqdm
 from parse_tools import parse
 import preprocess
 import json
+import convert_representation as cr
 
 
 def parse_openmp_pragma(pragma):
@@ -166,6 +168,7 @@ class OMP_Extractor():
         try:
             if self.lang == 'fortran':
                 node = parse(code.lower(), lang=self.lang).root_node
+                # convert and than use the mapping
                 self.detect_omp_fortran(node)
             else:
                 node = parse(code, lang=self.lang).root_node
@@ -198,15 +201,15 @@ class DatasetCreatorOMP:
 
         counter = {construct:{clause:0 for clause in rel_clauses} for construct in rel_constrcuts}
 
-        N = 60000
         batch_size = 10000
 
         def parse_json(json_file):             
             with open(os.path.join(self.data_dir, json_file), 'r') as f:
                 data = f.readlines()
                 dataset = []
-                idx = 5
-                for line in tqdm(data[idx*10000:(idx+1)*10000]):
+                idx = sys.argv[1]
+
+                for line in tqdm(data[idx*batch_size:(idx+1)*batch_size]):
 
                     js = json.loads(line.strip())
                     samples = self.extractor.extract_openmp(js['code'])
@@ -241,54 +244,7 @@ class DatasetCreatorOMP:
                 # write the dataset into json
                 with open(os.path.join(self.save_dir, f"{preprocess.get_filename(json_file)}_{idx}.jsonl"), 'w') as data_f:
                     for sample in dataset:
-                        data_f.write(json.dumps(sample) + '\n')
-
-
-            # with open(os.path.join(self.data_dir, json_file), 'r') as f:
-            #     data = f.readlines()
-                
-            #     for idx, start_index in enumerate(range(0, N, batch_size)):
-            #         dataset = []
-            #         end_index = start_index + batch_size
-            #         print(f'current range {start_index}-{end_index}')
-                
-            #         for line in tqdm(data[start_index:end_index]):
-
-            #             js = json.loads(line.strip())
-            #             samples = self.extractor.extract_openmp(js['code'])
-
-            #             for loop, target in samples:
-                            
-            #                 if target:
-            #                     ### count ###
-            #                     clauses = parse_openmp_pragma(target)
-            #                     clauses_key = [clause for clause, _ in clauses]
-
-            #                     for k,v in counter.items():
-            #                         if k in clauses_key:
-            #                             counter[k]['_'] += 1
-
-            #                         for vv in v:
-            #                             if k in clauses_key and vv in clauses_key:
-            #                                 counter[k][vv] += 1
-            #                     #############
-            #                     # print(target)
-            #                     # print(loop)
-            #                     dataset.append({'code': loop,
-            #                                     'pragma': target,
-            #                                     'hash': preprocess.get_hash(loop)
-            #                     })
-            #                     # print(counter)
-            #                     # return
-                        
-            #             self.extractor.reset()
-
-            #         print(counter)
-            #         # write the dataset into json
-            #         with open(os.path.join(self.save_dir, f"{preprocess.get_filename(json_file)}_{idx}.jsonl"), 'w') as data_f:
-            #             for sample in dataset:
-            #                 data_f.write(json.dumps(sample) + '\n')
-                
+                        data_f.write(json.dumps(sample) + '\n')                
         
         files = os.listdir(self.data_dir)
 
@@ -298,6 +254,10 @@ class DatasetCreatorOMP:
 
 # parser = DatasetCreatorOMP('/home/1010/talkad/Downloads/HPCorpus_final/fine_tune/fortran', '/home/1010/talkad/Downloads/OMP_Dataset/fortran', lang='fortran')
 # parser.iterate_corpus()
+
+
+
+
 
 
 

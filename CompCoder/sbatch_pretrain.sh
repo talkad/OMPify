@@ -21,7 +21,7 @@ cd /home/1010/talkad/OMPify/CompCoder
         # --no-ast \
 
  python main.py     \
-        --langs c      \
+        --langs fortran      \
         --do-pre-train  \
         --pre-train-tasks mass   \
         --n-epoch 1      \

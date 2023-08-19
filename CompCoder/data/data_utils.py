@@ -4,9 +4,9 @@ import os
 import logging
 from tqdm import tqdm
 from .asts import parse_tools, convert_representation as cr
-import enums
-from .asts.tokenizer import Tokompiler
+# import enums
 from data.asts.lexicalization import lexicalize
+
 
 logger = logging.getLogger(__name__)
 
@@ -69,16 +69,26 @@ def load_lines(path):
     return lines
 
 
+# def remove_comments(code, lang):
+#     if lang == enums.LANG_FORTRAN:
+#         code = redundant_line_comments_fortran.sub("\n", code)
+#         code = redundant_multiline_comments_c.sub("\n", code)
+#     elif lang in [enums.LANG_C, enums.LANG_CPP]:
+#         code = redundant_line_comments_c.sub("\n", code)
+#         code = redundant_multiline_comments_c.sub("\n", code)
+
+#     return code
+
+
 def remove_comments(code, lang):
-    if lang == enums.LANG_FORTRAN:
+    if lang == 'fortran':
         code = redundant_line_comments_fortran.sub("\n", code)
         code = redundant_multiline_comments_c.sub("\n", code)
-    elif lang in [enums.LANG_C, enums.LANG_CPP]:
+    elif lang in ['c', 'cpp']:
         code = redundant_line_comments_c.sub("\n", code)
         code = redundant_multiline_comments_c.sub("\n", code)
 
     return code
-
 
 def replace_string_literal(source):
     """
@@ -103,12 +113,11 @@ def parse_json_file(file, lang):
         lang (str): Source code language
 
     Returns:
-        (list[str]):
-            - List of source codes
-            - List of replaced codes
+        - List of source codes
+        - List of replaced codes
 
     """
-    # tokenizer = Tokompiler()
+
     sources = []
     replaced = []
 
@@ -119,8 +128,8 @@ def parse_json_file(file, lang):
             source = remove_comments(source, lang)
 
             ast = parse_tools.parse(source, lang)
-            replaced_code = cr.generate_replaced(ast)
-
+            replaced_code, mapping = cr.generate_replaced(ast)
+            
             if not replaced_code:   # parsing failed
                 continue
             
@@ -130,6 +139,64 @@ def parse_json_file(file, lang):
             replaced.append(replaced_code)
 
     return sources, replaced
+
+
+def parse_openmp_pragma(pragma, mapping):
+    pragma = f'{pragma} '
+    pattern = r'(\w+(\s*\(.*?\)|\s))'
+    matches = re.findall(pattern, pragma)
+    clauses = []
+    
+    for match in matches:
+        clause = match[0].strip()
+
+        if '(' in clause:
+            clause = clause[:clause.find('(')].strip()
+            args = match[1].strip()[1:-1]
+
+            args = sorted([mapping[arg] for arg in args.split()])
+    
+            clauses.append((clause, ' '.join(args)))
+        else:
+            clauses.append((clause, ''))
+    
+    return clauses
+
+
+def parse_json_file_pragma(file, lang):
+
+    sources = []
+    replaced = []
+    pragmas = []
+    replaced_pragmas = []
+
+    with open(file, encoding='utf-8') as f:
+        for line in f.readlines():
+            data = json.loads(line.strip())
+            source = data['code'].strip()
+            source = remove_comments(source, lang)
+
+            ast = parse_tools.parse(source, lang)
+            replaced_code, mapping = cr.generate_replaced(ast)
+            mapping = {k:v for k,v,_ in mapping}
+            
+            # with open('logger.out', 'w') as f:
+            #     f.write(source)
+            #     f.write('==========')
+            #     f.write(replaced_code)
+            #     f.write('==========')
+            #     f.write(mapping)
+            if not replaced_code:   # parsing failed
+                continue
+            
+            source = replace_string_literal(source)
+
+            sources.append(source)
+            replaced.append(replaced_code)
+            pragmas.append(data['pragma'])
+            replaced_pragmas.append(parse_openmp_pragma(data['pragma'], mapping))
+
+    return sources, replaced, pragmas, replaced_pragmas
 
 
 def iter_all_files(base):
@@ -322,78 +389,58 @@ def align_source_code(former_source, code):
     return former_code, latter_code
 
 
-def parse_for_pragma_gen(source_path, source_lang, target_path, target_lang):
+def parse_for_pragma_gen(dataset_path, lang):
     """
-    Load and parse for code translation.
+    Load and parse for pragma generation.
 
     Args:
-        source_path (str): Path of source dataset
-        source_lang (str): Source language
-        target_path (str): Path of target dataset
-        target_lang (str): Target language
+        dataset_path (str): Path of pramga gen dataset
 
     Returns:
-        (list[str], list[str], list[str], list[str]):
-            - List of tokenized code strings
-            - List of linearized AST strings
-            - List of tokenized target code strings
+    self.sources, self.source_tokens, self.replaced, self.replaced_tokens, self.pragma, self.pragma_tokens, \
+                    self.replaced_pragma, self.replaced_pragma_tokens, self.asts
+
+        (list[str], list[str], list[str], list[str], list[str]):
+            - List of code tokens 
+            - List of replaced code tokens
+            - List of pragma tokens
+            - List of replaced pragma tokens
+            - List of asts
 
     """
-    tokenizer = Tokompiler()
 
-    logger.info(f'    Source file: {source_path}')
-    sources = load_lines(source_path)
-    logger.info(f'    Target file: {target_path}')
-    targets = load_lines(target_path)   # xxxxxxxxxxxxxxxxxxxxx update
+    logger.info(f'    dataset: {dataset_path}')
+    sources, replaced, pragmas, repalced_pragmas = parse_json_file_pragma(dataset_path, lang)
 
     new_sources = []
-    new_targets = []
+    new_replaced = []
+    new_pragma = []
+    new_pragma_replaced = []
     asts = []
-    for source, target in tqdm(zip(sources, targets), desc='Parsing', leave=False, total=len(sources)):
+
+    for source, replace, pragma, replaced_pragma in tqdm(zip(sources, replaced, pragmas, repalced_pragmas), desc='Parsing', leave=False, total=len(sources)):
         try:
-            source = remove_comments(source, lang=source_lang)
+            ast = cr.code2xsbt(source, lang=lang)
 
-            # target = remove_comments_and_docstrings(target, lang=target_lang)
-            # target = replace_string_literal(target) # xxxxxxxxxxxxxxxxxxx update
+            if not ast:
+                continue
 
-            ast = parse_tools.parse(source, source_lang)
-            source = cr.generate_replaced(ast)
-
-            ast = cr.code2xsbt(source, lang=source_lang)
-            code = tokenizer.tokenize(trim_spaces(source), lang=source_lang)
-
-            tokenized_target = []
-            # tokenized_target = tokenize_source(source=target, lang=target_lang, use_regular=True) # xxxxxxxxxxxxxxxxxxxxxxxx update
-
-            new_sources.append(code)
+            new_sources.append(lexicalize(source, lang=lang))
+            new_replaced.append(lexicalize(replace, lang=lang, replaced=True))
             asts.append(ast)
-            new_targets.append(tokenized_target)
+
         except Exception:
             continue
 
-    return new_sources, asts, new_targets
+    return new_sources, asts
 
 
-def load_clone_mapping(dataset_root):
-    """
-    Load json file and transfer to a mapping from code id to source code.
 
-    Args:
-        dataset_root (str): Root of the dataset
 
-    Returns:
-        dict: Mapping from code id to source code
 
-    """
-    path = os.path.join(dataset_root, 'fine_tune', enums.TASK_CLONE_DETECTION, 'data.jsonl')
-    if not os.path.exists(path):
-        return None
-    mapping = dict()
-    with open(path, encoding='utf-8') as f:
-        for line in f.readlines():
-            data = json.loads(line.strip())
-            code_id = data['idx']
-            source = data['func'].strip()
-            mapping[code_id] = source
-    return mapping
+# sources, replaced, pragmas, replaced_pragmas = parse_json_file_pragma('/home/1010/talkad/Downloads/OMP_Dataset/fortran/total_uniq.jsonl', 'fortran')
 
+# print(sources[0])
+# print(replaced[0])
+# print(pragmas[0])
+# print(replaced_pragmas[0])
