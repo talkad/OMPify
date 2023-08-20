@@ -1,8 +1,8 @@
 import re
 import random
-from .dfg_parser import extract_dataflow
-from .ast_parser import generate_statement_xsbt
-from .parse_tools import parse
+from dfg_parser import extract_dataflow
+from ast_parser import generate_statement_xsbt
+from parse_tools import parse
 
 
 RE_NUMBERS = re.compile(r"(?<![_a-zA-Z])\b[0-9]+(?:\.[0-9]+)?(?:f)?\b(?![0-9.-])")
@@ -245,6 +245,7 @@ def generate_replaced(tree, num_generator=generate_random_numbers):
         Main funtion to create the replaced represrntation
     '''
     updated_code = ''
+    mappings = []
 
     try:
         updated_code, mappings = update_var_names(tree.root_node, num_generator)
@@ -253,5 +254,5 @@ def generate_replaced(tree, num_generator=generate_random_numbers):
     except RecursionError as e:
         print(e)
 
-    return updated_code, {k:v for k,v,_ in mappings}
+    return updated_code, {v:k for (k,v,_,_) in mappings}
 

@@ -41,13 +41,14 @@ def parse_openmp_pragma(pragma):
 
 
 class OMP_Extractor():
-    def __init__(self, lang='c'):
+    def __init__(self, lang='c', replaced=False):
         self.lang = lang
+        self.replaced = replaced
 
         self.samples = []
 
     def reset(self):
-        self.sample = []
+        self.samples = []
 
     def is_omp_pragma(self, pragma):
         '''
@@ -154,6 +155,49 @@ class OMP_Extractor():
                 pragma = ''
                 self.detect_omp_c(child)
                 
+    def replace_pragma(self, mappings):
+        result = []
+
+        for code, pragma in self.samples:
+            # print(code, pragma)
+
+            try:
+                clauses = parse_openmp_pragma(pragma)
+                replaced_pragma = []
+
+                for clause,vars in clauses:
+
+                    if not vars:
+                        replaced_pragma.append((clause,vars))
+                    elif clause in ['reduction', 'map']:
+                        func = vars[:vars.find(':')]
+                        func_vars = vars[vars.find(':')+1:].split()
+
+                        func_vars = ' '.join(sorted([mappings[var] for var in func_vars]))
+                        replaced_pragma.append((clause,f'{func}:{func_vars}'))
+                    else:
+                        func_vars = vars.split()
+
+                        func_vars = ' '.join(sorted([mappings[var] for var in func_vars]))
+                        replaced_pragma.append((clause,func_vars))
+
+                result.append((code, ' '.join(clause[0] if not clause[1] else f'{clause[0]}({clause[1]})' for clause in replaced_pragma)))
+            except Exception as e:
+                # print(mappings)
+                # print('='*20)
+                # print(code)
+                # print('='*20)
+                # print( pragma)
+                # print('='*20)
+                # print(original_code)
+                # print('='*20)
+                # print(replaced_code)
+                # print('='*20)
+                print(e)
+                # exit()
+                continue
+
+        self.samples = result
 
     def extract_openmp(self, code):
         '''
@@ -167,8 +211,17 @@ class OMP_Extractor():
         '''
         try:
             if self.lang == 'fortran':
+                code = code.lower()
+
+            if self.replaced:
+                node = parse(code, lang=self.lang)
+                code, mappings = cr.generate_replaced(node)
+
+            if self.lang == 'fortran':
+                if not code.startswith('subroutine') and not code.startswith('function'):
+                    return []
+                
                 node = parse(code.lower(), lang=self.lang).root_node
-                # convert and than use the mapping
                 self.detect_omp_fortran(node)
             else:
                 node = parse(code, lang=self.lang).root_node
@@ -176,17 +229,21 @@ class OMP_Extractor():
         except RecursionError:
             pass
         
+        if self.replaced:
+            self.replace_pragma(mappings)
+
         return self.samples
 
 
 
 class DatasetCreatorOMP:
-    def __init__(self, data_dir, save_dir, lang='c'):
+    def __init__(self, data_dir, save_dir, lang='c', replaced=False):
         self.data_dir = data_dir
         self.save_dir = save_dir
         self.lang = lang
+        self.replaced = replaced
 
-        self.extractor = OMP_Extractor(lang=self.lang)
+        self.extractor = OMP_Extractor(lang=self.lang, replaced=self.replaced)
         
     def iterate_corpus(self):
         '''
@@ -207,12 +264,12 @@ class DatasetCreatorOMP:
             with open(os.path.join(self.data_dir, json_file), 'r') as f:
                 data = f.readlines()
                 dataset = []
-                idx = sys.argv[1]
+                idx = int(sys.argv[1])
 
                 for line in tqdm(data[idx*batch_size:(idx+1)*batch_size]):
 
                     js = json.loads(line.strip())
-                    samples = self.extractor.extract_openmp(js['code'])
+                    samples = self.extractor.extract_openmp(js['code'].strip())
 
                     for loop, target in samples:
                         
@@ -228,15 +285,14 @@ class DatasetCreatorOMP:
                                 for vv in v:
                                     if k in clauses_key and vv in clauses_key:
                                         counter[k][vv] += 1
-                            #############
+                            #############   
+                            # print(js['code'])
                             # print(target)
                             # print(loop)
                             dataset.append({'code': loop,
                                             'pragma': target,
                                             'hash': preprocess.get_hash(loop)
                             })
-                            # print(counter)
-                            # return
                     
                     self.extractor.reset()
 
@@ -252,8 +308,8 @@ class DatasetCreatorOMP:
             parse_json(file)
 
 
-# parser = DatasetCreatorOMP('/home/1010/talkad/Downloads/HPCorpus_final/fine_tune/fortran', '/home/1010/talkad/Downloads/OMP_Dataset/fortran', lang='fortran')
-# parser.iterate_corpus()
+parser = DatasetCreatorOMP('/home/1010/talkad/Downloads/HPCorpus_final/fine_tune/fortran', '/home/1010/talkad/Downloads/OMP_Dataset/fortran/replaced', lang='fortran', replaced=True)
+parser.iterate_corpus()
 
 
 
@@ -262,94 +318,191 @@ class DatasetCreatorOMP:
 
 
 
-# code = '''
-#  integer, dimension(3)                                     ::  sz
-#     real, dimension(1-g:sz(1)+g, 1-g:sz(2)+g, 1-g:sz(3)+g)    ::  p
-#     integer, dimension(0:5)                                   ::  nID
+# code = '''subroutine incell2(ni,r2,r1)                                                                            | 747/10000 [00:06<01:18, 118.17it/s]
 
-#     if ( nID(m_face) >= 0 ) return
 
-#     ix = sz(1)
-#     jx = sz(2)
-#     kx = sz(3)
-#     face = m_face
 
-# !$OMP PARALLEL &
-# !$OMP FIRSTPRIVATE(ix, jx, kx, face)
 
-#     FACES : select case (face)
-#     case (X_minus)
 
-# !$OMP DO &
-# !$omp  SCHEDULE(static) &
-# !$OMP  PRIVATE(j, k)
-#       do k=1,kx
-#       do j=1,jx
-#         p(0,j,k) = p(1,j,k)
+
+
+
+
+#       implicit none
+#       integer ni
+#       real*8  r2(3,*),r1(3,*)
+
+
+
+#       real*8  fa1,fa2,fa3
+#       real*8  a(3,3),b(3,3),volume
+#       integer i,j
+
+
+
+#        real*8   lattice_unita
+#        external lattice_unita
+
+
+
+#       do j=1,3
+#       do i=1,3
+#         a(i,j) = lattice_unita(i,j)
 #       end do
 #       end do
+
+#       b(1,1) = a(2,2)*a(3,3) - a(3,2)*a(2,3)
+#       b(2,1) = a(3,2)*a(1,3) - a(1,2)*a(3,3)
+#       b(3,1) = a(1,2)*a(2,3) - a(2,2)*a(1,3)
+#       b(1,2) = a(2,3)*a(3,1) - a(3,3)*a(2,1)
+#       b(2,2) = a(3,3)*a(1,1) - a(1,3)*a(3,1)
+#       b(3,2) = a(1,3)*a(2,1) - a(2,3)*a(1,1)
+#       b(1,3) = a(2,1)*a(3,2) - a(3,1)*a(2,2)
+#       b(2,3) = a(3,1)*a(1,2) - a(1,1)*a(3,2)
+#       b(3,3) = a(1,1)*a(2,2) - a(2,1)*a(1,2)
+#       volume = a(1,1)*b(1,1)
+#      >       + a(2,1)*b(2,1)
+#      >       + a(3,1)*b(3,1)
+
+#       volume = 1.0d0/volume
+#       call dscal(9,volume,b,1)
+
+# !$OMP DO
+#       do i =1,ni
+
+
+
+#          fa1 =  b(1,1) * r2(1,i)
+#      >       +  b(2,1) * r2(2,i)
+#      >       +  b(3,1) * r2(3,i)
+
+#          fa2 =  b(1,2) * r2(1,i)
+#      >       +  b(2,2) * r2(2,i)
+#      >       +  b(3,2) * r2(3,i)
+
+#          fa3 =  b(1,3) * r2(1,i)
+#      >       +  b(2,3) * r2(2,i)
+#      >       +  b(3,3) * r2(3,i)
+
+
+
+
+
+
+
+#    23   IF (fa1 .GT. (0.5d0)) THEN
+
+
+#            r2(1,i) = r2(1,i) - lattice_unita(1,1)
+#            r2(2,i) = r2(2,i) - lattice_unita(2,1)
+#            r2(3,i) = r2(3,i) - lattice_unita(3,1)
+
+#            r1(1,i) = r1(1,i) - lattice_unita(1,1)
+#            r1(2,i) = r1(2,i) - lattice_unita(2,1)
+#            r1(3,i) = r1(3,i) - lattice_unita(3,1)
+
+
+#            fa1 =  b(1,1) * r2(1,i)
+#      >         +  b(2,1) * r2(2,i)
+#      >         +  b(3,1) * r2(3,i)
+#            GO TO 23
+#         ENDIF
+   
+#    24   IF (fa1 .LE. (-0.5d0)) THEN
+
+
+#            r2(1,i) = r2(1,i) + lattice_unita(1,1)
+#            r2(2,i) = r2(2,i) + lattice_unita(2,1)
+#            r2(3,i) = r2(3,i) + lattice_unita(3,1)
+
+#            r1(1,i) = r1(1,i) + lattice_unita(1,1)
+#            r1(2,i) = r1(2,i) + lattice_unita(2,1)
+#            r1(3,i) = r1(3,i) + lattice_unita(3,1)
+
+
+#            fa1 =  b(1,1) * r2(1,i)
+#      >         +  b(2,1) * r2(2,i)
+#      >         +  b(3,1) * r2(3,i)
+#             GO TO 24
+#         ENDIF
+
+#    25   IF (fa2 .GT. (0.5d0)) THEN
+
+
+#            r2(1,i) = r2(1,i) - lattice_unita(1,2)
+#            r2(2,i) = r2(2,i) - lattice_unita(2,2)
+#            r2(3,i) = r2(3,i) - lattice_unita(3,2)
+
+#            r1(1,i) = r1(1,i) - lattice_unita(1,2)
+#            r1(2,i) = r1(2,i) - lattice_unita(2,2)
+#            r1(3,i) = r1(3,i) - lattice_unita(3,2)
+
+
+#            fa2 =  b(1,2) * r2(1,i)
+#      >         +  b(2,2) * r2(2,i)
+#      >         +  b(3,2) * r2(3,i)
+#           GO TO 25
+#         ENDIF
+   
+#    26   IF (fa2 .LE. (-0.5d0)) THEN
+
+
+#            r2(1,i) = r2(1,i) + lattice_unita(1,2)
+#            r2(2,i) = r2(2,i) + lattice_unita(2,2)
+#            r2(3,i) = r2(3,i) + lattice_unita(3,2)
+
+#            r1(1,i) = r1(1,i) + lattice_unita(1,2)
+#            r1(2,i) = r1(2,i) + lattice_unita(2,2)
+#            r1(3,i) = r1(3,i) + lattice_unita(3,2)
+
+
+#            fa2 =  b(1,2) * r2(1,i)
+#      >         +  b(2,2) * r2(2,i)
+#      >         +  b(3,2) * r2(3,i)
+#            GO TO 26
+#         ENDIF
+
+
+#    27   IF (fa3 .GT. (0.5d0)) THEN
+
+
+#           r2(1,i) = r2(1,i) - lattice_unita(1,3)
+#           r2(2,i) = r2(2,i) - lattice_unita(2,3)
+#           r2(3,i) = r2(3,i) - lattice_unita(3,3)
+
+#           r1(1,i) = r1(1,i) - lattice_unita(1,3)
+#           r1(2,i) = r1(2,i) - lattice_unita(2,3)
+#           r1(3,i) = r1(3,i) - lattice_unita(3,3)
+
+#           fa3 =  b(1,3) * r2(1,i)
+#      >        +  b(2,3) * r2(2,i)
+#      >        +  b(3,3) * r2(3,i)
+#            GO TO 27
+#         ENDIF
+  
+#    28   IF (fa3 .LE. (-0.5d0)) THEN
+
+
+#           r2(1,i) = r2(1,i) + lattice_unita(1,3)
+#           r2(2,i) = r2(2,i) + lattice_unita(2,3)
+#           r2(3,i) = r2(3,i) + lattice_unita(3,3)
+
+#           r1(1,i) = r1(1,i) + lattice_unita(1,3)
+#           r1(2,i) = r1(2,i) + lattice_unita(2,3)
+#           r1(3,i) = r1(3,i) + lattice_unita(3,3)
+
+#           fa3 =  b(1,3) * r2(1,i)
+#      >        +  b(2,3) * r2(2,i)
+#      >        +  b(3,3) * r2(3,i)
+#            GO TO 28
+#         ENDIF
+
+#       end do 
 # !$OMP END DO
-      
-#     case (X_plus)
 
-# !$OMP DO SCHEDULE(static) PRIVATE(j, k)
-#       do k=1,kx
-#       do j=1,jx
-#         p(ix+1,j,k) = p(ix,j,k)
-#       end do
-#       end do
-# !$OMP END DO
-      
-#     case (Y_minus)
-
-# !$OMP DO SCHEDULE(static) PRIVATE(i, k)
-#       do k=1,kx
-#       do i=1,ix
-#         p(i,0,k) = p(i,1,k)
-#       end do
-#       end do
-# !$OMP END DO
-      
-#     case (Y_plus)
-
-# !$OMP DO SCHEDULE(static) PRIVATE(i, k)
-#       do k=1,kx
-#       do i=1,ix
-#         p(i,jx+1,k) = p(i,jx,k)
-#       end do
-#       end do
-# !$OMP END DO
-      
-#     case (Z_minus)
-
-# !$OMP DO SCHEDULE(static) PRIVATE(i, j)
-#       do j=1,jx
-#       do i=1,ix
-#         p(i,j,0) = p(i,j,1)
-#       end do
-#       end do
-# !$OMP END DO
-    
-#     case (Z_plus)
-
-# !$OMP DO SCHEDULE(static) PRIVATE(i, j)
-#       do j=1,jx
-#       do i=1,ix
-#         p(i,j,kx+1) = p(i,j,kx)
-#       end do
-#       end do
-# !$OMP END DO
-      
-#     case default
-#     end select FACES
-
-# !$OMP END PARALLEL
-
-#     return
-#     end subroutine pobc_neumann
+#       return
+#       end
 # '''
 
-extractor = OMP_Extractor(lang='fortran')
+# extractor = OMP_Extractor(lang='fortran', replaced=True)
 # print(extractor.extract_openmp(code))
-
-print(extractor.get_pragma('omp do private(ipol  n3  n2  n1  bgtau  arg)'))
