@@ -1,10 +1,10 @@
 #!/bin/bash
 
 # Input CSV file path
-input_file="/home/1010/talkad/Downloads/OMP_Dataset/fortran/hash/Fortran/total.csv"
+input_file="/home/1010/talkad/Downloads/OMP_Dataset/c/source/hash/c/total.csv"
 
 # Output file path (file without hash duplications)
-output_file="total_uniq_Fortran.csv"
+output_file="total_uniq_c.csv"
 
 # Check if the input file exists
 if [ ! -f "$input_file" ]; then

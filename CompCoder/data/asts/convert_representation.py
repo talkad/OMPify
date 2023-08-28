@@ -245,6 +245,7 @@ def generate_replaced(tree, num_generator=generate_random_numbers):
         Main funtion to create the replaced represrntation
     '''
     updated_code = ''
+    mappings = []
 
     try:
         updated_code, mappings = update_var_names(tree.root_node, num_generator)
@@ -253,7 +254,7 @@ def generate_replaced(tree, num_generator=generate_random_numbers):
     except RecursionError as e:
         print(e)
 
-    return updated_code, {k:v for k,v,_ in mappings}
+    return updated_code, {v:k for (k,v,_,_) in mappings}
 
 
 

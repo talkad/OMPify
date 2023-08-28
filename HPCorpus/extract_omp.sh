@@ -1,6 +1,6 @@
 #!/bin/bash
 
-for i in {0..5}; do
+for i in {1..514}; do
     echo $i
-    python extract_omp.py $i
+    python extract_omp_str.py $i
 done

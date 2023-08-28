@@ -2,12 +2,12 @@ from tqdm import tqdm
 import json
 import os
 
-lang = 'fortran'
+lang = 'c'
 
 rel_constrcuts = ['do' if lang == 'fortran' else 'for', 'sections', 'task', 'target', 'teams']
 rel_clauses = ['shared', 'private', 'firstprivate', 'lastprivate', 'reduction', 'map', 'simd', 'end', '_']
 
-data_dir = '/home/1010/talkad/Downloads/OMP_Dataset/fortran'
+data_dir = '/home/1010/talkad/Downloads/OMP_Dataset/c/source'
 
 counter = {construct:{clause:0 for clause in rel_clauses} for construct in rel_constrcuts}
 

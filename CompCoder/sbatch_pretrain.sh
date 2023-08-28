@@ -20,31 +20,22 @@ cd /home/1010/talkad/OMPify/CompCoder
 #         --no-replaced
         # --no-ast \
 
- python main.py     \
-        --langs fortran      \
-        --do-pre-train  \
-        --pre-train-tasks mass   \
-        --n-epoch 1      \
-        --batch-size 64   \
-        --fp16      \
-        --eval-batch-size 64    \
-        --no-dfg     \
-        --no-ast      \
-        --model-name c_mass_tokom
+python main.py \
+        --langs c \
+        --do-pre-train \
+        --pre-train-tasks mass \
+        --n-epoch 1\
+        --batch-size 64 \
+        --fp16 \
+        --eval-batch-size 64 \
+        --no-dfg \
+        --no-ast \
+        --no-replaced \
+        --model-name c_mass
 
 conda deactivate
 
 
 
 
-# python main.py \
-#         --langs c \
-#         --do-pre-train \
-#         --pre-train-tasks mass \
-#         --n-epoch 1\
-#         --batch-size 64 \
-#         --fp16 \
-#         --eval-batch-size 64 \
-#         --no-dfg \
-#         --no-ast \
-#         --model-name c_mass_tokom
+

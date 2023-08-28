@@ -50,14 +50,14 @@ def remove_dups(js_files):
                     
 
 
-def extract_hash(js_file):
+def extract_hash(dir, js_file):
     '''
     create csv files create the hash and its location
     '''
     dataset = []
-    hpcorpus_dir = '/home/1010/talkad/Downloads/OMP_Dataset/fortran'
-    save_dir = '/home/1010/talkad/Downloads/OMP_Dataset/fortran/hash'
-    langs = ['Fortran']
+    hpcorpus_dir = dir
+    save_dir = hpcorpus_dir+'/hash'
+    langs = ['c']
 
     lang_dir =  hpcorpus_dir #os.path.join(hpcorpus_dir, langs[0])
 
@@ -83,9 +83,9 @@ def extract_hash(js_file):
     logger.info(f'end {js_dir}')
 
 
-def unite_csv():
-    hpcorpus_dir = '/home/1010/talkad/Downloads/OMP_Dataset/fortran/hash'
-    langs = ['Fortran']
+def unite_csv(dir):
+    hpcorpus_dir = dir+'/hash'
+    langs = ['c']
     lang_dir = os.path.join(hpcorpus_dir, langs[0])
 
     with open(os.path.join(lang_dir, 'total.csv'), 'w') as total_f:
@@ -102,9 +102,9 @@ def unite_csv():
                     total_f.write(f'{csv_file},{line}' + '\n')
 
 
-def extract_uniq_samples():
-    hpcorpus_dir = '/home/1010/talkad/Downloads/OMP_Dataset/fortran'
-    lang = 'Fortran'
+def extract_uniq_samples(dir):
+    hpcorpus_dir = dir
+    lang = 'c'
 
     lang_dir = hpcorpus_dir # os.path.join(hpcorpus_dir, lang)
 
@@ -113,10 +113,10 @@ def extract_uniq_samples():
         # print(uniq_content)
     
     with open(os.path.join(lang_dir, 'total_uniq.jsonl'), 'a') as total_f:
-        for js_file in [os.listdir(lang_dir)[7]]:#tqdm(os.listdir(lang_dir)):
+        for js_file in tqdm(os.listdir(lang_dir)):
             print(js_file)
 
-            if 'total' in js_file:
+            if not js_file.startswith('batch_'):
                 continue
             
             uniq_content_file = [content.split(',') for content in uniq_content if content.startswith(preprocess.get_filename(js_file))]
@@ -142,18 +142,45 @@ def extract_uniq_samples():
 
 
 
-# hpcorpus_dir = '/home/1010/talkad/Downloads/OMP_Dataset/fortran'
+# hpcorpus_dir = '/home/1010/talkad/Downloads/OMP_Dataset/c/source'
 # samples = os.listdir(hpcorpus_dir)
 # for sample in tqdm(samples):
-#     if sample == 'hash':
+#     if not sample.startswith('batch'):
 #         continue
 #     print(sample)
-#     extract_hash(sample)
+#     extract_hash(hpcorpus_dir, sample)
 
 
 
-# unite_csv()
+# unite_csv(hpcorpus_dir)
 
 
-extract_uniq_samples()
+# extract_uniq_samples(hpcorpus_dir)
 
+
+
+
+
+
+
+dir = '/home/1010/talkad/Downloads/OMP_Dataset/c/source'
+
+# with open(os.path.join(dir, 'total.jsonl'), 'w') as f:
+#     for file in tqdm(os.listdir(dir)):
+
+#         if file.startswith('batch_'):
+#             print(file)
+#             with open(os.path.join(dir, file), 'r') as f_batch:
+
+#                 for l in f_batch:
+#                     f.write(l)
+
+
+hash = []
+with open(os.path.join(dir, 'total_uniq.jsonl'), 'w') as f, open(os.path.join(dir, 'total.jsonl'), 'r') as f_all:
+    for l in f_all:
+        js = json.loads(l.strip())
+
+        if js['hash'] not in hash:
+            f.write(l)
+            hash.append(js['hash'])
