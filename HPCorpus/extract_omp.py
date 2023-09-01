@@ -53,6 +53,23 @@ def parse_openmp_pragma(pragma):
     return clauses
 
 
+def connect_lines(code):
+    '''
+    concatenate c lines of code ends with '\'
+    '''
+    code_buf = []
+
+    for line in code.split('\n'):
+        if code_buf and code_buf[-1].rstrip().endswith('\\'):
+            code_buf[-1] = code_buf[-1].rstrip()[:-1] + ' ' + line
+        else:
+            code_buf.append(line)
+
+    code_buf = list(map(lambda line: line.replace('\t', ' ') if line.strip().startswith('#pragma') else line, code_buf))
+    return '\n'.join(code_buf)
+        
+
+
 def remove_comp_dir(code):
     code_buf = []
 
@@ -63,6 +80,9 @@ def remove_comp_dir(code):
         code_buf.append(f'{line} ')
 
     return '\n'.join(code_buf)
+
+
+
 
 
 class OMP_Extractor():
@@ -92,8 +112,8 @@ class OMP_Extractor():
         Constructs- parallel (for), sections, task, target
         Clause- shared, private, firstprivate, lastprivate, reduction, map
         '''
-        rel_constrcuts = ['do' if self.lang == 'fortran' else 'for', 'sections', 'target', 'task', 'teams']
-        rel_clauses = ['shared', 'private', 'firstprivate', 'lastprivate', 'reduction', 'map', 'simd']
+        rel_constrcuts = ['do' if self.lang == 'fortran' else 'for']
+        rel_clauses = ['private', 'reduction', 'simd']
         
         line = pragma.lstrip().lower()
         clauses = parse_openmp_pragma(line)
@@ -102,7 +122,7 @@ class OMP_Extractor():
         if 'omp' not in clauses_key:                                    # not an OpenMP pragma
             return                  
         
-        if not any([const in  rel_constrcuts+rel_clauses for const in clauses_key]):  # not contain relevant OpenMP constructs/directives
+        if not any([const in  rel_constrcuts for const in clauses_key]):  # not contain relevant OpenMP constructs
             return
 
         rel_pragma = list(filter(lambda clause: clause[0] in rel_constrcuts+rel_clauses, clauses))    # filter out irrelevent clauses
@@ -112,7 +132,7 @@ class OMP_Extractor():
         return rel_pragma
 
     def get_omp_construct(self, pragma):
-        rel_constrcuts = ['do' if self.lang == 'fortran' else 'for', 'sections', 'task', 'target', 'teams']
+        rel_constrcuts = ['do' if self.lang == 'fortran' else 'for']
         
         line = pragma.decode().lstrip().lower()
         clauses = parse_openmp_pragma(line)
@@ -121,7 +141,7 @@ class OMP_Extractor():
         return '_'.join(list(filter(lambda clause: clause in rel_constrcuts, clauses_key)))
 
     def reorder_pragma(self, pragma_lst):
-        rel_constrcuts = ['do' if self.lang == 'fortran' else 'for', 'sections', 'target', 'task', 'teams']
+        rel_constrcuts = ['do' if self.lang == 'fortran' else 'for']
 
         pragma_lst = sorted(pragma_lst)
         directives_pragma = list(filter(lambda clause: clause in rel_constrcuts, pragma_lst))
@@ -279,15 +299,20 @@ class DatasetCreatorOMP:
 
                     js = json.loads(line.strip())
                     code = js['code'].strip()
-                    samples = self.extractor.extract_openmp(code if self.lang=='fortran' else remove_comp_dir(code))
+                    samples = self.extractor.extract_openmp(code if self.lang=='fortran' else remove_comp_dir(connect_lines(code)))
 
-                    # if '#pragma omp' in js['code']:
-                    #     with open('debug.txt', 'a') as f:
+                    # with open('debug.txt', 'a') as f:
+                    #     orig_pragma = count_pragma_omp(js['code'])
+
+                    #     if len(samples) < orig_pragma:
                     #         f.write('code:\n'+js['code']+'\n')
+                    #         f.write(f"original pragmas: {orig_pragma}"+'\n')
+
+                    #         for _, target in samples:
+                    #             f.write(f'-- {target}')
+                    #         f.write('='*100)
 
                     if samples:
-                        # with open('debug.txt', 'a') as f:
-                        #     f.write('code:\n'+js['code']+'\n')
                             
                             for loop, target in samples:
                                 
@@ -324,7 +349,7 @@ class DatasetCreatorOMP:
         parse_json(f'batch_{sys.argv[1]}.jsonl')
 
 
-parser = DatasetCreatorOMP('/home/1010/talkad/Downloads/HPCorpus_final/fine_tune/c/batches', '/home/1010/talkad/Downloads/OMP_Dataset/c/source', lang='c', replaced=False)
+parser = DatasetCreatorOMP('/home/1010/talkad/Downloads/HPCorpus_final/fine_tune/fortran/batches', '/home/1010/talkad/Downloads/OMP_Dataset/fortran/replaced', lang='fortran', replaced=True)
 parser.iterate_corpus()
 
 
@@ -335,18 +360,55 @@ parser.iterate_corpus()
 
 
 # code = '''
-# int main() {
-
-#     #pragma omp parallel for
-#     for (int i = 0; i < array_size; ++i) {
-#         int thread_id = omp_get_thread_num(); 
-#         printf("Thread %d is processing element %d\n", thread_id, i);
-#         array[i] *= 2; 
+# static void _combine_masks_exclusion(float *const restrict dest, float *const restrict newmask, const size_t npixels,
+#                                      const float opacity, const int inverted)
+# {
+#   if(inverted)
+#   {
+# #ifdef _OPENMP
+# #if !defined(__SUNOS__) && !defined(__NetBSD__)
+# #pragma omp parallel for simd default(none) \
+#   dt_omp_firstprivate(npixels, opacity) \
+#   dt_omp_sharedconst(dest, newmask) aligned(dest, newmask : 64) \
+#   schedule(simd:static)
+# #else
+# #pragma omp parallel for shared(dest, newmask)
+# #endif
+# #endif
+#     for(int index = 0; index < npixels; index++)
+#     {
+#       const float mask = opacity * (1.0f - newmask[index]);
+#       const float pos = both_positive(dest[index], mask);
+#       const float neg = (1.0f - pos);
+#       const float b1 = dest[index];
+#       dest[index] = pos * MAX((1.0f - b1) * mask, b1 * (1.0f - mask)) + neg * MAX(b1, mask);
 #     }
-
+#   }
+#   else
+#   {
+# #ifdef _OPENMP
+# #if !defined(__SUNOS__) && !defined(__NetBSD__)
+# #pragma omp parallel for simd default(none) \\
+#   dt_omp_firstprivate(npixels, opacity) \\
+#   dt_omp_sharedconst(dest, newmask) aligned(dest, newmask : 64) \\
+#   schedule(simd:static)
+# #else
+# #pragma omp parallel for shared(dest, newmask)
+# #endif
+# #endif
+#     for(int index = 0; index < npixels; index++)
+#     {
+#       const float mask = opacity * newmask[index];
+#       const float pos = both_positive(dest[index], mask);
+#       const float neg = (1.0f - pos);
+#       const float b1 = dest[index];
+#       dest[index] = pos * MAX((1.0f - b1) * mask, b1 * (1.0f - mask)) + neg * MAX(b1, mask);
+#     }
+#   }
 # }
 # '''
-
-# # print(code)
+# code = remove_comp_dir(connect_lines(code))
+# print(code)
 # extractor = OMP_Extractor(lang='c', replaced=False)
-# print(extractor.extract_openmp(remove_comp_dir(code)))
+# print(extractor.extract_openmp(code))
+

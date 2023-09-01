@@ -2,12 +2,12 @@ from tqdm import tqdm
 import json
 import os
 
-lang = 'c'
+lang = 'fortran'
 
-rel_constrcuts = ['do' if lang == 'fortran' else 'for', 'sections', 'task', 'target', 'teams']
-rel_clauses = ['shared', 'private', 'firstprivate', 'lastprivate', 'reduction', 'map', 'simd', 'end', '_']
+rel_constrcuts = ['do' if lang == 'fortran' else 'for']
+rel_clauses = ['private', 'reduction', 'simd', '_']
 
-data_dir = '/home/1010/talkad/Downloads/OMP_Dataset/c/source'
+data_dir = '/home/1010/talkad/Downloads/OMP_Dataset/fortran/source'
 
 counter = {construct:{clause:0 for clause in rel_clauses} for construct in rel_constrcuts}
 
@@ -31,14 +31,6 @@ for file in [os.path.join(data_dir, 'total_uniq.jsonl')]:
     print(counter)
 
 
-# pragma = 'do private(a,b) firstprivate(d) reduce'
-# clauses = pragma.split()
-# clauses_key = [clause[:clause.find('(')] if '(' in clause else clause for clause in clauses]
-# print(clauses_key)
-
-# {'do': {'shared': 76, 'private': 415, 'firstprivate': 6, 'lastprivate': 5, 'reduction': 55, 'map': 1, 'simd': 5, 'end': 0, '_': 879}, 
-# 'sections': {'shared': 0, 'private': 1, 'firstprivate': 4, 'lastprivate': 4, 'reduction': 1, 'map': 0, 'simd': 0, 'end': 0, '_': 12}, 
-# 'task': {'shared': 12, 'private': 6, 'firstprivate': 9, 'lastprivate': 0, 'reduction': 1, 'map': 0, 'simd': 0, 'end': 0, '_': 47}, 
-# 'target': {'shared': 0, 'private': 0, 'firstprivate': 0, 'lastprivate': 0, 'reduction': 1, 'map': 41, 'simd': 0, 'end': 0, '_': 64},
-#  'teams': {'shared': 0, 'private': 0, 'firstprivate': 0, 'lastprivate': 0, 'reduction': 1, 'map': 1, 'simd': 0, 'end': 0, '_': 6}}
-
+# fortran: {'do': {'private': 422, 'reduction': 51, 'simd': 5, '_': 1062}}
+# c: {'for': {'private': 1035, 'reduction': 216, 'simd': 122, '_': 3351}}
+# cpp: {'for': {'private': 509, 'reduction': 431, 'simd': 171, '_': 5220}}

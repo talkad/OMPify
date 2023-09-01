@@ -163,22 +163,26 @@ def extract_uniq_samples(dir):
 
 
 
-dir = '/home/1010/talkad/Downloads/OMP_Dataset/c/source'
+dir = '/home/1010/talkad/Downloads/OMP_Dataset/c/replaced'
 
-# with open(os.path.join(dir, 'total.jsonl'), 'w') as f:
-#     for file in tqdm(os.listdir(dir)):
+with open(os.path.join(dir, 'total.jsonl'), 'w') as f:
+    for file in tqdm(os.listdir(dir)):
 
-#         if file.startswith('batch_'):
-#             print(file)
-#             with open(os.path.join(dir, file), 'r') as f_batch:
+        if file.startswith('batch_'):
+            # print(file)
+            with open(os.path.join(dir, file), 'r') as f_batch:
 
-#                 for l in f_batch:
-#                     f.write(l)
+                for idx, l in enumerate(f_batch):
+                    if l.startswith('e'):
+                        print(file)
+                        print(idx)
+                    f.write(l)
 
 
 hash = []
 with open(os.path.join(dir, 'total_uniq.jsonl'), 'w') as f, open(os.path.join(dir, 'total.jsonl'), 'r') as f_all:
-    for l in f_all:
+    for idx, l in enumerate(f_all):
+        # print(idx)
         js = json.loads(l.strip())
 
         if js['hash'] not in hash:
