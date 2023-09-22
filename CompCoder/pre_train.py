@@ -65,28 +65,6 @@ def pre_train(args,
         logger.info('The size of trimmed pre-train set: {}'.format(len(dataset)))
     logger.info('Datasets loaded and parsed successfully')
 
-    # #### DEBUG #####
-    # from tqdm import tqdm
-    # import hashlib
-    # import json
-
-    # with open('pretrain_c.jsonl', 'w') as f:
-    #     for source, replaced in tqdm(zip(dataset.sources, dataset.replaced)):
-    #         data = {'source': source, 'replaced': replaced}
-
-    #         hash = hashlib.sha256(source.encode('UTF-8'))
-    #         data['source_hash'] = hash.hexdigest()
-
-    #         hash = hashlib.sha256(replaced.encode('UTF-8'))
-    #         data['replaced_hash'] = hash.hexdigest()
-
-    #         f.write(json.dumps(data) + '\n')
-
-
-    # return
-    # #### DEBUG #####
-
-
     # --------------------------------------------------
     # vocabs
     # --------------------------------------------------

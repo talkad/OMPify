@@ -9,4 +9,5 @@
 **/openmp_versions
 !requirements.txt
 **/outputs
+**/.idea
 !vocab.txt
