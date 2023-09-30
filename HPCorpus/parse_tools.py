@@ -3,7 +3,7 @@ from tree_sitter import Language, Parser
 
 
 def get_parser(lang):
-    LANGUAGE = Language('/home/1010/talkad/OMPify/HPCorpus/my-languages.so', lang.lower())
+    LANGUAGE = Language('/mnt/lbosm1/home/Share/OMPify/HPCorpus/vendor/my-languages.so', lang.lower())
     parser = Parser()
     parser.set_language(LANGUAGE)
 

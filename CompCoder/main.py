@@ -13,19 +13,22 @@ from args import add_args
 from train import train
 from pre_train import pre_train
 
+from PPL_score import ppl_score
 
 def main(args):
 
     model = None
     vocab = None
 
-    if args.do_pre_train:
-        model, vocab = pre_train(args=args)
+    _, _ = ppl_score(args=args)
+    
+    # if args.do_pre_train:
+    #     model, vocab = pre_train(args=args)
 
-    if args.do_fine_tune or args.only_test:
-        train(args=args,
-              trained_model=model,
-              trained_vocab=vocab)
+    # if args.do_fine_tune or args.only_test:
+    #     train(args=args,
+    #           trained_model=model,
+    #           trained_vocab=vocab)
 
 
 if __name__ == '__main__':
