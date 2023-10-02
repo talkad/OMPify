@@ -53,14 +53,15 @@ class CodeDataset(Dataset):
 
             # pragma generation
             if task == enums.TASK_PRAGMA:
-                self.source_tokens, self.pragma_tokens, self.asts = parse_for_pragma_gen(
+                self.source_tokens, self.pragma_tokens = parse_for_pragma_gen(
                     dataset_path=args.pragma_dataset_path,
-                    lang=args.lang,
-                    is_replaced=no_replaced
+                    lang=language,
+                    split=split,
+                    is_replaced=not args.no_replaced
                     )
 
-                assert len(self.sources) == len(self.asts) == len(self.pragma)
-                self.size = len(self.sources)
+                assert len(self.source_tokens) == len(self.pragma_tokens)
+                self.size = len(self.source_tokens)
 
     def get_codes(self):
         # selection of code representation
@@ -147,29 +148,29 @@ def init_dataset(args, mode, task=None, language=None, split=None, load_if_saved
         CodeDataset: Loaded or initialized dataset
 
     """
-    name = 'c'
-    path = os.path.join(args.dataset_save_dir, f'{name}.pk')
+    # name = 'c'
+    # path = os.path.join(args.dataset_save_dir, f'{name}.pk')
 
-    with open(path, mode='rb') as f:
-        obj = pickle.load(f)
-    assert isinstance(obj, CodeDataset)
-    obj.args = args
-    logger.info(f'Dataset instance loaded from: {path}')
-    print_paths(obj.paths)
-    return obj
+    # with open(path, mode='rb') as f:
+    #     obj = pickle.load(f)
+    # assert isinstance(obj, CodeDataset)
+    # obj.args = args
+    # logger.info(f'Dataset instance loaded from: {path}')
+    # print_paths(obj.paths)
+    # return obj
 
-    # name = '.'.join([sub_name for sub_name in [mode, task, language, split] if sub_name is not None])
-    # if load_if_saved:
-    #     path = os.path.join(args.dataset_save_dir, f'{name}.pk')
-    #     if os.path.exists(path) and os.path.isfile(path):
-    #         logger.info(f'Trying to load saved binary pickle file from: {path}')
-    #         with open(path, mode='rb') as f:
-    #             obj = pickle.load(f)
-    #         assert isinstance(obj, CodeDataset)
-    #         obj.args = args
-    #         logger.info(f'Dataset instance loaded from: {path}')
-    #         print_paths(obj.paths)
-    #         return obj
+    name = '.'.join([sub_name for sub_name in [mode, task, language, split] if sub_name is not None])
+    if load_if_saved:
+        path = os.path.join(args.dataset_save_dir, f'{name}.pk')
+        if os.path.exists(path) and os.path.isfile(path):
+            logger.info(f'Trying to load saved binary pickle file from: {path}')
+            with open(path, mode='rb') as f:
+                obj = pickle.load(f)
+            assert isinstance(obj, CodeDataset)
+            obj.args = args
+            logger.info(f'Dataset instance loaded from: {path}')
+            print_paths(obj.paths)
+            return obj
 
     dataset = CodeDataset(args=args,
                           dataset_name=name,
@@ -177,7 +178,7 @@ def init_dataset(args, mode, task=None, language=None, split=None, load_if_saved
                           task=task,
                           language=language,
                           split=split)
-    dataset.save()
+    # dataset.save()
     return dataset
 
 

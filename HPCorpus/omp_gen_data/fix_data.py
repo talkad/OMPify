@@ -33,13 +33,13 @@ def get_pragma( pragma):
 
 
 
-dir = '/home/1010/talkad/Downloads/OMP_Dataset/fortran'
-with open(os.path.join(dir, 'total_uniq.jsonl'), 'r') as f, open(os.path.join(dir, 'total_uniq_new.jsonl'), 'w') as f_new:
+dir = '/home/talkad/LIGHTBITS_SHARE/CompCoder_datasets/OMP_Dataset/fortran/source'
+with open(os.path.join(dir, 'total.jsonl'), 'r') as f, open(os.path.join(dir, 'total_new.jsonl'), 'w') as f_new:
     dataset = []
 
     for line in f:
         js = json.loads(line.strip())
-        js['pragma'] = ' '.join(js['pragma'] )#get_pragma(js['pragma'])
+        js['pragma'] = js['pragma'][4:]#get_pragma(js['pragma'])
 
         dataset.append(js)
 

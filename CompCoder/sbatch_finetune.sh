@@ -24,3 +24,5 @@ cd /home/1010/talkad/OMPify/CompCoder
 
 conda deactivate
 
+
+python main.py         --langs fortran   --do-fine-tune      --task pragma_generation        --n-epoch 1        --batch-size 4         --fp16         --eval-batch-size 1         --no-dfg  --no-ast  --no-replaced  --model-name debug

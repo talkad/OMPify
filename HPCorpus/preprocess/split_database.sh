@@ -1,8 +1,8 @@
 #!/bin/bash
 
-input_file="/home/1010/talkad/Downloads/Fortran_HPCorpus/total_uniq.jsonl"
-output_file_1="/home/1010/talkad/Downloads/HPCorpus_final/pre_train/fortran/dataset_fortran.jsonl"
-output_file_2="/home/1010/talkad/Downloads/HPCorpus_final/fine_tune/fortran/dataset_fortran.jsonl"
+input_file="/home/talkad/LIGHTBITS_SHARE/CompCoder_datasets/OMP_Dataset/fortran/source/total.jsonl"
+output_file_1="/home/talkad/LIGHTBITS_SHARE/CompCoder_datasets/OMP_Dataset/fortran/source/train/total.jsonl"
+output_file_2="/home/talkad/LIGHTBITS_SHARE/CompCoder_datasets/OMP_Dataset/fortran/source/test/total.jsonl"
 
 # Get the total number of lines in the input file
 total_lines=$(wc -l < "$input_file")

@@ -26,6 +26,8 @@ def main(args):
         model, vocab = pre_train(args=args)
 
     if args.do_fine_tune or args.only_test:
+        vocab = '/home/talkad/LIGHTBITS_SHARE/CompCoder_datasets/vocab_saved'
+
         train(args=args,
               trained_model=model,
               trained_vocab=vocab)
