@@ -20,15 +20,15 @@ def main(args):
     model = None
     vocab = None
 
-    _, _ = ppl_score(args=args)
-    
-    # if args.do_pre_train:
-    #     model, vocab = pre_train(args=args)
+    # _, _ = ppl_score(args=args)
 
-    # if args.do_fine_tune or args.only_test:
-    #     train(args=args,
-    #           trained_model=model,
-    #           trained_vocab=vocab)
+    if args.do_pre_train:
+        model, vocab = pre_train(args=args)
+
+    if args.do_fine_tune or args.only_test:
+        train(args=args,
+              trained_model=model,
+              trained_vocab=vocab)
 
 
 if __name__ == '__main__':
@@ -84,7 +84,7 @@ if __name__ == '__main__':
     console.setLevel(level=logging.INFO)
     logger.addHandler(console)
 
-    file = logging.FileHandler(os.path.join(main_args.output_root, 'info.log'))
+    file = logging.FileHandler(os.path.join('info.log'))
     file.setLevel(level=logging.DEBUG)
     formatter = logging.Formatter('[%(asctime)s | %(filename)s | line %(lineno)d] - %(levelname)s: %(message)s')
     file.setFormatter(formatter)

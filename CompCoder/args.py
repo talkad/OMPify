@@ -72,12 +72,12 @@ class RuntimeArguments:
     )
 
     batch_size: int = field(
-        default=64,
+        default=8,
         metadata={'help': 'Batch size for training on each device'}
     )
 
     eval_batch_size: int = field(
-        default=64,
+        default=8,
         metadata={'help': 'Batch size for evaluation on each device'}
     )
 
@@ -293,7 +293,7 @@ class TaskArguments:
     """Arguments for specific tasks"""
 
     mass_mask_ratio: float = field(
-        default=0.5,
+        default=0.50,
         metadata={'help': 'Ratio between number of masked tokens and number of total tokens, in MASS'}
     )
 

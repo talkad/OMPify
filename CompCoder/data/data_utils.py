@@ -389,7 +389,7 @@ def align_source_code(former_source, code):
     return former_code, latter_code
 
 
-def parse_for_pragma_gen(dataset_path, lang):
+def parse_for_pragma_gen(dataset_path, lang, is_replaced):
     """
     Load and parse for pragma generation.
 
@@ -410,29 +410,34 @@ def parse_for_pragma_gen(dataset_path, lang):
     """
 
     logger.info(f'    dataset: {dataset_path}')
-    sources, replaced, pragmas, repalced_pragmas = parse_json_file_pragma(dataset_path, lang)
+    # sources, replaced, pragmas, repalced_pragmas = parse_json_file_pragma(dataset_path, lang)
 
-    new_sources = []
-    new_replaced = []
-    new_pragma = []
-    new_pragma_replaced = []
+    sources = []
+    pragmas = []
     asts = []
 
-    for source, replace, pragma, replaced_pragma in tqdm(zip(sources, replaced, pragmas, repalced_pragmas), desc='Parsing', leave=False, total=len(sources)):
-        try:
-            ast = cr.code2xsbt(source, lang=lang)
+    with open(os.path.join(dataset_path, lang, 'replaced' if is_replaced else 'source'), 'r') as f:
 
-            if not ast:
+        for line in tqdm(f, desc='Parsing'):
+            js = json.loads(line.strip())
+
+            code = js['code']
+            pragma = js['pragma']
+            try:
+                ast = cr.code2xsbt(code, lang=lang)
+
+                if not ast:
+                    continue
+
+                sources.append(lexicalize(code, lang=lang))
+                asts.append(ast)
+
+                pragmas.append(pragma)
+
+            except Exception:
                 continue
 
-            new_sources.append(lexicalize(source, lang=lang))
-            new_replaced.append(lexicalize(replace, lang=lang, replaced=True))
-            asts.append(ast)
-
-        except Exception:
-            continue
-
-    return new_sources, asts
+    return sources, pragma, asts
 
 
 

@@ -14,6 +14,8 @@ from utils.trainer import CodeTrainer, CodeCLSTrainer
 from utils.callbacks import LogStateCallBack
 from models.bart import BartForClassificationAndGeneration
 
+from data.data_collator import collate_fn
+import numpy as np
 
 logger = logging.getLogger(__name__)
 
@@ -108,17 +110,9 @@ def ppl_score(args,
                                save_root=args.vocab_root,
                                index_offset=len(code_vocab))
         
-        # # dfg vocab
-        # dfg_vocab = init_vocab(vocab_save_dir=args.vocab_save_dir,
-        #                        name=args.ast_vocab_name,
-        #                        method='comp',
-        #                        datasets=[dataset.dfg],
-        #                        save_root=args.vocab_root,
-        #                        index_offset=len(code_vocab)+len(ast_vocab))
         
     logger.info(f'The size of code vocabulary: {len(code_vocab)}')
     logger.info(f'The size of ast vocabulary: {len(ast_vocab)}')
-    # logger.info(f'The size of ast vocabulary: {len(dfg_vocab)}')
     logger.info('Vocabularies built successfully')
 
 
@@ -127,33 +121,33 @@ def ppl_score(args,
     # --------------------------------------------------
     logger.info('-' * 100)
     logger.info('Building model')
-    config = BartConfig(vocab_size=len(code_vocab) + len(ast_vocab),
-                        max_position_embeddings=512,
-                        encoder_layers=args.n_layer,
-                        encoder_ffn_dim=args.d_ff,
-                        encoder_attention_heads=args.n_head,
-                        decoder_layers=args.n_layer,
-                        decoder_ffn_dim=args.d_ff,
-                        decoder_attention_heads=args.n_head,
-                        activation_function='gelu',
-                        d_model=args.d_model,
-                        dropout=args.dropout,
-                        use_cache=True,
-                        pad_token_id=Vocab.START_VOCAB.index(Vocab.PAD_TOKEN),
-                        bos_token_id=Vocab.START_VOCAB.index(Vocab.SOS_TOKEN),
-                        eos_token_id=Vocab.START_VOCAB.index(Vocab.EOS_TOKEN),
-                        is_encoder_decoder=True,
-                        decoder_start_token_id=Vocab.START_VOCAB.index(Vocab.SOS_TOKEN),
-                        forced_eos_token_id=Vocab.START_VOCAB.index(Vocab.EOS_TOKEN),
-                        max_length=100,  # limit decoder output
-                        min_length=1,
-                        num_beams=args.beam_width,
-                        num_labels=2)
-    model = BartForClassificationAndGeneration(config)
-
-    # config = BartConfig.from_pretrained('/home/1010/talkad/OMPify/outputs/wed_pre_train_fortran_tokom_cap_mass_20230802_180945/models/mass/config.json')
+    # config = BartConfig(vocab_size=len(code_vocab) + len(ast_vocab),
+    #                     max_position_embeddings=512,
+    #                     encoder_layers=args.n_layer,
+    #                     encoder_ffn_dim=args.d_ff,
+    #                     encoder_attention_heads=args.n_head,
+    #                     decoder_layers=args.n_layer,
+    #                     decoder_ffn_dim=args.d_ff,
+    #                     decoder_attention_heads=args.n_head,
+    #                     activation_function='gelu',
+    #                     d_model=args.d_model,
+    #                     dropout=args.dropout,
+    #                     use_cache=True,
+    #                     pad_token_id=Vocab.START_VOCAB.index(Vocab.PAD_TOKEN),
+    #                     bos_token_id=Vocab.START_VOCAB.index(Vocab.SOS_TOKEN),
+    #                     eos_token_id=Vocab.START_VOCAB.index(Vocab.EOS_TOKEN),
+    #                     is_encoder_decoder=True,
+    #                     decoder_start_token_id=Vocab.START_VOCAB.index(Vocab.SOS_TOKEN),
+    #                     forced_eos_token_id=Vocab.START_VOCAB.index(Vocab.EOS_TOKEN),
+    #                     max_length=100,  # limit decoder output
+    #                     min_length=1,
+    #                     num_beams=args.beam_width,
+    #                     num_labels=2)
     # model = BartForClassificationAndGeneration(config)
-    # model.load_state_dict(torch.load('/home/1010/talkad/OMPify/outputs/wed_pre_train_fortran_tokom_cap_mass_20230802_180945/models/mass/pytorch_model.bin'))
+
+    config = BartConfig.from_pretrained('/home/talkad/shared/models/c_mass_tokom/models/mass/config.json')
+    model = BartForClassificationAndGeneration(config)
+    model.load_state_dict(torch.load('/home/talkad/shared/models/c_mass_tokom/models/mass/pytorch_model.bin'))
 
     # log model statistic
     logger.info('Model trainable parameters: {}'.format(human_format(count_params(model))))
@@ -162,8 +156,55 @@ def ppl_score(args,
     logger.info('Model built successfully')
 
 
-   
+    dataset.set_task(enums.TASK_MASS)
+    logger.info('-' * 100)
+    model.set_model_mode(enums.MODEL_MODE_GEN)
+
+    # for param in model.parameters():
+    #     param.requires_grad = False
+
+    # --------------------------------------------------
+    # trainer
+    # --------------------------------------------------
+    logger.info('-' * 100)
+    logger.info('Initializing the running configurations')
+
+    collate_func=lambda batch: collate_fn(batch,
+                                    args=args,
+                                    task=enums.TASK_MASS,
+                                    code_vocab=code_vocab,
+                                    ast_vocab=ast_vocab,
+                                    dfg_vocab=None)
+
+    total_loss = 0
+    total_tokens = 0
+    for idx, data in enumerate(dataset):
+        if idx == 200:
+            break
+
+        # print(data)
+        # print('-'*50)
+        inputs = collate_func([data])
+        # print(inputs)
+        # print('-'*50)
+        labels = inputs['labels']
+        labels_amount = labels.nonzero().size(0)
+        # print(labels_amount)
+        output = model(**inputs)
+        # print(output.keys())
+        # print('labels', labels)
+        # print('-'*50)
+        # print(inputs['labels'])
+        
+        total_tokens += labels_amount*2
+        total_loss += output.loss.item()
+
+    print(total_loss/total_tokens)
+    print(np.exp(total_loss/total_tokens))
+    print('='*50)
 
 
+
+    
 
     return None, None

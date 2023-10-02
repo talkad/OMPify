@@ -53,24 +53,29 @@ class CodeDataset(Dataset):
 
             # pragma generation
             if task == enums.TASK_PRAGMA:
-                self.source_tokens, self.replaced_tokens, self.pragma_tokens, self.replaced_pragma_tokens, self.asts = parse_for_pragma_gen(
+                self.source_tokens, self.pragma_tokens, self.asts = parse_for_pragma_gen(
                     dataset_path=args.pragma_dataset_path,
-                    lang=args.lang
+                    lang=args.lang,
+                    is_replaced=no_replaced
                     )
 
-                assert len(self.sources) == len(self.asts) == len(self.replaced) == len(self.pragma)
+                assert len(self.sources) == len(self.asts) == len(self.pragma)
                 self.size = len(self.sources)
-           
-    def __getitem__(self, index):
+
+    def get_codes(self):
         # selection of code representation
         if self.args.no_replaced:
             codes = self.source_tokens
         else:
             codes = self.replaced_tokens
 
+        return codes
+
+    def __getitem__(self, index):            
+
         # cap
         if self.task == enums.TASK_CODE_AST_PREDICTION:
-            
+            codes = self.get_codes()
             is_ast = random.random() < 0.5
             if is_ast:
                 return codes[index], self.asts[index], 1
@@ -81,6 +86,7 @@ class CodeDataset(Dataset):
                 return codes[index], other_ast, 0
         # mass
         elif self.task == enums.TASK_MASS:
+            codes = self.get_codes()
             code_tokens = codes[index].split()
             mask_len = int(self.args.mass_mask_ratio * len(code_tokens))
             mask_start = random.randint(0, len(code_tokens) - mask_len)
@@ -88,10 +94,9 @@ class CodeDataset(Dataset):
             input_tokens = code_tokens[:mask_start] + [Vocab.MSK_TOKEN] + code_tokens[mask_start + mask_len:]
             return ' '.join(input_tokens), self.asts[index], ' '.join(mask_tokens)
 
-        # translation
-        elif self.task == enums.TASK_TRANSLATION:
-            pass
-            # return self.codes[index], self.asts[index], self.names[index], self.targets[index]
+        # pragma generation
+        elif self.task == enums.TASK_PRAGMA:
+            return self.source_tokens[index], self.asts[index], self.targets[index]
         
     def __len__(self):
         return self.size
@@ -142,18 +147,29 @@ def init_dataset(args, mode, task=None, language=None, split=None, load_if_saved
         CodeDataset: Loaded or initialized dataset
 
     """
-    name = '.'.join([sub_name for sub_name in [mode, task, language, split] if sub_name is not None])
-    if load_if_saved:
-        path = os.path.join(args.dataset_save_dir, f'{name}.pk')
-        if os.path.exists(path) and os.path.isfile(path):
-            logger.info(f'Trying to load saved binary pickle file from: {path}')
-            with open(path, mode='rb') as f:
-                obj = pickle.load(f)
-            assert isinstance(obj, CodeDataset)
-            obj.args = args
-            logger.info(f'Dataset instance loaded from: {path}')
-            print_paths(obj.paths)
-            return obj
+    name = 'c'
+    path = os.path.join(args.dataset_save_dir, f'{name}.pk')
+
+    with open(path, mode='rb') as f:
+        obj = pickle.load(f)
+    assert isinstance(obj, CodeDataset)
+    obj.args = args
+    logger.info(f'Dataset instance loaded from: {path}')
+    print_paths(obj.paths)
+    return obj
+
+    # name = '.'.join([sub_name for sub_name in [mode, task, language, split] if sub_name is not None])
+    # if load_if_saved:
+    #     path = os.path.join(args.dataset_save_dir, f'{name}.pk')
+    #     if os.path.exists(path) and os.path.isfile(path):
+    #         logger.info(f'Trying to load saved binary pickle file from: {path}')
+    #         with open(path, mode='rb') as f:
+    #             obj = pickle.load(f)
+    #         assert isinstance(obj, CodeDataset)
+    #         obj.args = args
+    #         logger.info(f'Dataset instance loaded from: {path}')
+    #         print_paths(obj.paths)
+    #         return obj
 
     dataset = CodeDataset(args=args,
                           dataset_name=name,
