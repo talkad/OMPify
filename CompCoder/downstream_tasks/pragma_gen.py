@@ -15,6 +15,7 @@ from utils.callbacks import LogStateCallBack
 from utils.trainer import CodeTrainer
 
 logger = logging.getLogger(__name__)
+from data.data_collator import collate_fn
 
 
 def run_pragma_gen(
@@ -77,7 +78,7 @@ def run_pragma_gen(
     # --------------------------------------------------
     # model
     # --------------------------------------------------
-
+    
     logger.info('Loading the model from file')
     config = BartConfig.from_pretrained('/home/talkad/shared/models/fortran_mass/models/mass/config.json')
     model = BartForClassificationAndGeneration(config, mode=enums.MODEL_MODE_GEN)
@@ -190,33 +191,32 @@ def run_pragma_gen(
         trainer.save_metrics(split='train', metrics=metrics)
 
 
-    # --------------------------------------------------
-    # test
-    # --------------------------------------------------
-    logger.info('-' * 100)
-    logger.info('Initializing the running configurations')
+    # # --------------------------------------------------
+    # # test
+    # # --------------------------------------------------
+    # logger.info('-' * 100)
+    # logger.info('Testing pragma generation')
 
-    collate_func=lambda batch: collate_fn(batch,
-                                    args=args,
-                                    task=enums.TASK_PRAGMA,
-                                    code_vocab=code_vocab,
-                                    ast_vocab=ast_vocab,
-                                    dfg_vocab=None)
+    # config = BartConfig.from_pretrained('/mnt/lbosm1/home/Share/OMPify/outputs/fortran_20231002_204629/models/config.json')
+    # model = BartForClassificationAndGeneration(config, mode=enums.MODEL_MODE_GEN)
+    # model.load_state_dict(torch.load('/mnt/lbosm1/home/Share/OMPify/outputs/fortran_20231002_204629/models/pytorch_model.bin'))
 
-    total_loss = 0
-    total_tokens = 0
-    for idx, data in enumerate(dataset):
-        if idx == 200:
-            break
+    # collate_func=lambda batch: collate_fn(batch,
+    #                                 args=args,
+    #                                 task=enums.TASK_PRAGMA,
+    #                                 code_vocab=code_vocab,
+    #                                 ast_vocab=ast_vocab,
+    #                                 dfg_vocab=None)
 
-        inputs = collate_func([data])
-        labels = inputs['labels']
-        labels_amount = labels.nonzero().size(0)
-        output = model(**inputs)
+    # for idx, data in enumerate(datasets['test']):
+    #     if idx == 1:
+    #         break
 
-        total_tokens += labels_amount*2
-        total_loss += output.loss.item()
+    #     inputs = collate_func([data])
+    #     labels = inputs['labels']
+    #     output = model(**inputs)
 
-    print(total_loss/total_tokens)
-    print(np.exp(total_loss/total_tokens))
-    print('='*50)
+    #     output = torch.argmax(output['logits'], dim=-1)
+
+    #     print(labels)
+    #     print(output)
