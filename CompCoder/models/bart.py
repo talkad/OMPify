@@ -64,7 +64,6 @@ class BartForClassificationAndGeneration(BartForConditionalGeneration):
     ):
         assert self.mode, 'It is required to specific a mode for BART before the model is passed through'
 
-        # print('forward')
         if self.mode == enums.MODEL_MODE_SEARCH:
             return self.forward_search(input_ids=input_ids,
                                        attention_mask=attention_mask,
@@ -143,6 +142,10 @@ class BartForClassificationAndGeneration(BartForConditionalGeneration):
         
         return_dict = return_dict if return_dict is not None else self.config.use_return_dict
 
+        # print(input_ids.shape)
+        # print('aa', labels)
+        # print(labels.shape)
+
         if labels is not None:
             if decoder_input_ids is None:
                 decoder_input_ids = shift_tokens_right(
@@ -169,7 +172,7 @@ class BartForClassificationAndGeneration(BartForConditionalGeneration):
         lm_logits = self.lm_head(outputs[0]) + self.final_logits_bias
 
         masked_lm_loss = None
-        # print(masked_lm_loss)
+
         if labels is not None:
             loss_fct = CrossEntropyLoss(reduction='sum')
             masked_lm_loss = loss_fct(lm_logits.view(-1, self.config.vocab_size), labels.view(-1))

@@ -74,35 +74,47 @@ def collate_fn(batch, args, task, code_vocab, ast_vocab, dfg_vocab):
                                                      processor=Vocab.eos_processor,
                                                      max_len=int(args.mass_mask_ratio * args.max_code_len))
 
-    # translation
-    elif task == enums.TASK_TRANSLATION:
-        pass
-        # code_raw, ast_raw, name_raw, target_raw = map(list, zip(*batch))
+    # pragma generation
+    elif task == enums.TASK_PRAGMA:
+        code_raw, target_raw = map(list, zip(*batch))
 
-        # model_inputs['input_ids'], model_inputs['attention_mask'] = get_concat_batch_inputs(
-        #     code_raw=code_raw,
-        #     code_vocab=code_vocab,
-        #     max_code_len=args.max_code_len,
-        #     ast_raw=ast_raw,
-        #     ast_vocab=ast_vocab,
-        #     max_ast_len=args.max_ast_len,
-        #     nl_raw=name_raw,
-        #     nl_vocab=nl_vocab,
-        #     max_nl_len=args.max_nl_len,
-        #     no_ast=args.no_ast,
-        #     no_nl=args.no_nl
-        # )
+        # print(code_raw)
+        # print(target_raw)
+        # print('+'*50)
 
-        # model_inputs['decoder_input_ids'], model_inputs['decoder_attention_mask'] = get_batch_inputs(
-        #     batch=target_raw,
-        #     vocab=code_vocab,
-        #     processor=Vocab.sos_processor,
-        #     max_len=args.max_code_len
-        # )
-        # model_inputs['labels'], _ = get_batch_inputs(batch=target_raw,
-        #                                              vocab=code_vocab,
-        #                                              processor=Vocab.eos_processor,
-        #                                              max_len=args.max_code_len)
+        model_inputs['input_ids'], model_inputs['attention_mask'] = get_concat_batch_inputs(
+            code_raw=code_raw,
+            code_vocab=code_vocab,
+            max_code_len=args.max_code_len,
+            ast_raw=None,
+            ast_vocab=ast_vocab,
+            max_ast_len=args.max_ast_len,
+            dfg_raw=[],
+            dfg_vocab=dfg_vocab,
+            max_dfg_len=args.max_dfg_len,
+            no_ast=args.no_ast,
+            no_dfg=args.no_dfg
+        )
+
+        model_inputs['decoder_input_ids'], model_inputs['decoder_attention_mask'] = get_batch_inputs(
+            batch=target_raw,
+            vocab=code_vocab,
+            processor=Vocab.sos_processor,
+            max_len=args.max_code_len
+        )
+
+        model_inputs['labels'], _ = get_batch_inputs(batch=target_raw,
+                                                     vocab=code_vocab,
+                                                     processor=Vocab.eos_processor,
+                                                     max_len=args.max_code_len)
+
+        # print(model_inputs['input_ids'].shape)
+        # print(model_inputs['attention_mask'].shape)
+        # print(model_inputs['decoder_input_ids'].shape)
+        # print(model_inputs['decoder_attention_mask'].shape)
+        # print(model_inputs['labels'].shape)
+
+        # print('+'*50)
 
     return model_inputs
 

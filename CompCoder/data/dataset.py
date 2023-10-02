@@ -97,7 +97,7 @@ class CodeDataset(Dataset):
 
         # pragma generation
         elif self.task == enums.TASK_PRAGMA:
-            return self.source_tokens[index], self.asts[index], self.targets[index]
+            return self.source_tokens[index],  self.pragma_tokens[index]
         
     def __len__(self):
         return self.size

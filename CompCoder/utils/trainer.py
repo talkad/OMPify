@@ -57,7 +57,6 @@ class CodeTrainer(transformers.Seq2SeqTrainer):
 
         Subclass and override this method if you want to inject some custom behavior.
         """
-
         return DataLoader(dataset=self.train_dataset,
                           batch_size=self.main_args.batch_size,
                           shuffle=True,

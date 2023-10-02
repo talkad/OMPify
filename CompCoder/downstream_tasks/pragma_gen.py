@@ -80,9 +80,9 @@ def run_pragma_gen(
 
     logger.info('Loading the model from file')
     config = BartConfig.from_pretrained('/home/talkad/shared/models/fortran_mass/models/mass/config.json')
-    model = BartForClassificationAndGeneration(config)
+    model = BartForClassificationAndGeneration(config, mode=enums.MODEL_MODE_GEN)
     model.load_state_dict(torch.load('/home/talkad/shared/models/fortran_mass/models/mass/pytorch_model.bin'))
-
+    
     # log model statistic
     logger.info('Trainable parameters: {}'.format(human_format(count_params(model))))
     table = layer_wise_parameters(model)
@@ -90,141 +90,133 @@ def run_pragma_gen(
     logger.info('Model built successfully')
 
 
-    # # --------------------------------------------------
-    # # trainer
-    # # --------------------------------------------------
-    # logger.info('-' * 100)
-    # logger.info('Initializing the running configurations')
+    # --------------------------------------------------
+    # trainer
+    # --------------------------------------------------
+    logger.info('-' * 100)
+    logger.info('Initializing the running configurations')
 
-    # def decode_preds(preds):
-    #     preds, labels = preds
-    #     decoded_preds = code_vocab.decode_batch(preds)
-    #     decoded_labels = code_vocab.decode_batch(labels)
-    #     return decoded_labels, decoded_preds
+    def decode_preds(preds):
+        preds, labels = preds
+        decoded_preds = code_vocab.decode_batch(preds)
+        decoded_labels = code_vocab.decode_batch(labels)
+        return decoded_labels, decoded_preds
 
-    # # compute metrics
-    # def compute_valid_metrics(eval_preds):
-    #     decoded_labels, decoded_preds = decode_preds(eval_preds)
-    #     refs = [ref.strip().split() for ref in decoded_labels]
-    #     cans = [can.strip().split() for can in decoded_preds]
-    #     result = {}
-    #     result.update(bleu(references=refs, candidates=cans))
-    #     result.update(accuracy_for_sequence(references=refs, candidates=cans))
-    #     return result
+    # compute metrics
+    def compute_test_metrics(eval_preds):
+        decoded_labels, decoded_preds = decode_preds(eval_preds)
+        print(decoded_labels, decoded_preds)
+        return 1
 
-    # def compute_test_metrics(eval_preds):
-    #     decoded_labels, decoded_preds = decode_preds(eval_preds)
-    #     result = {'references': decoded_labels, 'candidates': decoded_preds}
-    #     refs = [ref.strip().split() for ref in decoded_labels]
-    #     cans = [can.strip().split() for can in decoded_preds]
-    #     result.update(bleu(references=refs, candidates=cans))
-    #     try:
-    #         result.update(meteor(references=refs, candidates=cans))
-    #     except Exception:
-    #         pass
-    #     result.update(rouge_l(references=refs, candidates=cans))
-    #     result.update(avg_ir_metrics(references=refs, candidates=cans))
-    #     result.update(accuracy_for_sequence(references=refs, candidates=cans))
-    #     return result
+        result = {'references': decoded_labels, 'candidates': decoded_preds}
+        refs = [ref.strip().split() for ref in decoded_labels]
+        cans = [can.strip().split() for can in decoded_preds]
+        result.update(bleu(references=refs, candidates=cans))
+        try:
+            result.update(meteor(references=refs, candidates=cans))
+        except Exception:
+            pass
+        result.update(rouge_l(references=refs, candidates=cans))
+        result.update(avg_ir_metrics(references=refs, candidates=cans))
+        result.update(accuracy_for_sequence(references=refs, candidates=cans))
+        return result
 
-    # training_args = Seq2SeqTrainingArguments(output_dir=os.path.join(args.checkpoint_root, enums.TASK_TRANSLATION),
-    #                                          overwrite_output_dir=True,
-    #                                          do_train=True,
-    #                                          do_eval=True,
-    #                                          do_predict=True,
-    #                                          evaluation_strategy=IntervalStrategy.EPOCH,
-    #                                          prediction_loss_only=False,
-    #                                          per_device_train_batch_size=args.batch_size,
-    #                                          per_device_eval_batch_size=args.eval_batch_size,
-    #                                          gradient_accumulation_steps=args.gradient_accumulation_steps,
-    #                                          learning_rate=args.learning_rate,
-    #                                          weight_decay=args.lr_decay_rate,
-    #                                          max_grad_norm=args.grad_clipping_norm,
-    #                                          num_train_epochs=args.n_epoch,
-    #                                          lr_scheduler_type=SchedulerType.LINEAR,
-    #                                          warmup_steps=args.warmup_steps,
-    #                                          logging_dir=os.path.join(args.tensor_board_root, enums.TASK_TRANSLATION),
-    #                                          logging_strategy=IntervalStrategy.STEPS,
-    #                                          logging_steps=args.logging_steps,
-    #                                          save_strategy=IntervalStrategy.EPOCH,
-    #                                          save_total_limit=5,
-    #                                          seed=args.random_seed,
-    #                                          fp16=args.fp16,
-    #                                          dataloader_drop_last=False,
-    #                                          run_name=args.model_name,
-    #                                          load_best_model_at_end=True,
-    #                                          metric_for_best_model='accuracy',
-    #                                          greater_is_better=True,
-    #                                          ignore_data_skip=False,
-    #                                          label_smoothing_factor=args.label_smoothing,
-    #                                          report_to=['tensorboard'],
-    #                                          dataloader_pin_memory=True,
-    #                                          predict_with_generate=True)
-    # trainer = CodeTrainer(main_args=args,
-    #                       code_vocab=code_vocab,
-    #                       ast_vocab=ast_vocab,
-    #                       nl_vocab=nl_vocab,
-    #                       task=enums.TASK_TRANSLATION,
-    #                       model=model,
-    #                       args=training_args,
-    #                       data_collator=None,
-    #                       train_dataset=datasets['train'] if 'train' in datasets else None,
-    #                       eval_dataset=datasets['valid'] if 'valid' in datasets else None,
-    #                       tokenizer=nl_vocab,
-    #                       model_init=None,
-    #                       compute_metrics=compute_valid_metrics,
-    #                       callbacks=[
-    #                           EarlyStoppingCallback(early_stopping_patience=args.early_stop_patience),
-    #                           LogStateCallBack()])
-    # logger.info('Running configurations initialized successfully')
+    training_args = Seq2SeqTrainingArguments(output_dir=os.path.join(args.checkpoint_root, enums.TASK_PRAGMA),
+                                             overwrite_output_dir=True,
+                                             do_train=True,
+                                             do_eval=True,
+                                             do_predict=True,
+                                             evaluation_strategy=IntervalStrategy.EPOCH,
+                                             prediction_loss_only=False,
+                                             per_device_train_batch_size=args.batch_size,
+                                             per_device_eval_batch_size=args.eval_batch_size,
+                                             gradient_accumulation_steps=args.gradient_accumulation_steps,
+                                             learning_rate=args.learning_rate,
+                                             weight_decay=args.lr_decay_rate,
+                                             max_grad_norm=args.grad_clipping_norm,
+                                             num_train_epochs=args.n_epoch,
+                                             lr_scheduler_type=SchedulerType.LINEAR,
+                                             warmup_steps=args.warmup_steps,
+                                             logging_dir=os.path.join(args.tensor_board_root, enums.TASK_PRAGMA),
+                                             logging_strategy=IntervalStrategy.STEPS,
+                                             logging_steps=args.logging_steps,
+                                             save_strategy=IntervalStrategy.EPOCH,
+                                             save_total_limit=5,
+                                             seed=args.random_seed,
+                                             fp16=args.fp16,
+                                             dataloader_drop_last=False,
+                                             run_name=args.model_name,
+                                             load_best_model_at_end=True,
+                                            #  metric_for_best_model='accuracy',
+                                             greater_is_better=True,
+                                             ignore_data_skip=False,
+                                             label_smoothing_factor=args.label_smoothing,
+                                             report_to=['tensorboard'],
+                                             dataloader_pin_memory=True,
+                                             predict_with_generate=True)
 
-    # # --------------------------------------------------
-    # # train
-    # # --------------------------------------------------
-    # if not only_test:
-    #     logger.info('-' * 100)
-    #     logger.info('Start training')
-    #     train_result = trainer.train()
-    #     logger.info('Training finished')
-    #     trainer.save_model(args.model_root)
-    #     trainer.save_state()
-    #     metrics = train_result.metrics
-    #     trainer.log_metrics(split='train', metrics=metrics)
-    #     trainer.save_metrics(split='train', metrics=metrics)
+    trainer = CodeTrainer(main_args=args,
+                          code_vocab=code_vocab,
+                          ast_vocab=ast_vocab,
+                          dfg_vocab=None,
+                          task=enums.TASK_PRAGMA,
+                          model=model,
+                          args=training_args,
+                          data_collator=None,
+                          train_dataset=datasets['train'] if 'train' in datasets else None,
+                          eval_dataset=datasets['test'] if 'test' in datasets else None,
+                          tokenizer=None,
+                          model_init=None,
+                          compute_metrics=compute_test_metrics,
+                          callbacks=[
+                              EarlyStoppingCallback(early_stopping_patience=args.early_stop_patience),
+                              LogStateCallBack()])
+    logger.info('Running configurations initialized successfully')
 
-    # # --------------------------------------------------
-    # # predict
-    # # --------------------------------------------------
-    # logger.info('-' * 100)
-    # logger.info('Start testing')
-    # trainer.compute_metrics = compute_test_metrics
-    # predict_results = trainer.predict(test_dataset=datasets['test'],
-    #                                   metric_key_prefix='test',
-    #                                   max_length=args.max_code_len,
-    #                                   num_beams=args.beam_width)
-    # predict_metrics = predict_results.metrics
-    # references = predict_metrics.pop('test_references')
-    # candidates = predict_metrics.pop('test_candidates')
-    # trainer.log_metrics(split='test', metrics=predict_metrics)
-    # trainer.save_metrics(split='test', metrics=predict_metrics)
-    # # save testing results
-    # with open(os.path.join(args.output_root, f'{enums.TASK_TRANSLATION}_test_results.txt'),
-    #           mode='w', encoding='utf-8') as result_f, \
-    #         open(os.path.join(args.output_root, f'{enums.TASK_TRANSLATION}_test_refs.txt'),
-    #              mode='w', encoding='utf-8') as refs_f, \
-    #         open(os.path.join(args.output_root, f'{enums.TASK_TRANSLATION}_test_cans.txt'),
-    #              mode='w', encoding='utf-8') as cans_f:
-    #     sample_id = 0
-    #     for reference, candidate in zip(references, candidates):
-    #         result_f.write(f'sample {sample_id}:\n')
-    #         sample_id += 1
-    #         result_f.write(f'reference: {reference}\n')
-    #         result_f.write(f'candidate: {candidate}\n')
-    #         result_f.write('\n')
-    #         refs_f.write(reference + '\n')
-    #         cans_f.write(candidate + '\n')
-    #     for name, score in predict_metrics.items():
-    #         result_f.write(f'{name}: {score}\n')
-    # logger.info('Testing finished')
-    # for name, score in predict_metrics.items():
-    #     logger.info(f'{name}: {score}')
+    # --------------------------------------------------
+    # train
+    # --------------------------------------------------
+    if not only_test:
+        logger.info('-' * 100)
+        logger.info('Start training')
+        # import pdb; pdb.set_trace()
+
+        train_result = trainer.train()
+        logger.info('Training finished')
+        trainer.save_model(args.model_root)
+        trainer.save_state()
+        metrics = train_result.metrics
+        trainer.log_metrics(split='train', metrics=metrics)
+        trainer.save_metrics(split='train', metrics=metrics)
+
+
+    # --------------------------------------------------
+    # test
+    # --------------------------------------------------
+    logger.info('-' * 100)
+    logger.info('Initializing the running configurations')
+
+    collate_func=lambda batch: collate_fn(batch,
+                                    args=args,
+                                    task=enums.TASK_PRAGMA,
+                                    code_vocab=code_vocab,
+                                    ast_vocab=ast_vocab,
+                                    dfg_vocab=None)
+
+    total_loss = 0
+    total_tokens = 0
+    for idx, data in enumerate(dataset):
+        if idx == 200:
+            break
+
+        inputs = collate_func([data])
+        labels = inputs['labels']
+        labels_amount = labels.nonzero().size(0)
+        output = model(**inputs)
+
+        total_tokens += labels_amount*2
+        total_loss += output.loss.item()
+
+    print(total_loss/total_tokens)
+    print(np.exp(total_loss/total_tokens))
+    print('='*50)
