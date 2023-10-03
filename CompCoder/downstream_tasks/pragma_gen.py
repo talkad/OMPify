@@ -16,6 +16,8 @@ from utils.trainer import CodeTrainer
 
 logger = logging.getLogger(__name__)
 from data.data_collator import collate_fn
+from tqdm import tqdm
+from prettytable import PrettyTable
 
 
 def run_pragma_gen(
@@ -62,11 +64,20 @@ def run_pragma_gen(
     # --------------------------------------------------
     logger.info('-' * 100)
     logger.info('Loading vocabularies from files')
+
+    extended_tokens = ['private', 'reduction', 'simd']
     
     if args.no_replaced:
         code_vocab = load_vocab(vocab_root=trained_vocab, name='code.bpe.50000.None') #name=args.code_vocab_name)
     else:
-        code_vocab = load_vocab(vocab_root=trained_vocab, name=args.replaced_code_vocab_name)
+        # code_vocab = load_vocab(vocab_root=trained_vocab, name=args.replaced_code_vocab_name)
+        code_vocab = init_vocab(vocab_save_dir=args.vocab_save_dir,
+                                    name=args.replaced_code_vocab_name,
+                                    method='comp',
+                                    datasets=[],
+                                    ignore_case=True,
+                                    save_root=args.vocab_root)
+        code_vocab.add_tokens(extended_tokens)
 
     ast_vocab = load_vocab(vocab_root=trained_vocab, name='ast.word.None.50000') #name=args.ast_vocab_name)
         
@@ -80,9 +91,9 @@ def run_pragma_gen(
     # --------------------------------------------------
     
     logger.info('Loading the model from file')
-    config = BartConfig.from_pretrained('/home/talkad/shared/models/fortran_mass/models/mass/config.json')
+    config = BartConfig.from_pretrained('/home/talkad/shared/models/fortran_tokom_mass/models/mass/config.json')
     model = BartForClassificationAndGeneration(config, mode=enums.MODEL_MODE_GEN)
-    model.load_state_dict(torch.load('/home/talkad/shared/models/fortran_mass/models/mass/pytorch_model.bin'))
+    model.load_state_dict(torch.load('/home/talkad/shared/models/fortran_tokom_mass/models/mass/pytorch_model.bin'))
     
     # log model statistic
     logger.info('Trainable parameters: {}'.format(human_format(count_params(model))))
@@ -177,46 +188,58 @@ def run_pragma_gen(
     # --------------------------------------------------
     # train
     # --------------------------------------------------
-    if not only_test:
-        logger.info('-' * 100)
-        logger.info('Start training')
-        # import pdb; pdb.set_trace()
+    # if not only_test:
+    #     logger.info('-' * 100)
+    #     logger.info('Start training')
+    #     # import pdb; pdb.set_trace()
 
-        train_result = trainer.train()
-        logger.info('Training finished')
-        trainer.save_model(args.model_root)
-        trainer.save_state()
-        metrics = train_result.metrics
-        trainer.log_metrics(split='train', metrics=metrics)
-        trainer.save_metrics(split='train', metrics=metrics)
+    #     train_result = trainer.train()
+    #     logger.info('Training finished')
+    #     trainer.save_model(args.model_root)
+    #     trainer.save_state()
+    #     metrics = train_result.metrics
+    #     trainer.log_metrics(split='train', metrics=metrics)
+    #     trainer.save_metrics(split='train', metrics=metrics)
 
 
-    # # --------------------------------------------------
-    # # test
-    # # --------------------------------------------------
-    # logger.info('-' * 100)
-    # logger.info('Testing pragma generation')
+    # --------------------------------------------------
+    # test
+    # --------------------------------------------------
+    logger.info('-' * 100)
+    logger.info('Testing pragma generation')
 
-    # config = BartConfig.from_pretrained('/mnt/lbosm1/home/Share/OMPify/outputs/fortran_20231002_204629/models/config.json')
-    # model = BartForClassificationAndGeneration(config, mode=enums.MODEL_MODE_GEN)
-    # model.load_state_dict(torch.load('/mnt/lbosm1/home/Share/OMPify/outputs/fortran_20231002_204629/models/pytorch_model.bin'))
+    config = BartConfig.from_pretrained('/mnt/lbosm1/home/Share/OMPify/outputs/fortran_tokom_20231003_102735/models/config.json')
+    model = BartForClassificationAndGeneration(config, mode=enums.MODEL_MODE_GEN)
+    model.load_state_dict(torch.load('/mnt/lbosm1/home/Share/OMPify/outputs/fortran_tokom_20231003_102735/models/pytorch_model.bin'))
 
-    # collate_func=lambda batch: collate_fn(batch,
-    #                                 args=args,
-    #                                 task=enums.TASK_PRAGMA,
-    #                                 code_vocab=code_vocab,
-    #                                 ast_vocab=ast_vocab,
-    #                                 dfg_vocab=None)
+    collate_func=lambda batch: collate_fn(batch,
+                                    args=args,
+                                    task=enums.TASK_PRAGMA,
+                                    code_vocab=code_vocab,
+                                    ast_vocab=ast_vocab,
+                                    dfg_vocab=None)
 
-    # for idx, data in enumerate(datasets['test']):
-    #     if idx == 1:
-    #         break
+    pred_table = PrettyTable()
+    pred_table.field_names = ["Label", "Pred"]
+    pred_table.align["Label"] = "l"
+    pred_table.align["Pred"] = "l"
 
-    #     inputs = collate_func([data])
-    #     labels = inputs['labels']
-    #     output = model(**inputs)
+    for data in tqdm(datasets['test']):
 
-    #     output = torch.argmax(output['logits'], dim=-1)
+        inputs = collate_func([data])
+        labels = inputs['labels']
+        output = model(**inputs)
+        output = torch.argmax(output['logits'], dim=-1)
 
-    #     print(labels)
-    #     print(output)
+        pred_table.add_row([code_vocab.decode(labels[0].tolist()), 
+                            code_vocab.decode(output[0].tolist())])
+        
+        print(data)
+        print(labels[0].tolist())
+        print(output[0].tolist())
+        print(code_vocab.decode(labels[0].tolist()))
+        print(code_vocab.decode(output[0].tolist()))
+        break
+
+    with open('result_fortran_ast.log', 'w') as f:
+        f.write(str(pred_table))

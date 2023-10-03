@@ -12,6 +12,7 @@ import logging
 
 from typing import List, Union
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -129,6 +130,14 @@ class Vocab(object):
             # save
             if save_root:
                 self.save(vocab_root=save_root)
+
+    def add_tokens(self, tokens):
+        tokens = [f'##{token}##' for token in tokens]
+        max_id = max(self.id2token.keys())
+
+        for idx, token in enumerate(tokens, start=max_id+1):
+            self.token2id[token] = idx
+            self.id2token[idx] = token
 
     def add_special_symbols(self, symbols: list):
         assert isinstance(symbols, list)
@@ -304,9 +313,25 @@ class Vocab(object):
             str: The decoded string
 
         """
-        if self.index_offset:
-            ids = [self.restore_index(index) for index in ids]
-        return self.tokenizer.decode(ids=ids, skip_special_tokens=skip_special_tokens)
+        if self.method == 'comp':
+            tokens = [self.id2token[id] for id in ids if id > 0 and id][:-1]
+            tokens = [token[2:-2]  if token.startswith('##') else token for token in tokens]
+
+            unified_vars = []
+            for idx, token in enumerate(tokens):
+                if token.isnumeric():
+                    continue
+
+                if token in ['var', 'arr', 'struct', 'arg'] and \
+                    idx < len(tokens)+1 and tokens[idx+1].isnumeric():
+                    unified_vars.append(f'{token}_{tokens[idx+1]}')
+                else:
+                    unified_vars.append(token)
+            return ' '.join(unified_vars)
+        else:
+            if self.index_offset:
+                ids = [self.restore_index(index) for index in ids]
+            return self.tokenizer.decode(ids=ids, skip_special_tokens=skip_special_tokens)
 
     def decode_batch(self, batch: List[List[int]], skip_special_tokens=True) -> List[str]:
         """

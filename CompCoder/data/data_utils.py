@@ -423,23 +423,11 @@ def parse_for_pragma_gen(dataset_path, lang, split, is_replaced):
             code = js['code']
             pragma = js['pragma']
             try:
-                # ast = cr.code2xsbt(code, lang=lang)  
-
-                # if not ast:
-                #     continue
 
                 source = lexicalize(code, lang=lang, replaced=is_replaced, partial=True)
-                # print(code)
-                # print('+'*50)
-                # print(source)
-                # print(pragma)
+                pragma = ' '.join([f'##{token}##' for token in pragma.replace('_', ' ').split()])
                 sources.append(source)
-                # asts.append(ast)
                 pragmas.append(pragma)
-
-                # print(source)
-                # print(ast)
-                # print(pragma)
 
             except Exception as e:
                 continue
