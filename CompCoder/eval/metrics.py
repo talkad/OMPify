@@ -227,6 +227,95 @@ def rouge_l(references, candidates):
 
 def pragma2dict(pragma):
     """
-    
+    Convert an openmp pragma into dictionary.
+    do private ( var_501 )  ->   {private: [var_501]}
+
+    if the pragma is illegal, None is returned.
     """
-    pass
+    clauses = ['private', 'reduction', 'simd']
+
+    result = {}
+    curr_clause = ''
+    collect_vars = False
+
+    for token in pragma.split()[1:]:
+        if token in clauses:
+            curr_clause = token
+            result[token] = [] 
+        elif token == '(' and (collect_vars or not curr_clause):
+            return
+        elif token == ')' and not collect_vars:
+            return
+        elif token == '(' and not collect_vars:
+            collect_vars = True
+        elif token == ')' and collect_vars:
+            collect_vars = False
+            curr_clause = ''
+        elif collect_vars:
+            result[curr_clause].append(token)
+        else:
+            return
+
+    return result
+
+
+def compare_directive(directive, preds, labels):
+    result = {'TP': 0, 'FP': 0, 'TN': 0, 'FN': 0, 'Illegal': 0}
+    preds = list(map(pragma2dict, preds))
+    labels = list(map(pragma2dict, labels))
+
+    for pred, label in zip(preds, labels):
+        if pred is None or label is None:
+            result['Illegal'] += 1
+            continue
+
+        if directive in pred and directive in label:
+            result['TP'] += 1
+        elif directive not in pred and directive not in label:
+            result['TN'] += 1
+        elif directive not in pred and directive in label:
+            result['FN'] += 1
+        elif directive in pred and directive not in label:
+            result['FP'] += 1
+        else:
+            print(pred, label)
+
+    return result
+
+
+def compare_vars(directive, preds, labels, operator=False):
+    result = {'TP': 0, 'FP': 0, 'TN': 0, 'FN': 0}
+    preds = list(map(pragma2dict, preds))
+    labels = list(map(pragma2dict, labels))
+
+    for pred, label in zip(preds, labels):
+        if pred is None or label is None or directive not in pred or directive not in label:
+            continue
+
+        if directive == 'reduction':
+            if len(pred[directive]) < 3 or pred[directive][1] != ':' or label[directive][1] != ':':
+                continue
+
+            if operator:
+                pred_vars = [pred[directive][0]]
+                label_vars = [label[directive][0]]
+            else:
+                pred_vars = pred[directive][2:]
+                label_vars = label[directive][2:]
+        else:
+            pred_vars = pred[directive] 
+            label_vars = label[directive] 
+
+        total_vars = set(pred_vars + label_vars)
+
+        for var in total_vars:
+            if var in pred_vars and var in label_vars:
+                result['TP'] += 1
+            elif var not in pred_vars and var not in label_vars:
+                result['TN'] += 1
+            elif var not in pred_vars and var in label_vars:
+                result['FN'] += 1
+            elif var in pred_vars and var not in label_vars:
+                result['FP'] += 1
+
+    return result
