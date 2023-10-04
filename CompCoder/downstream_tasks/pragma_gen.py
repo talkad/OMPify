@@ -77,6 +77,7 @@ def run_pragma_gen(
                                     datasets=[],
                                     ignore_case=True,
                                     save_root=args.vocab_root)
+
         code_vocab.add_tokens(extended_tokens)
 
     ast_vocab = load_vocab(vocab_root=trained_vocab, name='ast.word.None.50000') #name=args.ast_vocab_name)
@@ -95,6 +96,15 @@ def run_pragma_gen(
     model = BartForClassificationAndGeneration(config, mode=enums.MODEL_MODE_GEN)
     model.load_state_dict(torch.load('/home/talkad/shared/models/fortran_tokom_mass/models/mass/pytorch_model.bin'))
     
+    if not args.no_replaced:
+        embedding_layer = model.get_input_embeddings()  
+        num_embeddings = embedding_layer.weight.shape[0]
+
+        # print("Number of embeddings (vocabulary size):", num_embeddings)
+        # print("new vocab size: ", len(code_vocab))
+
+        model.resize_token_embeddings(num_embeddings+len(extended_tokens))
+
     # log model statistic
     logger.info('Trainable parameters: {}'.format(human_format(count_params(model))))
     table = layer_wise_parameters(model)
@@ -127,7 +137,7 @@ def run_pragma_gen(
         try:
             result.update(meteor(references=refs, candidates=cans))
         except Exception:
-            pass
+            model.resize_token_embeddings(len(tokenizer))
         result.update(rouge_l(references=refs, candidates=cans))
         result.update(avg_ir_metrics(references=refs, candidates=cans))
         result.update(accuracy_for_sequence(references=refs, candidates=cans))
@@ -208,9 +218,9 @@ def run_pragma_gen(
     logger.info('-' * 100)
     logger.info('Testing pragma generation')
 
-    config = BartConfig.from_pretrained('/mnt/lbosm1/home/Share/OMPify/outputs/fortran_tokom_20231003_102735/models/config.json')
+    config = BartConfig.from_pretrained('/mnt/lbosm1/home/Share/OMPify/outputs/fortran_tokom_20231004_102421/models/config.json')
     model = BartForClassificationAndGeneration(config, mode=enums.MODEL_MODE_GEN)
-    model.load_state_dict(torch.load('/mnt/lbosm1/home/Share/OMPify/outputs/fortran_tokom_20231003_102735/models/pytorch_model.bin'))
+    model.load_state_dict(torch.load('/mnt/lbosm1/home/Share/OMPify/outputs/fortran_tokom_20231004_102421/models/pytorch_model.bin'))
 
     collate_func=lambda batch: collate_fn(batch,
                                     args=args,
@@ -241,5 +251,5 @@ def run_pragma_gen(
         print(code_vocab.decode(output[0].tolist()))
         break
 
-    with open('result_fortran_ast.log', 'w') as f:
-        f.write(str(pred_table))
+    # with open('result_fortran_tokom.log', 'w') as f:
+    #     f.write(str(pred_table))

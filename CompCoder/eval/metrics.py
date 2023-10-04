@@ -223,3 +223,10 @@ def rouge_l(references, candidates):
     """
     rouge_calculator = Rouge()
     return {'rouge-l': rouge_calculator.compute_score(references=references, candidates=candidates)[0]}
+
+
+def pragma2dict(pragma):
+    """
+    
+    """
+    pass

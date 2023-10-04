@@ -2,35 +2,31 @@ from tqdm import tqdm
 import json
 import os
 
-lang = 'fortran'
+lang = 'cpp'
 
-rel_constrcuts = ['do' if lang == 'fortran' else 'for']
-rel_clauses = ['private', 'reduction', 'simd', '_']
+rel_clauses = ['private', 'reduction', 'simd', 'total']
 
-data_dir = '/home/1010/talkad/Downloads/OMP_Dataset/fortran/source'
+data_dir = '/home/talkad/LIGHTBITS_SHARE/CompCoder_datasets/OMP_Dataset'
 
-counter = {construct:{clause:0 for clause in rel_clauses} for construct in rel_constrcuts}
+counter = {clause:0 for clause in rel_clauses}
 
-for file in [os.path.join(data_dir, 'total_uniq.jsonl')]:
+for file in [os.path.join(data_dir, lang, 'source', 'total.jsonl')]:
     
     with open(os.path.join(data_dir, file), 'r') as f:
         for line in tqdm(f):
             js = json.loads(line.strip())
 
-            clauses = js['pragma'].split()
-            clauses_key = [clause[:clause.find('(')] if '(' in clause else clause for clause in clauses]
+            clauses = js['pragma']
+            
+            counter['total'] += 1
 
-            for k,v in counter.items():
-                if k in clauses_key:
-                    counter[k]['_'] += 1
-
-                for vv in v:
-                    if k in clauses_key and vv in clauses_key:
-                        counter[k][vv] += 1
+            for clause in rel_clauses[:-1]:
+                if clause in clauses:
+                    counter[clause] += 1
 
     print(counter)
 
 
-# fortran: {'do': {'private': 422, 'reduction': 51, 'simd': 5, '_': 1062}}
-# c: {'for': {'private': 1035, 'reduction': 216, 'simd': 122, '_': 3351}}
-# cpp: {'for': {'private': 509, 'reduction': 431, 'simd': 171, '_': 5220}}
+# fortran: {'private': 1867, 'reduction': 180, 'simd': 16, 'total': 3857}
+# c: {'private': 4410, 'reduction': 748, 'simd': 355, 'total': 11336}
+# cpp: {'private': 2237, 'reduction': 1453, 'simd': 353, 'total': 19091}
