@@ -141,10 +141,12 @@ class BartForClassificationAndGeneration(BartForConditionalGeneration):
     ):
         
         return_dict = return_dict if return_dict is not None else self.config.use_return_dict
-
+        
+        # print(input_ids)
         # print(input_ids.shape)
         # print('aa', labels)
         # print(labels.shape)
+        # print('-'*50)
 
         if labels is not None:
             if decoder_input_ids is None:

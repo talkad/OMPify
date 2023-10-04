@@ -59,7 +59,7 @@ def run_pragma_gen(
         logger.info('The size of trimmed train set: {}'.format(len(datasets['train'])))
     logger.info('Datasets loaded successfully')
 
-      # --------------------------------------------------
+    # --------------------------------------------------
     # vocabs
     # --------------------------------------------------
     logger.info('-' * 100)
@@ -218,9 +218,9 @@ def run_pragma_gen(
     logger.info('-' * 100)
     logger.info('Testing pragma generation')
 
-    config = BartConfig.from_pretrained('/mnt/lbosm1/home/Share/OMPify/outputs/fortran_tokom_20231004_102421/models/config.json')
+    config = BartConfig.from_pretrained('/mnt/lbosm1/home/Share/OMPify/outputs/fortran_tokom_20231004_153311/models/config.json')
     model = BartForClassificationAndGeneration(config, mode=enums.MODEL_MODE_GEN)
-    model.load_state_dict(torch.load('/mnt/lbosm1/home/Share/OMPify/outputs/fortran_tokom_20231004_102421/models/pytorch_model.bin'))
+    model.load_state_dict(torch.load('/mnt/lbosm1/home/Share/OMPify/outputs/fortran_tokom_20231004_153311/models/pytorch_model.bin'))
 
     collate_func=lambda batch: collate_fn(batch,
                                     args=args,
@@ -235,9 +235,14 @@ def run_pragma_gen(
     pred_table.align["Pred"] = "l"
 
     for data in tqdm(datasets['test']):
-
+        
         inputs = collate_func([data])
-        labels = inputs['labels']
+        # inputs = collate_func([('##subroutine## ##example## ##(## ##)## ##do## ##var## ##123## ##=## ##num## ##586## ##,## ##func## ##925## ##%## ##npwt## ##func## ##538## ##(## ##func## ##925## ##%## ##nlt## ##(## ##var## ##123## ##)## ##)## ##=## ##func## ##815## ##(## ##var## ##123## ##,## ##var## ##221## ##)## ##func## ##538## ##(## ##func## ##925## ##%## ##nltm## ##(## ##var## ##123## ##)## ##)## ##=## ##func## ##525## ##(## ##func## ##815## ##(## ##var## ##123## ##,## ##var## ##221## ##)## ##)## ##enddo## ##end## ##subroutine## ##example##', '##do## ##private## ##(## ##var## ##888## ##)##')])
+        # print(inputs) 
+        inputs.pop('decoder_input_ids')
+        labels = inputs.pop('labels')
+        # labels = inputs['labels']
+        
         output = model(**inputs)
         output = torch.argmax(output['logits'], dim=-1)
 
@@ -251,5 +256,5 @@ def run_pragma_gen(
         print(code_vocab.decode(output[0].tolist()))
         break
 
-    # with open('result_fortran_tokom.log', 'w') as f:
-    #     f.write(str(pred_table))
+    with open('result_fortran_tokom.log', 'w') as f:
+        f.write(str(pred_table))

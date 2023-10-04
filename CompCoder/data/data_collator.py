@@ -78,10 +78,6 @@ def collate_fn(batch, args, task, code_vocab, ast_vocab, dfg_vocab):
     elif task == enums.TASK_PRAGMA:
         code_raw, target_raw = map(list, zip(*batch))
 
-        # print(code_raw)
-        # print(target_raw)
-        # print('+'*50)
-
         model_inputs['input_ids'], model_inputs['attention_mask'] = get_concat_batch_inputs(
             code_raw=code_raw,
             code_vocab=code_vocab,
@@ -107,14 +103,6 @@ def collate_fn(batch, args, task, code_vocab, ast_vocab, dfg_vocab):
                                                      vocab=code_vocab,
                                                      processor=Vocab.eos_processor,
                                                      max_len=args.max_code_len)
-
-        # print(model_inputs['input_ids'].shape)
-        # print(model_inputs['attention_mask'].shape)
-        # print(model_inputs['decoder_input_ids'].shape)
-        # print(model_inputs['decoder_attention_mask'].shape)
-        # print(model_inputs['labels'].shape)
-
-        # print('+'*50)
 
     return model_inputs
 
