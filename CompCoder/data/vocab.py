@@ -11,7 +11,7 @@ import os
 import logging
 
 from typing import List, Union
-
+from .Tokompiler import Tokompiler
 
 logger = logging.getLogger(__name__)
 
@@ -85,13 +85,7 @@ class Vocab(object):
 
 
         if method == 'comp':
-            self.tokenizer = Tokenizer(WordLevel(unk_token=Vocab.UNK_TOKEN))
-            trainer = WordLevelTrainer(special_tokens=self.__special_symbols)
-
-            with open('/home/1010/talkad/OMPify/CompCoder/data/asts/vocabs/tokenizer_vocab/vocab.txt', 'r') as f:
-                tokens = ['[PAD]', '[SOS]', '[EOS]', '[UNK]', '[MSK]', '[SEP]', '[CLS]'] + [f'##{token[:-1]}##' for token in f.readlines()]
-                self.token2id = {token:idx for idx, token in enumerate(tokens, start=1)}
-                self.id2token = {value: key for key, value in self.token2id.items()}
+            self.tokenizer = Tokompiler(vocab_path='/home/1010/talkad/OMPify/CompCoder/data/asts/vocabs/tokenizer_vocab/vocab.txt')
         else:
             # tokenizer and trainer
             if method =='word': 
@@ -132,12 +126,7 @@ class Vocab(object):
                 self.save(vocab_root=save_root)
 
     def add_tokens(self, tokens):
-        tokens = [f'##{token}##' for token in tokens]
-        max_id = max(self.id2token.keys())
-
-        for idx, token in enumerate(tokens, start=max_id+1):
-            self.token2id[token] = idx
-            self.id2token[idx] = token
+        self.tokenizer.add_tokens(tokens)
 
     def add_special_symbols(self, symbols: list):
         assert isinstance(symbols, list)
@@ -215,37 +204,6 @@ class Vocab(object):
             return self.get_unk_index()
         return index - self.index_offset
 
-    def encode_comp(self, code: str):
-        tokens = code.split()
-
-        ids = []
-        for token in tokens:
-            index = self.token2id[token] if token in self.token2id else self.token2id['[UNK]']
-            ids.append(index if (not self.index_offset or index < len(self.__special_symbols)) else index+self.index_offset)
-            # print(token, index if (not self.index_offset or index < len(self.__special_symbols)) else index+self.index_offset)
-
-        return  ids
-
-    def encode_sequence(self, sequence: Union[str, List[str]], is_pre_tokenized=False):
-        """
-        Encode a sequence to corresponding ids.
-
-        Args:
-            sequence (Union[str, List[str]]): Sequence to be encoded,
-                when is_pre_tokenized is False, the type should be str,
-                when is_pre_tokenized is True, the type should be List[str]
-            is_pre_tokenized (bool): Whether the input is already pre-tokenized
-
-        Returns:
-            list[int], list[int]: indices and mask for sequence
-
-        """
-        if self.ignore_case:
-            sequence = sequence.lower()
-        encoded = self.tokenizer.encode(sequence=sequence, is_pretokenized=is_pre_tokenized)
-        ids = [self.transfer_index(index) for index in encoded.ids]
-        return ids, encoded.attention_mask
-
     def encode_batch(self, batch: Union[List[str], List[List[str]]], is_pre_tokenized=False,
                      pad=False, max_length=None):
         """
@@ -265,38 +223,17 @@ class Vocab(object):
                 - encoded batch of attention masks
 
         """
-        
-        if self.method == 'comp':
-            if self.ignore_case:
-                batch = [sequence.lower()+' [SEP]' if isinstance(sequence, str) else [token.lower()+ ' [SEP]' for token in sequence]
-                        for sequence in batch]
-            else:
-                batch = [sequence+' [SEP]' if isinstance(sequence, str) else [token+ ' [SEP]' for token in sequence]
-                        for sequence in batch]
+        if self.ignore_case:
+            batch = [sequence.lower() if isinstance(sequence, str) else [token.lower() for token in sequence]
+                    for sequence in batch]
 
-            ids_lsts = [self.encode_comp(sequence) if isinstance(sequence, str) else [self.encode_comp(seq) for seq in sequence]
-                            for sequence in batch]
-
-            if max_length is not None:
-                ids = [ids[:max_length] + [0] * (max_length - len(ids)) if len(ids) < max_length else ids[:max_length]
-                        for ids in ids_lsts]
-            else:
-                ids = ids_lsts
-            
-            attention_mask = [[1]*len(i) for i in ids]
+        if pad:
+            self.tokenizer.enable_padding(length=max_length)
         else:
-
-            if self.ignore_case:
-                batch = [sequence.lower() if isinstance(sequence, str) else [token.lower() for token in sequence]
-                        for sequence in batch]
-
-            if pad:
-                self.tokenizer.enable_padding(length=max_length)
-            else:
-                self.tokenizer.no_padding()
-            encoded_batch = self.tokenizer.encode_batch(input=batch, is_pretokenized=is_pre_tokenized)
-            ids = [[self.transfer_index(index) for index in encoded.ids] for encoded in encoded_batch]
-            attention_mask = [encoded.attention_mask for encoded in encoded_batch]
+            self.tokenizer.no_padding()
+        encoded_batch = self.tokenizer.encode_batch(input=batch, is_pretokenized=is_pre_tokenized)
+        ids = [[self.transfer_index(index) for index in encoded.ids] for encoded in encoded_batch]
+        attention_mask = [encoded.attention_mask for encoded in encoded_batch]
 
         return ids, attention_mask
 
@@ -313,25 +250,9 @@ class Vocab(object):
             str: The decoded string
 
         """
-        if self.method == 'comp':
-            tokens = [self.id2token[id] for id in ids if id > 0 and id][:-1]
-            tokens = [token[2:-2]  if token.startswith('##') else token for token in tokens]
-
-            unified_vars = []
-            for idx, token in enumerate(tokens):
-                if token.isnumeric():
-                    continue
-
-                if token in ['var', 'arr', 'struct', 'arg'] and \
-                    idx < len(tokens)+1 and tokens[idx+1].isnumeric():
-                    unified_vars.append(f'{token}_{tokens[idx+1]}')
-                else:
-                    unified_vars.append(token)
-            return ' '.join(unified_vars)
-        else:
-            if self.index_offset:
-                ids = [self.restore_index(index) for index in ids]
-            return self.tokenizer.decode(ids=ids, skip_special_tokens=skip_special_tokens)
+        if self.index_offset:
+            ids = [self.restore_index(index) for index in ids]
+        return self.tokenizer.decode(ids=ids, skip_special_tokens=skip_special_tokens)
 
     def decode_batch(self, batch: List[List[int]], skip_special_tokens=True) -> List[str]:
         """
@@ -383,12 +304,11 @@ class Vocab(object):
         with open(os.path.join(vocab_dir, '{}.pk'.format(vocab_name)), mode='wb') as f:
             pickle.dump(self, f)
         # save tokenizer
-        if self.method != 'comp':
-            self.tokenizer.save(os.path.join(vocab_dir, '{}_tokenizer.json'.format(vocab_name)))
-            # save token to id mapping as a txt file
-            with open(os.path.join(vocab_dir, '{}_mapping.txt'.format(vocab_name)), mode='w', encoding='utf-8') as f:
-                for token, index in sorted(self.tokenizer.get_vocab().items(), key=lambda item: item[1]):
-                    f.write('{}\t{}\n'.format(token, index))
+        self.tokenizer.save(os.path.join(vocab_dir, '{}_tokenizer.json'.format(vocab_name)))
+        # save token to id mapping as a txt file
+        with open(os.path.join(vocab_dir, '{}_mapping.txt'.format(vocab_name)), mode='w', encoding='utf-8') as f:
+            for token, index in sorted(self.tokenizer.get_vocab().items(), key=lambda item: item[1]):
+                f.write('{}\t{}\n'.format(token, index))
 
     def save_pretrained(self, output_dir):
         return
@@ -403,9 +323,6 @@ class Vocab(object):
         logger.info(f'Vocab saved to {path}')
 
     def __len__(self):
-        if self.method == 'comp':
-            return len(self.token2id)
-        
         return self.tokenizer.get_vocab_size()
 
     def __contains__(self, item):

@@ -1,3 +1,6 @@
+import pickle
+from transformers import BatchEncoding
+
 
 class Tokompiler:
     '''
@@ -15,8 +18,14 @@ class Tokompiler:
         self.encoder = {token:idx for idx, token in enumerate(tokens, start=1)}
         self.decoder = {val:key for key, val in self.encoder.items()}
 
+        self.add_padding = False
+        self.max_length = 256
+
     def __len__(self):
         return len(self.eencoder)
+
+    def get_vocab_size(self):
+        return vocab_size
 
     @property
     def vocab_size(self):
@@ -56,6 +65,43 @@ class Tokompiler:
     def mask(self):
         return self.tokenizer.encoder['[MSK]']
 
+    def enable_padding(self, max_length):
+        """
+        Enable padding for encodings.
+        """
+        self.add_padding = True
+        self.max_length = max_length
+
+    def no_padding(self):
+        """
+        Disable padding for encodings.
+        """
+        self.add_padding = False
+
+    def add_tokens(self, new_tokens: List[str]) -> int:
+        """
+        Add a list of new tokens to the tokenizer class. 
+        If the new tokens are not in the vocabulary, they are added to it with indices starting from 
+        length of the current vocabulary.
+
+        Note, when adding new tokens to the vocabulary, you should make sure to also resize the token 
+        embedding matrix of the model so that its embedding matrix matches the tokenizer.
+        """
+        num_tokens_added = 0
+        max_id = max(self.decoder.keys())
+
+        for token in tokens:
+            if token in self.encoder:
+                continue
+
+            num_tokens_added += 1
+            idx = max_id + num_tokens_added
+
+            self.encoder[token] = idx
+            self.decoder[idx] = token
+
+        return num_tokens_added
+
     def tokenize(self, text: str, **kwargs) -> List[str]:
         """
         Converts a string in a sequence of tokens, using the tokenizer.
@@ -69,7 +115,7 @@ class Tokompiler:
     def id_to_token(self, id):
         return self.decoder[id]
 
-    def encode(self, sequence: Union[str, List[str]], is_pretokenized=False, **kwargs):
+    def encode(self, sequence: Union[str, List[str]], is_pretokenized=False, **kwargs) -> [list[int], list[int]]:
         """
         Encode a sequence to corresponding ids.
 
@@ -84,16 +130,44 @@ class Tokompiler:
         if not is_pretokenized and isinstance(sequence str):
             sequence = self.tokenize(sequence, kwargs)
 
-        ids = [self.token_to_id(token) for token in tokens]
-        return ids
+        ids = [self.token_to_id(token) for token in sequence]
+        attention_mask = [1] * len(ids)
 
-    def decode(self, token_ids: List[int], skip_special_tokens=False) -> str:
+        if self.add_padding:
+            ids = ids[:self.max_length] + [0] * (max_length - len(ids)) if len(ids) < max_length else ids[:max_length]
+            attention_mask = attention_mask[:self.max_length] + [0] * (max_length - len(attention_mask)) if len(attention_mask) < max_length else attention_mask[:max_length]
+
+        return ids, attention_mask
+
+    def decode(self, ids: List[int], skip_special_tokens=False) -> str:
         """
         Converts a sequence of ids in a string, using the tokenizer and vocabulary with options to remove special tokens and clean up tokenization spaces.
         """
-        tokens = ' '.join([self.id_to_token(id) for id in token_ids] if not (skip_special_tokens and id <= len(self.special_tokens)))
+        tokens = ' '.join([self.id_to_token(id) for id in ids] if not (skip_special_tokens and id <= len(self.special_tokens)))
 
         return tokens
+
+    def encode_batch(self, input:Union[List[str], List[List[str]]], is_pretokenized=False, **kwargs):
+        """
+        Tokenize and prepare for the model a list of sequences or a list of pairs of sequences.
+        """
+        encoded_batch = [self.encode(sequence, is_pretokenized=is_pretokenized) for sequence in input]
+
+        return BatchEncoding(input_ids=[encoding[0] for encoding in encoded_batch],
+                            attention_mask=[encoding[1] for encoding in encoded_batch])
+
+    def decode_batch(self, sequences: List[List[int]], skip_special_tokens: bool, **kwargs) -> List[str]:
+        """
+        Convert a list of lists of token ids into a list of strings by calling decode.
+        """
+        return [self.decode(ids, skip_special_tokens) for ids in sequences]
+
+    def save(self, tokenizer_path):
+        """
+        Save tokenizer as pickle
+        """
+        with open(tokenizer_path, 'wb') as f:
+            pickle.dump(self, f)
 
 
 
