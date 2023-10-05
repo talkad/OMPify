@@ -1,6 +1,15 @@
 import pickle
-from transformers import BatchEncoding
 from typing import List, Union
+
+
+class BatchEncoding:
+    def __init__(self, data):
+        self.data = data
+
+        self.ids = [sample['input_ids'] for sample in self.data]
+        self.attention_mask = [sample['attention_mask'] for sample in self.data]
+
+
 
 class Tokompiler:
     '''
@@ -151,10 +160,13 @@ class Tokompiler:
         """
         Tokenize and prepare for the model a list of sequences or a list of pairs of sequences.
         """
-        encoded_batch = [self.encode(sequence, is_pretokenized=is_pretokenized) for sequence in input]
+        encodings = []
 
-        return BatchEncoding(input_ids=[encoding[0] for encoding in encoded_batch],
-                            attention_mask=[encoding[1] for encoding in encoded_batch])
+        for sequence in input:
+            input_ids, attention_mask = self.encode(sequence, is_pretokenized=is_pretokenized)
+            encodings.append({'input_ids': input_ids, 'attention_mask': attention_mask})
+
+        return BatchEncoding(data=encodings)
 
     def decode_batch(self, sequences: List[List[int]], skip_special_tokens: bool, **kwargs) -> List[str]:
         """

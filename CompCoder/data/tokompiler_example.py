@@ -38,7 +38,9 @@ lex = lexicalize(replaced_code, lang='fortran', replaced=True)
 tokenizer = Tokompiler(vocab_path='/mnt/lbosm1/home/Share/OMPify/CompCoder/data/asts/vocabs/tokenizer_vocab/vocab.txt')
 
 tokenizer.enable_padding(max_length=256)
+# encodigs = tokenizer.encode_batch([lex])
 
+# print(encodigs.ids)
 encodings, attention_mask = tokenizer.encode(lex)
 
 print(encodings)
