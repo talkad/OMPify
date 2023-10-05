@@ -41,7 +41,7 @@ def lexicalize(code, lang='c', replaced=False, partial=False):
             else:
                 updated_code.append(token)
 
-        updated_code = [f'##{token}##' for token in updated_code]
+        # updated_code = [f'##{token}##' for token in updated_code]
         # updated_code = [token for token in updated_code]
         return ' '.join(updated_code)
         

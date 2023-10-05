@@ -85,7 +85,7 @@ class Vocab(object):
 
 
         if method == 'comp':
-            self.tokenizer = Tokompiler(vocab_path='/home/1010/talkad/OMPify/CompCoder/data/asts/vocabs/tokenizer_vocab/vocab.txt')
+            self.tokenizer = Tokompiler(vocab_path='/mnt/lbosm1/home/Share/OMPify/CompCoder/data/asts/vocabs/tokenizer_vocab/vocab.txt')
         else:
             # tokenizer and trainer
             if method =='word': 

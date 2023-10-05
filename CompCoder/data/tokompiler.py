@@ -1,6 +1,6 @@
 import pickle
 from transformers import BatchEncoding
-
+from typing import List, Union
 
 class Tokompiler:
     '''
@@ -29,41 +29,41 @@ class Tokompiler:
 
     @property
     def vocab_size(self):
-        return len(self.tokenizer.encoder)
+        return len(self.encoder)
 
     @property
     def vocab(self):
         """Dictionary from vocab text token to id token."""
-        return self.tokenizer.encoder
+        return self.encoder
 
     @property
     def inv_vocab(self):
         """Dictionary from vocab id token to text token."""
-        return self.tokenizer.decoder
+        return self.decoder
 
     @property
     def unk(self):
-        return self.tokenizer.encoder['[UNK]']
+        return self.encoder['[UNK]']
 
     @property
     def cls(self):
-        return self.tokenizer.encoder['[CLS]']
+        return self.encoder['[CLS]']
 
     @property
     def sep(self):
-        return self.tokenizer.encoder['[SEP]']
+        return self.encoder['[SEP]']
 
     @property
     def pad(self):
-        return self.tokenizer.encoder['[PAD]']
+        return self.encoder['[PAD]']
 
     @property
     def eod(self):
-        return self.tokenizer.encoder['[EOS]']
+        return self.encoder['[EOS]']
 
     @property
     def mask(self):
-        return self.tokenizer.encoder['[MSK]']
+        return self.encoder['[MSK]']
 
     def enable_padding(self, max_length):
         """
@@ -127,15 +127,15 @@ class Tokompiler:
         Returns:
             list[int], list[int]: indices and mask for sequence
         """
-        if not is_pretokenized and isinstance(sequence str):
-            sequence = self.tokenize(sequence, kwargs)
+        if not is_pretokenized and isinstance(sequence, str):
+            sequence = self.tokenize(sequence, **kwargs)
 
         ids = [self.token_to_id(token) for token in sequence]
         attention_mask = [1] * len(ids)
 
         if self.add_padding:
-            ids = ids[:self.max_length] + [0] * (max_length - len(ids)) if len(ids) < max_length else ids[:max_length]
-            attention_mask = attention_mask[:self.max_length] + [0] * (max_length - len(attention_mask)) if len(attention_mask) < max_length else attention_mask[:max_length]
+            ids = ids[:self.max_length] + [self.pad] * (self.max_length - len(ids)) if len(ids) < self.max_length else ids[:self.max_length]
+            attention_mask = attention_mask[:self.max_length] + [0] * (self.max_length - len(attention_mask)) if len(attention_mask) < self.max_length else attention_mask[:self.max_length]
 
         return ids, attention_mask
 
@@ -143,7 +143,7 @@ class Tokompiler:
         """
         Converts a sequence of ids in a string, using the tokenizer and vocabulary with options to remove special tokens and clean up tokenization spaces.
         """
-        tokens = ' '.join([self.id_to_token(id) for id in ids] if not (skip_special_tokens and id <= len(self.special_tokens)))
+        tokens = ' '.join([self.id_to_token(id) for id in ids if not (skip_special_tokens and id <= len(self.special_tokens))])
 
         return tokens
 
