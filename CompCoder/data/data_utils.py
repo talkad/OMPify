@@ -4,7 +4,6 @@ import os
 import logging
 from tqdm import tqdm
 from .asts import parse_tools, convert_representation as cr
-# import enums
 from data.asts.lexicalization import lexicalize
 
 
@@ -180,12 +179,6 @@ def parse_json_file_pragma(file, lang):
             replaced_code, mapping = cr.generate_replaced(ast)
             mapping = {k:v for k,v,_ in mapping}
             
-            # with open('logger.out', 'w') as f:
-            #     f.write(source)
-            #     f.write('==========')
-            #     f.write(replaced_code)
-            #     f.write('==========')
-            #     f.write(mapping)
             if not replaced_code:   # parsing failed
                 continue
             
@@ -425,7 +418,8 @@ def parse_for_pragma_gen(dataset_path, lang, split, is_replaced):
             try:
 
                 source = lexicalize(code, lang=lang, replaced=is_replaced, partial=True)
-                pragma = ' '.join([f'##{token}##' for token in pragma.replace('_', ' ').split()])
+                # pragma = ' '.join([f'##{token}##' for token in pragma.replace('_', ' ').split()])
+                pragma = pragma.replace('_', ' ')
                 sources.append(source)
                 pragmas.append(pragma)
 
@@ -433,14 +427,3 @@ def parse_for_pragma_gen(dataset_path, lang, split, is_replaced):
                 continue
 
     return sources, pragmas
-
-
-
-
-
-# sources, replaced, pragmas, replaced_pragmas = parse_json_file_pragma('/home/1010/talkad/Downloads/OMP_Dataset/fortran/total_uniq.jsonl', 'fortran')
-
-# print(sources[0])
-# print(replaced[0])
-# print(pragmas[0])
-# print(replaced_pragmas[0])

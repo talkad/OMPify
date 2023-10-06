@@ -164,6 +164,7 @@ def get_concat_batch_inputs(code_raw, code_vocab, max_code_len,
             - concat attention mask
 
     """
+    # import pdb ; pdb.set_trace()
     code_inputs, code_padding_mask = get_batch_inputs(batch=code_raw,
                                                       vocab=code_vocab,
                                                       processor=Vocab.sep_processor,

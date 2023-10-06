@@ -3,11 +3,13 @@ from typing import List, Union
 
 
 class BatchEncoding:
-    def __init__(self, data):
-        self.data = data
+    def __init__(self, input_ids, attention_mask):
+        self.input_ids = input_ids
+        self.attention_mask = attention_mask
 
-        self.ids = [sample['input_ids'] for sample in self.data]
-        self.attention_mask = [sample['attention_mask'] for sample in self.data]
+    @property
+    def ids(self):
+        return self.input_ids
 
 
 class Tokompiler:
@@ -26,7 +28,10 @@ class Tokompiler:
         self.encoder = {token:idx for idx, token in enumerate(tokens, start=1)}
         self.decoder = {val:key for key, val in self.encoder.items()}
 
-        self.add_padding = False
+        self.do_padding = False
+        self.do_truncation = False
+
+        self.length = 256
         self.max_length = 256
 
     def __len__(self):
@@ -36,7 +41,7 @@ class Tokompiler:
         return self.encoder
 
     def get_vocab_size(self):
-        return vocab_size
+        return self.vocab_size
 
     @property
     def vocab_size(self):
@@ -76,18 +81,31 @@ class Tokompiler:
     def mask(self):
         return self.encoder['[MSK]']
 
-    def enable_padding(self, max_length):
+    def enable_padding(self, length):
         """
         Enable padding for encodings.
         """
-        self.add_padding = True
-        self.max_length = max_length
+        self.do_padding = True
+        self.length = length
 
     def no_padding(self):
         """
         Disable padding for encodings.
         """
-        self.add_padding = False
+        self.do_padding = False
+
+    def enable_truncation(self, max_length):
+        """
+        Enable padding for encodings.
+        """
+        self.do_truncation = True
+        self.max_length = max_length
+
+    def no_truncation(self):
+        """
+        Disable padding for encodings.
+        """
+        self.do_truncation = False
 
     def add_tokens(self, new_tokens: List[str]) -> int:
         """
@@ -101,7 +119,7 @@ class Tokompiler:
         num_tokens_added = 0
         max_id = max(self.decoder.keys())
 
-        for token in tokens:
+        for token in new_tokens:
             if token in self.encoder:
                 continue
 
@@ -144,9 +162,13 @@ class Tokompiler:
         ids = [self.token_to_id(token) for token in sequence]
         attention_mask = [1] * len(ids)
 
-        if self.add_padding:
-            ids = ids[:self.max_length] + [self.pad] * (self.max_length - len(ids)) if len(ids) < self.max_length else ids[:self.max_length]
-            attention_mask = attention_mask[:self.max_length] + [0] * (self.max_length - len(attention_mask)) if len(attention_mask) < self.max_length else attention_mask[:self.max_length]
+        if self.do_truncation:
+            ids = ids[:self.max_length]
+            attention_mask = attention_mask[:self.max_length]
+            
+        if self.do_padding:
+            ids = ids[:self.length] + [self.pad] * (self.length - len(ids)) if len(ids) < self.length else ids[:self.length]
+            attention_mask = attention_mask[:self.length] + [0] * (self.length - len(attention_mask)) if len(attention_mask) < self.length else attention_mask[:self.length]
 
         return ids, attention_mask
 
@@ -164,11 +186,15 @@ class Tokompiler:
         """
         encodings = []
 
+        if 'pad' in kwargs and 'max_length' in kwargs:
+            if kwargs['pad']:
+                self.enable_padding(length=kwargs['max_length'])
+
         for sequence in input:
             input_ids, attention_mask = self.encode(sequence, is_pretokenized=is_pretokenized)
-            encodings.append({'input_ids': input_ids, 'attention_mask': attention_mask})
+            encodings.append(BatchEncoding(input_ids, attention_mask))
 
-        return BatchEncoding(data=encodings)
+        return encodings
 
     def decode_batch(self, sequences: List[List[int]], skip_special_tokens: bool, **kwargs) -> List[str]:
         """

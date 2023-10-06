@@ -70,7 +70,6 @@ def run_pragma_gen(
     if args.no_replaced:
         code_vocab = load_vocab(vocab_root=trained_vocab, name='code.bpe.50000.None') #name=args.code_vocab_name)
     else:
-        # code_vocab = load_vocab(vocab_root=trained_vocab, name=args.replaced_code_vocab_name)
         code_vocab = init_vocab(vocab_save_dir=args.vocab_save_dir,
                                     name=args.replaced_code_vocab_name,
                                     method='comp',
@@ -198,63 +197,63 @@ def run_pragma_gen(
     # --------------------------------------------------
     # train
     # --------------------------------------------------
-    # if not only_test:
-    #     logger.info('-' * 100)
-    #     logger.info('Start training')
-    #     # import pdb; pdb.set_trace()
+    if not only_test:
+        logger.info('-' * 100)
+        logger.info('Start training')
+        # import pdb; pdb.set_trace()
 
-    #     train_result = trainer.train()
-    #     logger.info('Training finished')
-    #     trainer.save_model(args.model_root)
-    #     trainer.save_state()
-    #     metrics = train_result.metrics
-    #     trainer.log_metrics(split='train', metrics=metrics)
-    #     trainer.save_metrics(split='train', metrics=metrics)
+        train_result = trainer.train()
+        logger.info('Training finished')
+        trainer.save_model(args.model_root)
+        trainer.save_state()
+        metrics = train_result.metrics
+        trainer.log_metrics(split='train', metrics=metrics)
+        trainer.save_metrics(split='train', metrics=metrics)
 
 
     # --------------------------------------------------
     # test
     # --------------------------------------------------
-    logger.info('-' * 100)
-    logger.info('Testing pragma generation')
+    # logger.info('-' * 100)
+    # logger.info('Testing pragma generation')
 
-    config = BartConfig.from_pretrained('/mnt/lbosm1/home/Share/OMPify/outputs/fortran_tokom_20231004_153311/models/config.json')
-    model = BartForClassificationAndGeneration(config, mode=enums.MODEL_MODE_GEN)
-    model.load_state_dict(torch.load('/mnt/lbosm1/home/Share/OMPify/outputs/fortran_tokom_20231004_153311/models/pytorch_model.bin'))
+    # config = BartConfig.from_pretrained('/mnt/lbosm1/home/Share/OMPify/outputs/fortra_mass_new_20231006_105853/models/config.json')
+    # model = BartForClassificationAndGeneration(config, mode=enums.MODEL_MODE_GEN)
+    # model.load_state_dict(torch.load('/mnt/lbosm1/home/Share/OMPify/outputs/fortra_mass_new_20231006_105853/models/pytorch_model.bin'))
 
-    collate_func=lambda batch: collate_fn(batch,
-                                    args=args,
-                                    task=enums.TASK_PRAGMA,
-                                    code_vocab=code_vocab,
-                                    ast_vocab=ast_vocab,
-                                    dfg_vocab=None)
+    # collate_func=lambda batch: collate_fn(batch,
+    #                                 args=args,
+    #                                 task=enums.TASK_PRAGMA,
+    #                                 code_vocab=code_vocab,
+    #                                 ast_vocab=ast_vocab,
+    #                                 dfg_vocab=None)
 
-    pred_table = PrettyTable()
-    pred_table.field_names = ["Label", "Pred"]
-    pred_table.align["Label"] = "l"
-    pred_table.align["Pred"] = "l"
+    # pred_table = PrettyTable()
+    # pred_table.field_names = ["Label", "Pred"]
+    # pred_table.align["Label"] = "l"
+    # pred_table.align["Pred"] = "l"
 
-    for data in tqdm(datasets['test']):
+    # for data in tqdm(datasets['test']):
         
-        inputs = collate_func([data])
-        # inputs = collate_func([('##subroutine## ##example## ##(## ##)## ##do## ##var## ##123## ##=## ##num## ##586## ##,## ##func## ##925## ##%## ##npwt## ##func## ##538## ##(## ##func## ##925## ##%## ##nlt## ##(## ##var## ##123## ##)## ##)## ##=## ##func## ##815## ##(## ##var## ##123## ##,## ##var## ##221## ##)## ##func## ##538## ##(## ##func## ##925## ##%## ##nltm## ##(## ##var## ##123## ##)## ##)## ##=## ##func## ##525## ##(## ##func## ##815## ##(## ##var## ##123## ##,## ##var## ##221## ##)## ##)## ##enddo## ##end## ##subroutine## ##example##', '##do## ##private## ##(## ##var## ##888## ##)##')])
-        # print(inputs) 
-        inputs.pop('decoder_input_ids')
-        labels = inputs.pop('labels')
-        # labels = inputs['labels']
+    #     inputs = collate_func([data])
+    #     # inputs = collate_func([('##subroutine## ##example## ##(## ##)## ##do## ##var## ##123## ##=## ##num## ##586## ##,## ##func## ##925## ##%## ##npwt## ##func## ##538## ##(## ##func## ##925## ##%## ##nlt## ##(## ##var## ##123## ##)## ##)## ##=## ##func## ##815## ##(## ##var## ##123## ##,## ##var## ##221## ##)## ##func## ##538## ##(## ##func## ##925## ##%## ##nltm## ##(## ##var## ##123## ##)## ##)## ##=## ##func## ##525## ##(## ##func## ##815## ##(## ##var## ##123## ##,## ##var## ##221## ##)## ##)## ##enddo## ##end## ##subroutine## ##example##', '##do## ##private## ##(## ##var## ##888## ##)##')])
+    #     # print(inputs) 
+    #     # inputs.pop('decoder_input_ids')
+    #     # labels = inputs.pop('labels')
+    #     labels = inputs['labels']
         
-        output = model(**inputs)
-        output = torch.argmax(output['logits'], dim=-1)
+    #     output = model(**inputs)
+    #     output = torch.argmax(output['logits'], dim=-1)
 
-        pred_table.add_row([code_vocab.decode(labels[0].tolist()), 
-                            code_vocab.decode(output[0].tolist())])
+    #     pred_table.add_row([code_vocab.decode(labels[0].tolist()), 
+    #                         code_vocab.decode(output[0].tolist())])
         
-        print(data)
-        print(labels[0].tolist())
-        print(output[0].tolist())
-        print(code_vocab.decode(labels[0].tolist()))
-        print(code_vocab.decode(output[0].tolist()))
-        break
+    #     print(data)
+    #     print(labels[0].tolist())
+    #     print(output[0].tolist())
+    #     print(code_vocab.decode(labels[0].tolist()))
+    #     print(code_vocab.decode(output[0].tolist()))
+    #     break
 
-    with open('result_fortran_tokom.log', 'w') as f:
-        f.write(str(pred_table))
+    # with open('aaaa.log', 'w') as f:
+    #     f.write(str(pred_table))

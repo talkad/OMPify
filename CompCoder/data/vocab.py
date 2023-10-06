@@ -11,7 +11,7 @@ import os
 import logging
 
 from typing import List, Union
-from .Tokompiler import Tokompiler
+from .tokompiler import Tokompiler
 
 logger = logging.getLogger(__name__)
 
@@ -83,8 +83,7 @@ class Vocab(object):
         else:
             self.index_offset = None
 
-
-        if method == 'comp':
+        if self.method == 'comp':
             self.tokenizer = Tokompiler(vocab_path='/mnt/lbosm1/home/Share/OMPify/CompCoder/data/asts/vocabs/tokenizer_vocab/vocab.txt')
         else:
             # tokenizer and trainer
@@ -231,6 +230,7 @@ class Vocab(object):
             self.tokenizer.enable_padding(length=max_length)
         else:
             self.tokenizer.no_padding()
+        # import pdb; pdb.set_trace()
         encoded_batch = self.tokenizer.encode_batch(input=batch, is_pretokenized=is_pre_tokenized)
         ids = [[self.transfer_index(index) for index in encoded.ids] for encoded in encoded_batch]
         attention_mask = [encoded.attention_mask for encoded in encoded_batch]
@@ -369,10 +369,11 @@ def init_vocab(vocab_save_dir,
                save_root=None,
                index_offset=None,
                load_if_saved=True) -> Vocab:
+
     vocab_name = '.'.join(
-        [sub_name for sub_name in [name, method, str(vocab_size), str(index_offset)] if sub_name is not None])
+            [sub_name for sub_name in [name, method, str(vocab_size), str(index_offset)] if sub_name is not None])
     path = os.path.join(vocab_save_dir, f'{vocab_name}.pk')
-    if load_if_saved:
+    if load_if_saved and method != 'comp':
         if os.path.exists(path) and os.path.isfile(path):
             logger.info(f'Trying to load saved binary pickle file from: {path}')
             with open(path, mode='rb') as f:
@@ -381,6 +382,7 @@ def init_vocab(vocab_save_dir,
             if save_root:
                 obj.save(save_root)
             return obj
+
     vocab = Vocab(name=name,
                   method=method,
                   vocab_size=vocab_size,
