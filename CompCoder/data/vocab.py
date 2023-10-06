@@ -222,8 +222,10 @@ class Vocab(object):
                 - encoded batch of attention masks
 
         """
+        lower = lambda sequence: ' '.join(token if token in self.__special_symbols else token.lower() for token in sequence.split())
+        
         if self.ignore_case:
-            batch = [sequence.lower() if isinstance(sequence, str) else [token.lower() for token in sequence]
+            batch = [lower(sequence) if isinstance(sequence, str) else [lower(token) for token in sequence]
                     for sequence in batch]
 
         if pad:

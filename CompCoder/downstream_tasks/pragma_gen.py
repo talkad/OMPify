@@ -117,6 +117,21 @@ def run_pragma_gen(
     logger.info('-' * 100)
     logger.info('Initializing the running configurations')
 
+    def concat_vars(pragma):
+        unified_vars = []
+        tokens = pragma.split()
+
+        for idx, token in enumerate(tokens):
+            if token.isnumeric():
+                continue
+
+            if token in ['var', 'arr', 'struct', 'arg'] and idx < len(tokens) - 1 and tokens[idx + 1].isnumeric():
+                unified_vars.append(f'{token}_{tokens[idx + 1]}')
+            else:
+                unified_vars.append(token)
+
+        return ' '.join(unified_vars)
+        
     def decode_preds(preds):
         preds, labels = preds
         decoded_preds = code_vocab.decode_batch(preds)
@@ -197,63 +212,66 @@ def run_pragma_gen(
     # --------------------------------------------------
     # train
     # --------------------------------------------------
-    if not only_test:
-        logger.info('-' * 100)
-        logger.info('Start training')
-        # import pdb; pdb.set_trace()
+    # if not only_test:
+    #     logger.info('-' * 100)
+    #     logger.info('Start training')
+    #     # import pdb; pdb.set_trace()
 
-        train_result = trainer.train()
-        logger.info('Training finished')
-        trainer.save_model(args.model_root)
-        trainer.save_state()
-        metrics = train_result.metrics
-        trainer.log_metrics(split='train', metrics=metrics)
-        trainer.save_metrics(split='train', metrics=metrics)
+    #     train_result = trainer.train()
+    #     logger.info('Training finished')
+    #     trainer.save_model(args.model_root)
+    #     trainer.save_state()
+    #     metrics = train_result.metrics
+    #     trainer.log_metrics(split='train', metrics=metrics)
+    #     trainer.save_metrics(split='train', metrics=metrics)
 
 
     # --------------------------------------------------
     # test
     # --------------------------------------------------
-    # logger.info('-' * 100)
-    # logger.info('Testing pragma generation')
 
-    # config = BartConfig.from_pretrained('/mnt/lbosm1/home/Share/OMPify/outputs/fortra_mass_new_20231006_105853/models/config.json')
-    # model = BartForClassificationAndGeneration(config, mode=enums.MODEL_MODE_GEN)
-    # model.load_state_dict(torch.load('/mnt/lbosm1/home/Share/OMPify/outputs/fortra_mass_new_20231006_105853/models/pytorch_model.bin'))
+    logger.info('-' * 100)
+    logger.info('Testing pragma generation')
 
-    # collate_func=lambda batch: collate_fn(batch,
-    #                                 args=args,
-    #                                 task=enums.TASK_PRAGMA,
-    #                                 code_vocab=code_vocab,
-    #                                 ast_vocab=ast_vocab,
-    #                                 dfg_vocab=None)
+    config = BartConfig.from_pretrained('/mnt/lbosm1/home/Share/OMPify/outputs/fortran_tokom_mass_new_20231006_121545/models/config.json')
+    model = BartForClassificationAndGeneration(config, mode=enums.MODEL_MODE_GEN)
+    model.load_state_dict(torch.load('/mnt/lbosm1/home/Share/OMPify/outputs/fortran_tokom_mass_new_20231006_121545/models/pytorch_model.bin'))
 
-    # pred_table = PrettyTable()
-    # pred_table.field_names = ["Label", "Pred"]
-    # pred_table.align["Label"] = "l"
-    # pred_table.align["Pred"] = "l"
+    collate_func=lambda batch: collate_fn(batch,
+                                    args=args,
+                                    task=enums.TASK_PRAGMA,
+                                    code_vocab=code_vocab,
+                                    ast_vocab=ast_vocab,
+                                    dfg_vocab=None)
 
-    # for data in tqdm(datasets['test']):
+    pred_table = PrettyTable()
+    pred_table.field_names = ["Label", "Pred"]
+    pred_table.align["Label"] = "l"
+    pred_table.align["Pred"] = "l"
+
+    for data in tqdm(datasets['test']):
+        data = ('subroutine example ( ) do var 501 = num 586 , func 925 % npwt func 538 ( func 925 % nlt ( var 501 ) ) = func 815 ( var 501 , var 221 ) func 538 ( func 925 % nltm ( var 501 ) ) = func 525 ( func 815 ( var 501 , var 221 ) ) enddo end subroutine example', 'do private ( var 501 ) reduction ( + : var 3 )')
+        inputs = collate_func([data])
+        # print(inputs)
+        # inputs.pop('decoder_input_ids')
+        # labels = inputs.pop('labels')
+        labels = inputs['labels']
         
-    #     inputs = collate_func([data])
-    #     # inputs = collate_func([('##subroutine## ##example## ##(## ##)## ##do## ##var## ##123## ##=## ##num## ##586## ##,## ##func## ##925## ##%## ##npwt## ##func## ##538## ##(## ##func## ##925## ##%## ##nlt## ##(## ##var## ##123## ##)## ##)## ##=## ##func## ##815## ##(## ##var## ##123## ##,## ##var## ##221## ##)## ##func## ##538## ##(## ##func## ##925## ##%## ##nltm## ##(## ##var## ##123## ##)## ##)## ##=## ##func## ##525## ##(## ##func## ##815## ##(## ##var## ##123## ##,## ##var## ##221## ##)## ##)## ##enddo## ##end## ##subroutine## ##example##', '##do## ##private## ##(## ##var## ##888## ##)##')])
-    #     # print(inputs) 
-    #     # inputs.pop('decoder_input_ids')
-    #     # labels = inputs.pop('labels')
-    #     labels = inputs['labels']
-        
-    #     output = model(**inputs)
-    #     output = torch.argmax(output['logits'], dim=-1)
+        output = model(**inputs)
+        output = torch.argmax(output['logits'], dim=-1)
 
-    #     pred_table.add_row([code_vocab.decode(labels[0].tolist()), 
-    #                         code_vocab.decode(output[0].tolist())])
+        pred_table.add_row([concat_vars(code_vocab.decode(labels[0].tolist())), 
+                            concat_vars(code_vocab.decode(output[0].tolist()))])
         
-    #     print(data)
-    #     print(labels[0].tolist())
-    #     print(output[0].tolist())
-    #     print(code_vocab.decode(labels[0].tolist()))
-    #     print(code_vocab.decode(output[0].tolist()))
-    #     break
+        print(data)
+        print(labels[0].tolist())
+        print(output[0].tolist())
+        print(code_vocab.decode(labels[0].tolist()))
+        print(code_vocab.decode(output[0].tolist()))
 
-    # with open('aaaa.log', 'w') as f:
-    #     f.write(str(pred_table))
+        print(concat_vars(code_vocab.decode(labels[0].tolist())))
+        print(concat_vars(code_vocab.decode(output[0].tolist())))
+        break
+
+    with open('aaaa.log', 'w') as f:
+        f.write(str(pred_table))

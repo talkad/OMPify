@@ -1,15 +1,18 @@
 from eval.metrics import *
 
-with open('result_fortran_tokom.log', 'r') as f:
-    lines = f.readlines()[3:-1]
 
-    labels, preds = [], []
-    for line in lines:
-        cols = line.split('|')
-        labels.append(cols[1])
-        preds.append(cols[2])
 
-    print(compare_directive('private', preds, labels))
+
+# with open('result_fortran_tokom.log', 'r') as f:
+#     lines = f.readlines()[3:-1]
+
+#     labels, preds = [], []
+#     for line in lines:
+#         cols = line.split('|')
+#         labels.append(cols[1])
+#         preds.append(cols[2])
+
+#     print(compare_directive('private', preds, labels))
 
 
 # fortran
