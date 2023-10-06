@@ -255,4 +255,3 @@ def generate_replaced(tree, num_generator=generate_random_numbers):
         print(e)
 
     return updated_code, {v:k for (k,v,_,_) in mappings}
-
