@@ -10,7 +10,6 @@ class BatchEncoding:
         self.attention_mask = [sample['attention_mask'] for sample in self.data]
 
 
-
 class Tokompiler:
     '''
         Compiler oriented tokenizer
