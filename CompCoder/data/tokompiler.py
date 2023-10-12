@@ -34,6 +34,8 @@ class Tokompiler:
         self.length = 256
         self.max_length = 256
 
+        self.post_processor = None
+
     def __len__(self):
         return len(self.encoder)
 
@@ -72,6 +74,10 @@ class Tokompiler:
     @property
     def pad(self):
         return self.encoder['[PAD]']
+
+    @property
+    def sos(self):
+        return self.encoder['[SOS]']
 
     @property
     def eod(self):
@@ -144,6 +150,14 @@ class Tokompiler:
     def id_to_token(self, id):
         return self.decoder[id]
 
+    def post_process(self, ids):
+        if self.post_processor == 'sos':
+            ids = [self.sos] + ids
+        elif self.post_processor == 'eos':
+            ids = ids + [self.eod]
+
+        return ids
+
     def encode(self, sequence: Union[str, List[str]], is_pretokenized=False, **kwargs) -> [list[int], list[int]]:
         """
         Encode a sequence to corresponding ids.
@@ -160,12 +174,14 @@ class Tokompiler:
             sequence = self.tokenize(sequence, **kwargs)
 
         ids = [self.token_to_id(token) for token in sequence]
+        ids = self.post_process(ids)
+
         attention_mask = [1] * len(ids)
 
         if self.do_truncation:
             ids = ids[:self.max_length]
             attention_mask = attention_mask[:self.max_length]
-            
+
         if self.do_padding:
             ids = ids[:self.length] + [self.pad] * (self.length - len(ids)) if len(ids) < self.length else ids[:self.length]
             attention_mask = attention_mask[:self.length] + [0] * (self.length - len(attention_mask)) if len(attention_mask) < self.length else attention_mask[:self.length]

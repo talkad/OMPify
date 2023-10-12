@@ -148,7 +148,7 @@ def init_dataset(args, mode, task=None, language=None, split=None, load_if_saved
         CodeDataset: Loaded or initialized dataset
 
     """
-    # name = 'c'
+    # name = 'fortran'
     # path = os.path.join(args.dataset_save_dir, f'{name}.pk')
 
     # with open(path, mode='rb') as f:

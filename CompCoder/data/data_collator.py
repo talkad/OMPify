@@ -7,6 +7,8 @@ import itertools
 from data.vocab import Vocab
 import enums
 
+from .tokompiler import Tokompiler
+
 
 def collate_fn(batch, args, task, code_vocab, ast_vocab, dfg_vocab):
     """
@@ -24,8 +26,6 @@ def collate_fn(batch, args, task, code_vocab, ast_vocab, dfg_vocab):
         dict: Model inputs
 
     """
-    # print(code_vocab.tokenizer.get_vocab())
-
 
     model_inputs = {}
     # cap
@@ -96,18 +96,20 @@ def collate_fn(batch, args, task, code_vocab, ast_vocab, dfg_vocab):
             batch=target_raw,
             vocab=code_vocab,
             processor=Vocab.sos_processor,
+            tokom_processor='sos',
             max_len=args.max_code_len
         )
 
         model_inputs['labels'], _ = get_batch_inputs(batch=target_raw,
                                                      vocab=code_vocab,
                                                      processor=Vocab.eos_processor,
+                                                     tokom_processor='eos',
                                                      max_len=args.max_code_len)
 
     return model_inputs
 
 
-def get_batch_inputs(batch: List[str], vocab: Vocab, processor=None, max_len=None):
+def get_batch_inputs(batch: List[str], vocab: Vocab, processor=None, tokom_processor=None, max_len=None):
     """
     Encode the given batch to input to the model.
 
@@ -123,7 +125,10 @@ def get_batch_inputs(batch: List[str], vocab: Vocab, processor=None, max_len=Non
 
     """
     # set post processor
-    vocab.tokenizer.post_processor = processor
+    if isinstance(vocab.tokenizer, Tokompiler):
+        vocab.tokenizer.post_processor = tokom_processor
+    else:
+        vocab.tokenizer.post_processor = processor
     # set truncation
     if max_len:
         vocab.tokenizer.enable_truncation(max_length=max_len)

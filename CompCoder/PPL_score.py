@@ -121,33 +121,10 @@ def ppl_score(args,
     # --------------------------------------------------
     logger.info('-' * 100)
     logger.info('Building model')
-    # config = BartConfig(vocab_size=len(code_vocab) + len(ast_vocab),
-    #                     max_position_embeddings=512,
-    #                     encoder_layers=args.n_layer,
-    #                     encoder_ffn_dim=args.d_ff,
-    #                     encoder_attention_heads=args.n_head,
-    #                     decoder_layers=args.n_layer,
-    #                     decoder_ffn_dim=args.d_ff,
-    #                     decoder_attention_heads=args.n_head,
-    #                     activation_function='gelu',
-    #                     d_model=args.d_model,
-    #                     dropout=args.dropout,
-    #                     use_cache=True,
-    #                     pad_token_id=Vocab.START_VOCAB.index(Vocab.PAD_TOKEN),
-    #                     bos_token_id=Vocab.START_VOCAB.index(Vocab.SOS_TOKEN),
-    #                     eos_token_id=Vocab.START_VOCAB.index(Vocab.EOS_TOKEN),
-    #                     is_encoder_decoder=True,
-    #                     decoder_start_token_id=Vocab.START_VOCAB.index(Vocab.SOS_TOKEN),
-    #                     forced_eos_token_id=Vocab.START_VOCAB.index(Vocab.EOS_TOKEN),
-    #                     max_length=100,  # limit decoder output
-    #                     min_length=1,
-    #                     num_beams=args.beam_width,
-    #                     num_labels=2)
-    # model = BartForClassificationAndGeneration(config)
 
-    config = BartConfig.from_pretrained('/home/talkad/shared/models/c_mass_tokom/models/mass/config.json')
+    config = BartConfig.from_pretrained('/home/talkad/shared/models/fortran_tokom_cap_mass/models/mass/config.json')
     model = BartForClassificationAndGeneration(config)
-    model.load_state_dict(torch.load('/home/talkad/shared/models/c_mass_tokom/models/mass/pytorch_model.bin'))
+    model.load_state_dict(torch.load('/home/talkad/shared/models/fortran_tokom_cap_mass/models/mass/pytorch_model.bin'))
 
     # log model statistic
     logger.info('Model trainable parameters: {}'.format(human_format(count_params(model))))
@@ -176,6 +153,7 @@ def ppl_score(args,
                                     ast_vocab=ast_vocab,
                                     dfg_vocab=None)
 
+    mask_ratio = 0.6
     total_loss = 0
     total_tokens = 0
     for idx, data in enumerate(dataset):
@@ -196,7 +174,7 @@ def ppl_score(args,
         # print('-'*50)
         # print(inputs['labels'])
         
-        total_tokens += labels_amount*2
+        total_tokens += labels_amount*(1/mask_ratio)
         total_loss += output.loss.item()
 
     print(total_loss/total_tokens)

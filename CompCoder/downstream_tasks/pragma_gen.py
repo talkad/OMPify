@@ -91,9 +91,9 @@ def run_pragma_gen(
     # --------------------------------------------------
     
     logger.info('Loading the model from file')
-    config = BartConfig.from_pretrained('/home/talkad/shared/models/fortran_tokom_mass/models/mass/config.json')
+    config = BartConfig.from_pretrained('/home/talkad/shared/models/c_mass_tokom/models/mass/config.json')
     model = BartForClassificationAndGeneration(config, mode=enums.MODEL_MODE_GEN)
-    model.load_state_dict(torch.load('/home/talkad/shared/models/fortran_tokom_mass/models/mass/pytorch_model.bin'))
+    model.load_state_dict(torch.load('/home/talkad/shared/models/c_mass_tokom/models/mass/pytorch_model.bin'))
     
     if not args.no_replaced:
         embedding_layer = model.get_input_embeddings()  
@@ -209,9 +209,9 @@ def run_pragma_gen(
                               LogStateCallBack()])
     logger.info('Running configurations initialized successfully')
 
-    # --------------------------------------------------
-    # train
-    # --------------------------------------------------
+    # # --------------------------------------------------
+    # # train
+    # # --------------------------------------------------
     # if not only_test:
     #     logger.info('-' * 100)
     #     logger.info('Start training')
@@ -233,9 +233,9 @@ def run_pragma_gen(
     logger.info('-' * 100)
     logger.info('Testing pragma generation')
 
-    config = BartConfig.from_pretrained('/mnt/lbosm1/home/Share/OMPify/outputs/fortran_tokom_mass_new_20231006_121545/models/config.json')
+    config = BartConfig.from_pretrained('/mnt/lbosm1/home/Share/OMPify/outputs/c_mass_20231012_130218/models/config.json')
     model = BartForClassificationAndGeneration(config, mode=enums.MODEL_MODE_GEN)
-    model.load_state_dict(torch.load('/mnt/lbosm1/home/Share/OMPify/outputs/fortran_tokom_mass_new_20231006_121545/models/pytorch_model.bin'))
+    model.load_state_dict(torch.load('/mnt/lbosm1/home/Share/OMPify/outputs/c_mass_20231012_130218/models/pytorch_model.bin'))
 
     collate_func=lambda batch: collate_fn(batch,
                                     args=args,
@@ -250,12 +250,16 @@ def run_pragma_gen(
     pred_table.align["Pred"] = "l"
 
     for data in tqdm(datasets['test']):
-        data = ('subroutine example ( ) do var 501 = num 586 , func 925 % npwt func 538 ( func 925 % nlt ( var 501 ) ) = func 815 ( var 501 , var 221 ) func 538 ( func 925 % nltm ( var 501 ) ) = func 525 ( func 815 ( var 501 , var 221 ) ) enddo end subroutine example', 'do private ( var 501 ) reduction ( + : var 3 )')
+        # import pdb ; pdb.set_trace()
+        # data = ('subroutine example ( ) do var 501 = num 586 , func 925 % npwt func 538 ( func 925 % nlt ( var 501 ) ) = func 815 ( var 501 , var 221 ) func 538 ( func 925 % nltm ( var 501 ) ) = func 525 ( func 815 ( var 501 , var 221 ) ) enddo end subroutine example', 'do private ( var 501 ) ')
+        # print(data)
+        # import pdb; pdb.set_trace()
         inputs = collate_func([data])
         # print(inputs)
+        # print(inputs)
         # inputs.pop('decoder_input_ids')
-        # labels = inputs.pop('labels')
-        labels = inputs['labels']
+        labels = inputs.pop('labels')
+        # labels = inputs['labels']
         
         output = model(**inputs)
         output = torch.argmax(output['logits'], dim=-1)
@@ -263,15 +267,16 @@ def run_pragma_gen(
         pred_table.add_row([concat_vars(code_vocab.decode(labels[0].tolist())), 
                             concat_vars(code_vocab.decode(output[0].tolist()))])
         
-        print(data)
-        print(labels[0].tolist())
-        print(output[0].tolist())
-        print(code_vocab.decode(labels[0].tolist()))
-        print(code_vocab.decode(output[0].tolist()))
+        # print(data)
+        # print(labels[0].tolist())
+        # print(output[0].tolist())
+        # print(code_vocab.decode(labels[0].tolist()))
+        # print(code_vocab.decode(output[0].tolist()))
 
-        print(concat_vars(code_vocab.decode(labels[0].tolist())))
-        print(concat_vars(code_vocab.decode(output[0].tolist())))
-        break
+        # print(concat_vars(code_vocab.decode(labels[0].tolist())))
+        # print(concat_vars(code_vocab.decode(output[0].tolist())))
+        # break
 
-    with open('aaaa.log', 'w') as f:
+    with open('result_c_tokom.log', 'w') as f:
         f.write(str(pred_table))
+

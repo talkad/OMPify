@@ -51,6 +51,10 @@ python main.py \
         --model-name debug
 
 
+PPL:
+python main.py         --langs fortran         --do-pre-train         --pre-train-tasks mass         --n-epoch 1        --batch-size 64         --fp16         --eval-batch-size 64         --no-dfg       --mass-mask-ratio 0.6 --model-name debug
+
+
 
 
 
