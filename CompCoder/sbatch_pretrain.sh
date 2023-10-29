@@ -56,5 +56,8 @@ python main.py         --langs fortran         --do-pre-train         --pre-trai
 
 
 
+python main.py         --langs c         --do-pre-train         --pre-train-tasks mass         --n-epoch 1        --batch-size 64         --fp16         --eval-batch-size 64   --no-ast      --no-dfg   --no-replaced    --mass-mask-ratio 0.6 --model-name debug
+
+
 
 

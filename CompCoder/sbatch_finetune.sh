@@ -27,3 +27,4 @@ conda deactivate
 
 python main.py         --langs fortran   --do-fine-tune      --task pragma_generation        --n-epoch 10        --batch-size 8         --fp16         --eval-batch-size 4         --no-dfg  --no-ast  --model-name fortran_tokom_mass
 
+python main.py         --langs c   --do-fine-tune      --task pragma_generation        --n-epoch 1   --batch-size 8         --fp16         --eval-batch-size 4         --no-dfg  --no-ast   --model-name  aaaaaaaaaaaaaaa

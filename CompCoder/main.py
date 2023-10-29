@@ -20,17 +20,17 @@ def main(args):
     model = None
     vocab = None
 
-    # _, _ = ppl_score(args=args)
+    _, _ = ppl_score(args=args)
 
-    if args.do_pre_train:
-        model, vocab = pre_train(args=args)
+    # if args.do_pre_train:
+    #     model, vocab = pre_train(args=args)
 
-    if args.do_fine_tune or args.only_test:
-        vocab = '/home/talkad/LIGHTBITS_SHARE/CompCoder_datasets/vocab_saved'
+    # if args.do_fine_tune or args.only_test:
+    #     vocab = '/home/talkad/LIGHTBITS_SHARE/CompCoder_datasets/vocab_saved'
 
-        train(args=args,
-              trained_model=model,
-              trained_vocab=vocab)
+    #     train(args=args,
+    #           trained_model=model,
+    #           trained_vocab=vocab)
 
 
 if __name__ == '__main__':

@@ -122,9 +122,9 @@ def ppl_score(args,
     logger.info('-' * 100)
     logger.info('Building model')
 
-    config = BartConfig.from_pretrained('/home/talkad/shared/models/fortran_tokom_cap_mass/models/mass/config.json')
+    config = BartConfig.from_pretrained('/home/talkad/shared/models/c_mass/models/mass/config.json')
     model = BartForClassificationAndGeneration(config)
-    model.load_state_dict(torch.load('/home/talkad/shared/models/fortran_tokom_cap_mass/models/mass/pytorch_model.bin'))
+    model.load_state_dict(torch.load('/home/talkad/shared/models/c_mass/models/mass/pytorch_model.bin'))
 
     # log model statistic
     logger.info('Model trainable parameters: {}'.format(human_format(count_params(model))))

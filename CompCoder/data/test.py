@@ -2,10 +2,9 @@ import re
 import json
 import os
 import logging
-import random
 from tqdm import tqdm
-from .asts import parse_tools, convert_representation as cr
-from data.asts.lexicalization import lexicalize
+from asts import parse_tools, convert_representation as cr
+from asts.lexicalization import lexicalize
 
 
 logger = logging.getLogger(__name__)
@@ -463,11 +462,10 @@ def parse_for_pragma_gen(dataset_path, lang, split, is_replaced):
     pragmas = []
     asts = []
 
-    num_augment = 1 if is_replaced else 1
-    dataset_path = os.path.join(dataset_path, lang, 'source', split, 'total.jsonl')
+    num_augment = 4 if is_replaced else 1
+
     # with open(os.path.join(dataset_path, lang, 'replaced' if is_replaced else 'source', split, 'total.jsonl'), 'r') as f:
-    with open(dataset_path, 'r') as f:
-        logger.info(f'dataset path {dataset_path}')
+    with open(os.path.join(dataset_path, lang, 'source', split, 'total.jsonl'), 'r') as f:
 
         for line in tqdm(f, desc='Parsing'):
             for _ in range(num_augment):
@@ -492,23 +490,14 @@ def parse_for_pragma_gen(dataset_path, lang, split, is_replaced):
                     pragma = pragma.replace('_', ' ')
                         
                     sources.append(source)
-
-                    ### simplify pragma ###
-                    updated_pragma = 'for'
-                    if 'private' in pragma:
-                        updated_pragma += ' private'
-                    if 'reduction' in pragma:
-                        updated_pragma += ' reduction'
-
-                    pragma = updated_pragma
-                    #######################
                     pragmas.append(pragma)                    
 
                 except Exception as e:
                     continue
 
-    data = list(zip(sources, pragmas))
-    random.shuffle(data)
-    sources, pragmas = zip(*data)
-
     return sources, pragmas
+
+# import pdb; pdb.set_trace()
+a = parse_for_pragma_gen('/home/talkad/LIGHTBITS_SHARE/CompCoder_datasets/OMP_Dataset', 'c', 'train', True)
+print('aa')
+print('bb')

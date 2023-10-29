@@ -3,9 +3,9 @@ from collections import Counter
 import re
 from sklearn.metrics import precision_score, recall_score, f1_score, accuracy_score
 
-from .bleu.google_bleu import avg_bleu
-from .meteor.meteor import Meteor
-from .rouge.rouge import Rouge
+from bleu.google_bleu import avg_bleu
+from meteor.meteor import Meteor
+from rouge.rouge import Rouge
 
 
 def ir_metrics(references, candidates):
@@ -260,6 +260,11 @@ def pragma2dict(pragma):
 
 
 def compare_directive(directive, preds, labels):
+    '''
+    label: for private ( ... ) 
+    generated: for private ( ... )  reduction ( ... )
+    private: TP   |   reduction: FP
+    '''
     result = {'TP': 0, 'FP': 0, 'TN': 0, 'FN': 0, 'Illegal': 0}
     preds = list(map(pragma2dict, preds))
     labels = list(map(pragma2dict, labels))
