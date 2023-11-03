@@ -437,6 +437,36 @@ def replace_pragma(pragma, mappings):
     return ' '.join(clause[0] if not clause[1] else f'{clause[0]} ( {clause[1]} )' for clause in replaced_pragma)
 
 
+def pragma2dict(pragma):
+    """
+    Convert an openmp pragma into dictionary.
+    do private ( var_501 )  ->   {private,vars: [var_501]}
+
+    Assumes legal omp pragmas
+    """
+    result = {}
+    pattern = r' (private)\s*\((.+?)\)| (reduction)\s*\((.+?):(.+?)\)| (simd)'
+
+    matches = re.findall(pattern, pragma)
+    for match in matches:
+        private, private_vars, reduction, reduction_op, reduction_vars, simd = match
+        
+        if private:
+            result['private'] = {}
+            result['private']['vars'] = private_vars.split()
+            # result['private']['vars'] = private_vars.replace(' ','').split(',')
+        elif reduction:
+            result['reduction'] = {}
+            result['reduction']['operator'] = reduction_op
+            result['reduction']['vars'] = reduction_vars.split()
+            # result['reduction']['vars'] = reduction_vars.replace(' ','').split(',')
+        elif simd:
+            result['simd'] = {}
+            result['simd']['vars'] = []
+
+    return result
+
+
 def parse_for_pragma_gen(dataset_path, lang, split, is_replaced):
     """
     Load and parse for pragma generation.
@@ -486,22 +516,34 @@ def parse_for_pragma_gen(dataset_path, lang, split, is_replaced):
                             continue
                         
                         pragma = replace_pragma(pragma, mapping)
+                        pragma = pragma.replace('_', ' ')
 
 
                     source = lexicalize(code, lang=lang, replaced=is_replaced, partial=True)
-                    pragma = pragma.replace('_', ' ')
-                        
-                    sources.append(source)
 
                     ### simplify pragma ###
-                    updated_pragma = 'for'
-                    if 'private' in pragma:
-                        updated_pragma += ' private'
-                    if 'reduction' in pragma:
-                        updated_pragma += ' reduction'
+                    # updated_pragma = 'for'
+                    # if 'private' in pragma:
+                    #     updated_pragma += ' private'
+                    # if 'reduction' in pragma:
+                    #     updated_pragma += ' reduction'
+
+                    # pragma = updated_pragma
+                    #######################
+
+                    ### AutoParLLM format ###
+                    pragma_dict = pragma2dict(pragma)
+                    updated_pragma = 'private'
+                    if 'private' in pragma_dict:
+                        updated_pragma += ' ' + ' '.join(pragma_dict['private']['vars'])
+                        source = 'private || ' + source 
 
                     pragma = updated_pragma
-                    #######################
+                    #########################
+
+                    # print('source\n', source)
+                    # print('pragma\n', pragma)
+                    sources.append(source)
                     pragmas.append(pragma)                    
 
                 except Exception as e:

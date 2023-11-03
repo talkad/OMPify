@@ -225,6 +225,24 @@ def rouge_l(references, candidates):
     return {'rouge-l': rouge_calculator.compute_score(references=references, candidates=candidates)[0]}
 
 
+def omp_valid_paren(pragma):
+    '''
+    balanced non canonical parentheses
+    '''
+    count = 0
+
+    for ch in pragma:
+        if ch < 0 or ch > 1:
+            return False
+
+        if ch == '(':
+            count += 1
+        elif ch == ')':
+            count -= 1
+
+    return count == 0
+
+
 def pragma2dict(pragma):
     """
     Convert an openmp pragma into dictionary.
@@ -310,6 +328,28 @@ def compare_vars(directive, preds, labels, operator=False):
         else:
             pred_vars = pred[directive] 
             label_vars = label[directive] 
+
+        total_vars = set(pred_vars + label_vars)
+
+        for var in total_vars:
+            if var in pred_vars and var in label_vars:
+                result['TP'] += 1
+            elif var not in pred_vars and var not in label_vars:
+                result['TN'] += 1
+            elif var not in pred_vars and var in label_vars:
+                result['FN'] += 1
+            elif var in pred_vars and var not in label_vars:
+                result['FP'] += 1
+
+    return result
+
+
+def compare_vars_autoPar(preds, labels):
+    result = {'TP': 0, 'FP': 0, 'TN': 0, 'FN': 0}
+
+    for pred, label in zip(preds, labels):
+        pred_vars = pred.split()[1:]
+        label_vars = label.split()[1:]
 
         total_vars = set(pred_vars + label_vars)
 
