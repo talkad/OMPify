@@ -231,16 +231,16 @@ def run_pragma_gen(
     #     trainer.save_metrics(split='train', metrics=metrics)
 
 
-    # --------------------------------------------------
-    # test
-    # --------------------------------------------------
+    # # --------------------------------------------------
+    # # test
+    # # --------------------------------------------------
 
     logger.info('-' * 100)
     logger.info('Testing pragma generation')
 
-    config = BartConfig.from_pretrained('/mnt/lbosm1/home/Share/OMPify/outputs/c_autopar_20231103_141820/models/config.json')
+    config = BartConfig.from_pretrained('/mnt/lbosm1/home/Share/OMPify/outputs/c_autopar_priavte_reduction_20231104_143951/models/config.json')
     model = BartForClassificationAndGeneration(config, mode=enums.MODEL_MODE_GEN)
-    model.load_state_dict(torch.load('/mnt/lbosm1/home/Share/OMPify/outputs/c_autopar_20231103_141820/models/pytorch_model.bin'))
+    model.load_state_dict(torch.load('/mnt/lbosm1/home/Share/OMPify/outputs/c_autopar_priavte_reduction_20231104_143951/models/pytorch_model.bin'))
 
     collate_func=lambda batch: collate_fn(batch,
                                     args=args,
@@ -277,6 +277,6 @@ def run_pragma_gen(
         # print(concat_vars(code_vocab.decode(output[0].tolist())))
         # break
 
-    with open('result_c_auropar.log', 'w') as f:
+    with open('result_c_auropar_private_reduction.log', 'w') as f:
         f.write(str(pred_table))
 

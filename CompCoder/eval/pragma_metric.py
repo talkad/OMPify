@@ -7,15 +7,26 @@ with open('../result_c_spt_mass.log', 'r') as f:
     lines = f.readlines()[3:-1]
 
     labels, preds = [], []
+    #################### Vars only ####################
+    # for line in lines:
+    #     line = line.replace('||', '##')
+    #     cols = line.split('|')
+    #     if '##' not in cols[2]:
+    #         continue
+    #     labels.append(cols[1].split('##')[1])
+    #     preds.append(cols[2].split('##')[1])
+
+    # print('autoPar', compare_vars_autoPar(preds, labels))
+
+    #################### Full pragma ####################
     for line in lines:
         cols = line.split('|')
+
         labels.append(cols[1])
         preds.append(cols[2])
 
-    print('autoPar', compare_vars_autoPar(preds, labels))
-
-    # print('private', compare_directive('private', preds, labels))
-    # print('reduction', compare_directive('reduction', preds, labels))
+    print('private', compare_directive('private', preds, labels))
+    print('reduction', compare_directive('reduction', preds, labels))
 
     # print('private var', compare_vars('private', preds, labels))
     # print('reduction var', compare_vars('reduction', preds, labels))
@@ -80,4 +91,8 @@ with open('../result_c_spt_mass.log', 'r') as f:
 
 
 # AutoParLLM
-# private vars {'TP': 5854, 'FP': 778, 'TN': 0, 'FN': 1971}
+# autoPar {'TP': 3185, 'FP': 213, 'TN': 0, 'FN': 657}
+
+#autopar reduction and private:
+# private vars  {'TP': 3080, 'FP': 209, 'TN': 0, 'FN': 762}
+#reduction vars {'TP': 210, 'FP': 90, 'TN': 0, 'FN': 104}

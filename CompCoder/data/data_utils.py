@@ -534,11 +534,12 @@ def parse_for_pragma_gen(dataset_path, lang, split, is_replaced):
                     ### AutoParLLM format ###
                     pragma_dict = pragma2dict(pragma)
                     updated_pragma = 'private'
+                    if 'reduction' in pragma_dict:
+                        source = 'reduction || ' + source 
                     if 'private' in pragma_dict:
-                        updated_pragma += ' ' + ' '.join(pragma_dict['private']['vars'])
                         source = 'private || ' + source 
 
-                    pragma = updated_pragma
+                    pragma = f"private {' '.join(pragma_dict['private']['vars']) if 'private' in pragma_dict else ''} || reduction {' '.join(pragma_dict['reduction']['vars']) if 'reduction' in pragma_dict else ''} "
                     #########################
 
                     # print('source\n', source)

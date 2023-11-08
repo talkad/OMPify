@@ -227,12 +227,12 @@ def rouge_l(references, candidates):
 
 def omp_valid_paren(pragma):
     '''
-    balanced non canonical parentheses
+    Balanced non-canonical parentheses
     '''
     count = 0
 
     for ch in pragma:
-        if ch < 0 or ch > 1:
+        if count < 0 or count > 1:
             return False
 
         if ch == '(':
@@ -243,38 +243,66 @@ def omp_valid_paren(pragma):
     return count == 0
 
 
+def omp_valid_pragma(pragma):
+    clause_vars = ['private', 'reduction']
+
+    if not omp_valid_paren(pragma):
+        return False
+
+    # parentheses after clause
+    paren_indexes = [idx for idx, ch in enumerate(pragma) if ch =='(']
+    for idx in paren_indexes:
+        if all([not pragma[:idx].rstrip().endswith(clause) for clause in clause_vars]):
+            return False
+
+    # clause before parentheses
+    for clause in clause_vars:
+        idx = pragma.find(clause)
+
+        if idx == -1: continue
+
+        if not pragma[idx+len(clause):].lstrip().startswith('('):
+            return False
+
+        if clause == 'reduction':
+            reduction_part = pragma[idx+len(clause):]
+            reduction_part = reduction_part[reduction_part.find('('):reduction_part.find(')')]
+
+            if reduction_part.count(':') != 1:
+                return False
+
+    return True
+
+
 def pragma2dict(pragma):
     """
     Convert an openmp pragma into dictionary.
-    do private ( var_501 )  ->   {private: [var_501]}
+    do private ( var_501 )  ->   {private.vars: [var_501]}
 
-    if the pragma is illegal, None is returned.
+    Assumes legal omp pragmas
     """
-    clauses = ['private', 'reduction', 'simd']
-
     result = {}
-    curr_clause = ''
-    collect_vars = False
+    pattern = r' (private)\s*\((.+?)\)| (reduction)\s*\((.+?):(.+?)\)| (simd)'
 
-    for token in pragma.split()[1:]:
-        if token in clauses:
-            curr_clause = token
-            result[token] = [] 
-        elif token == '(' and (collect_vars or not curr_clause):
-            return
-        elif token == ')' and not collect_vars:
-            return
-        elif token == '(' and not collect_vars:
-            collect_vars = True
-        elif token == ')' and collect_vars:
-            collect_vars = False
-            curr_clause = ''
-        elif collect_vars:
-            result[curr_clause].append(token)
-        else:
-            return
+    matches = re.findall(pattern, pragma)
+    for match in matches:
+        private, private_vars, reduction, reduction_op, reduction_vars, simd = match
+        
+        if private:
+            result['private'] = {}
+            result['private']['vars'] = private_vars.split()
+            # result['private']['vars'] = private_vars.replace(' ','').split(',')
+        elif reduction:
+            result['reduction'] = {}
+            result['reduction']['operator'] = reduction_op
+            result['reduction']['vars'] = reduction_vars.split()
+            # result['reduction']['vars'] = reduction_vars.replace(' ','').split(',')
+        elif simd:
+            result['simd'] = {}
+            result['simd']['vars'] = []
 
     return result
+
 
 
 def compare_directive(directive, preds, labels):
@@ -284,64 +312,61 @@ def compare_directive(directive, preds, labels):
     private: TP   |   reduction: FP
     '''
     result = {'TP': 0, 'FP': 0, 'TN': 0, 'FN': 0, 'Illegal': 0}
-    preds = list(map(pragma2dict, preds))
-    labels = list(map(pragma2dict, labels))
 
     for pred, label in zip(preds, labels):
-        if pred is None or label is None:
+        if directive not in label: continue
+        
+        if not omp_valid_pragma(pred) or not omp_valid_pragma(label):
             result['Illegal'] += 1
             continue
+        
+        pred_dict, label_dict = pragma2dict(pred), pragma2dict(label)
+        if directive not in label_dict: continue
 
-        if directive in pred and directive in label:
+        if directive in pred_dict and directive in label_dict:
             result['TP'] += 1
-        elif directive not in pred and directive not in label:
+        elif directive not in pred_dict and directive not in label_dict:
             result['TN'] += 1
-        elif directive not in pred and directive in label:
+        elif directive not in pred_dict and directive in label_dict:
             result['FN'] += 1
-        elif directive in pred and directive not in label:
+        elif directive in pred_dict and directive not in label_dict:
             result['FP'] += 1
-        else:
-            print(pred, label)
 
     return result
 
 
 def compare_vars(directive, preds, labels, operator=False):
     result = {'TP': 0, 'FP': 0, 'TN': 0, 'FN': 0}
-    preds = list(map(pragma2dict, preds))
-    labels = list(map(pragma2dict, labels))
 
     for pred, label in zip(preds, labels):
-        if pred is None or label is None or directive not in pred or directive not in label:
+        if not omp_valid_pragma(pred) or not omp_valid_pragma(label):
             continue
 
-        if directive == 'reduction':
-            if len(pred[directive]) < 3 or pred[directive][1] != ':' or label[directive][1] != ':':
-                continue
+        pred_dict, label_dict = pragma2dict(pred), pragma2dict(label)
+        if directive not in pred_dict or directive not in label_dict:
+            continue
 
-            if operator:
-                pred_vars = [pred[directive][0]]
-                label_vars = [label[directive][0]]
-            else:
-                pred_vars = pred[directive][2:]
-                label_vars = label[directive][2:]
+        if not operator:
+            pred_vars, label_vars = pred_dict[directive]['vars'], label_dict[directive]['vars']
+            total_vars = set(pred_vars + label_vars)
+
+            for var in total_vars:
+                if var in pred_vars and var in label_vars:
+                    result['TP'] += 1
+                elif var not in pred_vars and var not in label_vars:
+                    result['TN'] += 1
+                elif var not in pred_vars and var in label_vars:
+                    result['FN'] += 1
+                elif var in pred_vars and var not in label_vars:
+                    result['FP'] += 1
         else:
-            pred_vars = pred[directive] 
-            label_vars = label[directive] 
-
-        total_vars = set(pred_vars + label_vars)
-
-        for var in total_vars:
-            if var in pred_vars and var in label_vars:
+            if pred_dict['operator'] == label_dict['operator']:
                 result['TP'] += 1
-            elif var not in pred_vars and var not in label_vars:
-                result['TN'] += 1
-            elif var not in pred_vars and var in label_vars:
+            else:
                 result['FN'] += 1
-            elif var in pred_vars and var not in label_vars:
-                result['FP'] += 1
 
     return result
+
 
 
 def compare_vars_autoPar(preds, labels):
