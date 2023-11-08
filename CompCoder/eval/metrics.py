@@ -314,8 +314,10 @@ def compare_directive(directive, preds, labels):
     result = {'TP': 0, 'FP': 0, 'TN': 0, 'FN': 0, 'Illegal': 0}
 
     for pred, label in zip(preds, labels):
+        # if directive in pred and directive not in label:
+        #     print(label.rstrip(), pred.rstrip())
         if directive not in label: continue
-        
+
         if not omp_valid_pragma(pred) or not omp_valid_pragma(label):
             result['Illegal'] += 1
             continue
@@ -367,6 +369,14 @@ def compare_vars(directive, preds, labels, operator=False):
 
     return result
 
+
+def omp_compute_score(conf_matrix, metric='acc'):
+    if metric == 'precision':
+        return conf_matrix['TP'] / (conf_matrix['TP'] + conf_matrix['FP'])
+    elif metric == 'recall':
+        return conf_matrix['TP'] / (conf_matrix['TP'] + conf_matrix['FN'])
+    else:
+        return (conf_matrix['TP'] + conf_matrix['TN']) / (conf_matrix['TP'] + conf_matrix['TN'] + conf_matrix['FP'] + conf_matrix['FN'])
 
 
 def compare_vars_autoPar(preds, labels):
