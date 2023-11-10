@@ -1,36 +1,99 @@
 from metrics import *
+from typing import List
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+
+def evaluate_omp(output_file='../result_c_spt_mass.log'):
+    with open(output_file, 'r') as f:
+        lines = f.readlines()[3:-1]
+
+        labels, preds = [], []
+        #################### Vars only ####################
+        # for line in lines:
+        #     line = line.replace('||', '##')
+        #     cols = line.split('|')
+        #     if '##' not in cols[2]:
+        #         continue
+        #     labels.append(cols[1].split('##')[1])
+        #     preds.append(cols[2].split('##')[1])
+
+        # print('autoPar', compare_vars_autoPar(preds, labels))
+
+        #################### Full pragma ####################
+        for line in lines:
+            cols = line.split('|')
+
+            labels.append(cols[1])
+            preds.append(cols[2])
+
+        print('private', compare_directive('private', preds, labels))
+        print('reduction', compare_directive('reduction', preds, labels))
+
+        # print('private var', compare_vars('private', preds, labels))
+        # print('reduction var', compare_vars('reduction', preds, labels))
+        # print('reduction operator', compare_vars('reduction', preds, labels, operator=True))
+
+
+def plot_bar(result: dict, metric='precision'):
+    labels, values = [], []
+
+    for k, v in result.items():
+        labels.append(k)
+        values.append(omp_compute_score(v, metric=metric))
+
+    plt.bar(labels, values)
+    plt.ylabel(metric)
+    plt.title('OMP Pragma Generation Eval')
+    plt.grid(axis='y', linestyle='--', alpha=0.7)
+    plt.show()
+
+
+
+def plot_confusion_matrix(ax, cm, title):
+    sns.heatmap([[cm['TP'], cm['FP']], [cm['FN'], cm['TN']]], annot=True, fmt='d', cmap='Blues', cbar=False, ax=ax)
+    ax.set_xlabel('Predicted Labels')
+    ax.set_ylabel('True Labels')
+    ax.set_title(title)
+
+
+def plot_conf_marices(result: dict):
+    fig, axs = plt.subplots(2, 3, figsize=(12, 8))
+
+    for (k, cm), ax in zip(result.items(), axs.flatten()):
+        plot_confusion_matrix(ax, cm, title=k)
+
+    fig.delaxes(axs[1, 2])  # Remove the empty subplot
+    plt.tight_layout()      # Adjust layout
+
+    plt.subplots_adjust(wspace=0.5, hspace=0.5)
+    plt.show()
 
 
 
 
-with open('../result_c_spt_mass.log', 'r') as f:
-    lines = f.readlines()[3:-1]
 
-    labels, preds = [], []
-    #################### Vars only ####################
-    # for line in lines:
-    #     line = line.replace('||', '##')
-    #     cols = line.split('|')
-    #     if '##' not in cols[2]:
-    #         continue
-    #     labels.append(cols[1].split('##')[1])
-    #     preds.append(cols[2].split('##')[1])
 
-    # print('autoPar', compare_vars_autoPar(preds, labels))
 
-    #################### Full pragma ####################
-    for line in lines:
-        cols = line.split('|')
 
-        labels.append(cols[1])
-        preds.append(cols[2])
 
-    print('private', compare_directive('private', preds, labels))
-    print('reduction', compare_directive('reduction', preds, labels))
+plot_conf_marices({'private': {'TP': 68, 'FP': 37, 'TN': 2666, 'FN': 95, 'Illegal': 7},
+           'reduction': {'TP': 36, 'FP': 36, 'TN': 2760, 'FN': 34, 'Illegal': 7},
+           'private var': {'TP': 108, 'FP': 75, 'TN': 0, 'FN': 75},
+           'reduction var': {'TP': 33, 'FP': 7, 'TN': 0, 'FN': 7},
+           'reduction operator': {'TP': 35, 'FP': 1, 'TN': 0, 'FN': 1}})
 
-    # print('private var', compare_vars('private', preds, labels))
-    # print('reduction var', compare_vars('reduction', preds, labels))
-    # print('reduction operator', compare_vars('reduction', preds, labels, operator=True))
+
+
+
+
+
+
+
+
+
+
+
 
 
 # fortran
