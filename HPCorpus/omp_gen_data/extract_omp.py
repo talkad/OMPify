@@ -3,7 +3,7 @@ import os
 import sys
 from tqdm import tqdm
 from parse_tools import parse
-import preprocess
+import preprocess as preprocess
 import json
 import convert_representation as cr
 from typing import List
@@ -112,8 +112,8 @@ class OMP_Extractor():
         Constructs- parallel (for), sections, task, target
         Clause- shared, private, firstprivate, lastprivate, reduction, map
         '''
-        rel_constrcuts = ['do' if self.lang == 'fortran' else 'for']
-        rel_clauses = ['private', 'reduction', 'simd']
+        rel_constrcuts = ['do' if self.lang == 'fortran' else 'for', 'parallel', 'target', 'teams', 'distribute']
+        rel_clauses = ['private', 'firstprivate', 'lastprivate', 'reduction', 'simd']
         
         line = pragma.lstrip().lower()
         clauses = parse_openmp_pragma(line)
@@ -126,19 +126,23 @@ class OMP_Extractor():
             return
 
         rel_pragma = list(filter(lambda clause: clause[0] in rel_constrcuts+rel_clauses, clauses))    # filter out irrelevent clauses
-        rel_pragma = sorted(rel_pragma, key=lambda x: x[0])                                                       # sort the pragma
+
+        # unite private/firstprivate/lastprivate as we are not including loop scope
+        unified_pragma = []
+        private_vars = []
+        for clause in rel_pragma:
+            if clause[0] in ['private', 'lastprivate', 'firstprivate']:
+                private_vars += clause[1].split(',')
+            else:
+                unified_pragma.append(clause)
+
+        unified_pragma.append(('private', ','.join(private_vars)))
+        rel_pragma = unified_pragma
+
+        # rel_pragma = sorted(rel_pragma, key=lambda x: x[0])                                           # sort the pragma
         rel_pragma = list(map(lambda clause: f"{clause[0]}({' '.join(sorted(re.split('[ ,]', clause[1])))})" if clause[1] else clause[0] , rel_pragma))                      # convert to string
         
         return rel_pragma
-
-    def get_omp_construct(self, pragma):
-        rel_constrcuts = ['do' if self.lang == 'fortran' else 'for']
-        
-        line = pragma.decode().lstrip().lower()
-        clauses = parse_openmp_pragma(line)
-        clauses_key = [clause for clause, _ in clauses]
-
-        return '_'.join(list(filter(lambda clause: clause in rel_constrcuts, clauses_key)))
 
     def reorder_pragma(self, pragma_lst):
         rel_constrcuts = ['do' if self.lang == 'fortran' else 'for']
@@ -276,7 +280,21 @@ class DatasetCreatorOMP:
         self.replaced = replaced
 
         self.extractor = OMP_Extractor(lang=self.lang, replaced=self.replaced)
+
+    def is_valid_sample(self, loop, pragma):
+        if not loop.startswith('for'): 
+            return False
         
+        return True
+
+    def fix_pragma(self, pragma):
+        if 'private' in pragma:
+            idx = pragma.find('private')
+            if pragma[idx:].find('(') == -1:
+                return pragma[:idx]
+
+        return pragma
+
     def iterate_corpus(self):
         '''
         Iterate over the HPCorpus and for each function save the following representations:
@@ -284,11 +302,6 @@ class DatasetCreatorOMP:
             2. hash
             3. openmp pragma
         '''
-
-        rel_constrcuts = ['do' if self.lang == 'fortran' else 'for', 'sections', 'task', 'target', 'teams']
-        rel_clauses = ['shared', 'private', 'firstprivate', 'lastprivate', 'reduction', 'map', 'simd', '_']
-
-        counter = {construct:{clause:0 for clause in rel_clauses} for construct in rel_constrcuts}
 
         def parse_json(json_file):             
             with open(os.path.join(self.data_dir, json_file), 'r') as f:
@@ -301,114 +314,30 @@ class DatasetCreatorOMP:
                     code = js['code'].strip()
                     samples = self.extractor.extract_openmp(code if self.lang=='fortran' else remove_comp_dir(connect_lines(code)))
 
-                    # with open('debug.txt', 'a') as f:
-                    #     orig_pragma = count_pragma_omp(js['code'])
-
-                    #     if len(samples) < orig_pragma:
-                    #         f.write('code:\n'+js['code']+'\n')
-                    #         f.write(f"original pragmas: {orig_pragma}"+'\n')
-
-                    #         for _, target in samples:
-                    #             f.write(f'-- {target}')
-                    #         f.write('='*100)
-
                     if samples:
                             
-                            for loop, target in samples:
+                            for loop, pragma in samples:
+
+                                if not self.is_valid_sample(loop, pragma): continue
                                 
-                                # f.write('aa:\n'+loop +  '\n--\n' + target)
-                                if target:
-
-                                    ### count ###
-                                    clauses = parse_openmp_pragma(target)
-                                    clauses_key = [clause for clause, _ in clauses]
-
-                                    for k,v in counter.items():
-                                        if k in clauses_key:
-                                            counter[k]['_'] += 1
-
-                                        for vv in v:
-                                            if k in clauses_key and vv in clauses_key:
-                                                counter[k][vv] += 1
-                                    #############   
+                                if pragma:
+                                    full_pragma = pragma if isinstance(pragma, str) else ' '.join(pragma)
 
                                     dataset.append({'code': loop,
-                                                    'pragma': target if isinstance(target, str) else ' '.join(target),
+                                                    'pragma': self.fix_pragma(full_pragma),
                                                     'hash': preprocess.get_hash(loop)
                                     })
-                            # f.write('=========================\n')
                     
                     self.extractor.reset()
 
-                # print(counter)
                 # write the dataset into json
                 with open(os.path.join(self.save_dir, json_file), 'w') as data_f:
                     for sample in dataset:
                         data_f.write(json.dumps(sample) + '\n')                
-        
-        parse_json(f'batch_{sys.argv[1]}.jsonl')
+
+        parse_json(sys.argv[1])
 
 
 parser = DatasetCreatorOMP('/home/1010/talkad/Downloads/HPCorpus_final/fine_tune/fortran/batches', '/home/1010/talkad/Downloads/OMP_Dataset/fortran/replaced', lang='fortran', replaced=True)
 parser.iterate_corpus()
-
-
-
-
-
-
-
-
-# code = '''
-# static void _combine_masks_exclusion(float *const restrict dest, float *const restrict newmask, const size_t npixels,
-#                                      const float opacity, const int inverted)
-# {
-#   if(inverted)
-#   {
-# #ifdef _OPENMP
-# #if !defined(__SUNOS__) && !defined(__NetBSD__)
-# #pragma omp parallel for simd default(none) \
-#   dt_omp_firstprivate(npixels, opacity) \
-#   dt_omp_sharedconst(dest, newmask) aligned(dest, newmask : 64) \
-#   schedule(simd:static)
-# #else
-# #pragma omp parallel for shared(dest, newmask)
-# #endif
-# #endif
-#     for(int index = 0; index < npixels; index++)
-#     {
-#       const float mask = opacity * (1.0f - newmask[index]);
-#       const float pos = both_positive(dest[index], mask);
-#       const float neg = (1.0f - pos);
-#       const float b1 = dest[index];
-#       dest[index] = pos * MAX((1.0f - b1) * mask, b1 * (1.0f - mask)) + neg * MAX(b1, mask);
-#     }
-#   }
-#   else
-#   {
-# #ifdef _OPENMP
-# #if !defined(__SUNOS__) && !defined(__NetBSD__)
-# #pragma omp parallel for simd default(none) \\
-#   dt_omp_firstprivate(npixels, opacity) \\
-#   dt_omp_sharedconst(dest, newmask) aligned(dest, newmask : 64) \\
-#   schedule(simd:static)
-# #else
-# #pragma omp parallel for shared(dest, newmask)
-# #endif
-# #endif
-#     for(int index = 0; index < npixels; index++)
-#     {
-#       const float mask = opacity * newmask[index];
-#       const float pos = both_positive(dest[index], mask);
-#       const float neg = (1.0f - pos);
-#       const float b1 = dest[index];
-#       dest[index] = pos * MAX((1.0f - b1) * mask, b1 * (1.0f - mask)) + neg * MAX(b1, mask);
-#     }
-#   }
-# }
-# '''
-# code = remove_comp_dir(connect_lines(code))
-# print(code)
-# extractor = OMP_Extractor(lang='c', replaced=False)
-# print(extractor.extract_openmp(code))
 

@@ -4,7 +4,7 @@ from tqdm import tqdm
 from concurrent.futures.thread import ThreadPoolExecutor
 import logging
 
-import preprocess
+import HPCorpus.preprocess.preprocess as preprocess
 
 
 logging.basicConfig(filename='clean_c.log', format='%(asctime)s - %(levelname)s - %(name)s -   %(message)s',datefmt='%d/%m/%Y %H:%M:%S',level=logging.INFO)

@@ -4,7 +4,7 @@ from tqdm import tqdm
 # import dask
 # import dask.bag as db
 import concurrent.futures
-import preprocess
+import HPCorpus.preprocess.preprocess as preprocess
 import parse_tools 
 import shutil
 import tempfile
