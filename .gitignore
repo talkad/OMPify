@@ -11,3 +11,5 @@
 **/outputs
 **/.idea
 !vocab.txt
+!original.log
+*.key

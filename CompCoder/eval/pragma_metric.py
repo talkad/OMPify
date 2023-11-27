@@ -2,6 +2,7 @@ from metrics import *
 from typing import List
 import matplotlib.pyplot as plt
 import seaborn as sns
+import json
 
 
 def evaluate_omp(output_file='../result_c_spt_mass.log'):
@@ -21,11 +22,19 @@ def evaluate_omp(output_file='../result_c_spt_mass.log'):
         # print('autoPar', compare_vars_autoPar(preds, labels))
 
         #################### Full pragma ####################
-        for line in lines:
-            cols = line.split('|')
+        
+        ## talbe format ##
+        # for line in lines:
+        #     cols = line.split('|')
 
-            labels.append(cols[1])
-            preds.append(cols[2])
+        #     labels.append(cols[1])
+        #     preds.append(cols[2])
+
+        ## json format ##
+        for line in lines:
+            sample = json.loads(line.strip())
+            labels.append(sample['label'].lower())
+            preds.append(sample['prediction'].lower())
 
         print('private', compare_directive('private', preds, labels))
         print('reduction', compare_directive('reduction', preds, labels))
@@ -77,13 +86,11 @@ def plot_conf_marices(result: dict):
 
 
 
-plot_conf_marices({'private': {'TP': 68, 'FP': 37, 'TN': 2666, 'FN': 95, 'Illegal': 7},
-           'reduction': {'TP': 36, 'FP': 36, 'TN': 2760, 'FN': 34, 'Illegal': 7},
-           'private var': {'TP': 108, 'FP': 75, 'TN': 0, 'FN': 75},
-           'reduction var': {'TP': 33, 'FP': 7, 'TN': 0, 'FN': 7},
-           'reduction operator': {'TP': 35, 'FP': 1, 'TN': 0, 'FN': 1}})
-
-
+# plot_conf_marices({'private': {'TP': 68, 'FP': 37, 'TN': 2666, 'FN': 95, 'Illegal': 7},
+#            'reduction': {'TP': 36, 'FP': 36, 'TN': 2760, 'FN': 34, 'Illegal': 7},
+#            'private var': {'TP': 108, 'FP': 75, 'TN': 0, 'FN': 75},
+#            'reduction var': {'TP': 33, 'FP': 7, 'TN': 0, 'FN': 7},
+#            'reduction operator': {'TP': 35, 'FP': 1, 'TN': 0, 'FN': 1}})
 
 
 
@@ -159,3 +166,7 @@ plot_conf_marices({'private': {'TP': 68, 'FP': 37, 'TN': 2666, 'FN': 95, 'Illega
 #autopar reduction and private:
 # private vars  {'TP': 3080, 'FP': 209, 'TN': 0, 'FN': 762}
 #reduction vars {'TP': 210, 'FP': 90, 'TN': 0, 'FN': 104}
+
+
+# GPT3.5 turbo
+evaluate_omp('/mnt/lbosm1/home/Share/OMPify/CompCoder/comparison_models/GPT3.5_Turbo/output.log')

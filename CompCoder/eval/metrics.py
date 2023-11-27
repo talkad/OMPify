@@ -244,7 +244,7 @@ def omp_valid_paren(pragma):
 
 
 def omp_valid_pragma(pragma):
-    clause_vars = ['private', 'reduction']
+    clause_vars = ['private', 'reduction', 'collapse', 'schedule', 'shared', 'default', 'aligned', 'num_threads']
 
     if not omp_valid_paren(pragma):
         return False
@@ -256,7 +256,7 @@ def omp_valid_pragma(pragma):
             return False
 
     # clause before parentheses
-    for clause in clause_vars:
+    for clause in clause_vars[:2]:
         idx = pragma.find(clause)
 
         if idx == -1: continue
@@ -268,7 +268,7 @@ def omp_valid_pragma(pragma):
             reduction_part = pragma[idx+len(clause):]
             reduction_part = reduction_part[reduction_part.find('('):reduction_part.find(')')]
 
-            if reduction_part.count(':') != 1:
+            if reduction_part.count(':') == 0:
                 return False
 
     return True
@@ -314,9 +314,8 @@ def compare_directive(directive, preds, labels):
     result = {'TP': 0, 'FP': 0, 'TN': 0, 'FN': 0, 'Illegal': 0}
 
     for pred, label in zip(preds, labels):
-        # if directive in pred and directive not in label:
-        #     print(label.rstrip(), pred.rstrip())
-        if directive not in label: continue
+
+        # if directive not in label: continue
 
         if not omp_valid_pragma(pred) or not omp_valid_pragma(label):
             result['Illegal'] += 1
