@@ -1,1 +1,1 @@
-# HPCorpus_{OMP} database
+# HPCorpus<sub>OMP</sub> database

@@ -13,4 +13,5 @@
 !vocab.txt
 !original.log
 !processed.log
+!**/HPCorpus_omp/**
 *.key
