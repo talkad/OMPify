@@ -12,4 +12,5 @@
 **/.idea
 !vocab.txt
 !original.log
+!processed.log
 *.key

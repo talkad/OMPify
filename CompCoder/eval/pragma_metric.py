@@ -39,23 +39,28 @@ def evaluate_omp(output_file='../result_c_spt_mass.log'):
         print('private', compare_directive('private', preds, labels))
         print('reduction', compare_directive('reduction', preds, labels))
 
-        # print('private var', compare_vars('private', preds, labels))
-        # print('reduction var', compare_vars('reduction', preds, labels))
-        # print('reduction operator', compare_vars('reduction', preds, labels, operator=True))
+        print('private var', compare_vars('private', preds, labels))
+        print('reduction var', compare_vars('reduction', preds, labels))
+        print('reduction operator', compare_vars('reduction', preds, labels, operator=True))
 
 
-def plot_bar(result: dict, metric='precision'):
+def plot_bar(result: dict, metric='precision', output_file=None):
     labels, values = [], []
 
     for k, v in result.items():
         labels.append(k)
         values.append(omp_compute_score(v, metric=metric))
-
+    
+    plt.figure(figsize=(12,8))
     plt.bar(labels, values)
     plt.ylabel(metric)
     plt.title('OMP Pragma Generation Eval')
     plt.grid(axis='y', linestyle='--', alpha=0.7)
-    plt.show()
+
+    if not output_file:
+        plt.show()
+    else:
+        plt.savefig(output_file)
 
 
 
@@ -169,4 +174,15 @@ def plot_conf_marices(result: dict):
 
 
 # GPT3.5 turbo
-evaluate_omp('/mnt/lbosm1/home/Share/OMPify/CompCoder/comparison_models/GPT3.5_Turbo/output.log')
+# evaluate_omp('/mnt/lbosm1/home/Share/OMPify/CompCoder/comparison_models/GPT3.5_Turbo/output.log')
+# private {'TP': 86, 'FP': 131, 'TN': 1898, 'FN': 459, 'Illegal': 6}
+# reduction {'TP': 122, 'FP': 107, 'TN': 2254, 'FN': 91, 'Illegal': 6}
+# private var {'TP': 53, 'FP': 341, 'TN': 0, 'FN': 306}
+# reduction var {'TP': 107, 'FP': 38, 'TN': 0, 'FN': 50}
+# reduction operator {'TP': 94, 'FP': 0, 'TN': 0, 'FN': 28}
+
+plot_bar({'private': {'TP': 86, 'FP': 131, 'TN': 1898, 'FN': 459, 'Illegal': 6},
+           'reduction': {'TP': 122, 'FP': 107, 'TN': 2254, 'FN': 91, 'Illegal': 6},
+           'private var': {'TP': 53, 'FP': 341, 'TN': 0, 'FN': 306},
+           'reduction var': {'TP': 107, 'FP': 38, 'TN': 0, 'FN': 50},
+           'reduction operator': {'TP': 94, 'FP': 0, 'TN': 0, 'FN': 28}}, output_file='GPT_turbo')
