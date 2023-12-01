@@ -181,8 +181,8 @@ def plot_conf_marices(result: dict):
 # reduction var {'TP': 107, 'FP': 38, 'TN': 0, 'FN': 50}
 # reduction operator {'TP': 94, 'FP': 0, 'TN': 0, 'FN': 28}
 
-plot_bar({'private': {'TP': 86, 'FP': 131, 'TN': 1898, 'FN': 459, 'Illegal': 6},
+plot_conf_marices({'private': {'TP': 86, 'FP': 131, 'TN': 1898, 'FN': 459, 'Illegal': 6},
            'reduction': {'TP': 122, 'FP': 107, 'TN': 2254, 'FN': 91, 'Illegal': 6},
            'private var': {'TP': 53, 'FP': 341, 'TN': 0, 'FN': 306},
            'reduction var': {'TP': 107, 'FP': 38, 'TN': 0, 'FN': 50},
-           'reduction operator': {'TP': 94, 'FP': 0, 'TN': 0, 'FN': 28}}, output_file='GPT_turbo')
+           'reduction operator': {'TP': 94, 'FP': 0, 'TN': 0, 'FN': 28}}) #, output_file='GPT_turbo')
