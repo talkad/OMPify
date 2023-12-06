@@ -315,12 +315,9 @@ def compare_directive(directive, preds, labels):
 
     for pred, label in zip(preds, labels):
 
-        # if directive not in label: continue
-
         if not omp_valid_pragma(pred) or not omp_valid_pragma(label):
-            # print(label, ' - ', pred)
             result['Illegal'] += 1
-            continue
+            # continue
         
         pred_dict, label_dict = pragma2dict(pred), pragma2dict(label)
         # if directive not in label_dict: continue
@@ -341,8 +338,9 @@ def compare_vars(directive, preds, labels, operator=False):
     result = {'TP': 0, 'FP': 0, 'TN': 0, 'FN': 0}
 
     for pred, label in zip(preds, labels):
-        if not omp_valid_pragma(pred) or not omp_valid_pragma(label):
-            continue
+
+        # if not omp_valid_pragma(pred) or not omp_valid_pragma(label):
+        #     continue
 
         pred_dict, label_dict = pragma2dict(pred), pragma2dict(label)
         if directive not in pred_dict or directive not in label_dict:

@@ -24,17 +24,17 @@ def evaluate_omp(output_file='../result_c_spt_mass.log'):
         #################### Full pragma ####################
         
         ## talbe format ##
-        # for line in lines:
-        #     cols = line.split('|')
-
-        #     labels.append(cols[1])
-        #     preds.append(cols[2])
-
-        ## json format ##
         for line in lines:
-            sample = json.loads(line.strip())
-            labels.append(sample['label'].lower())
-            preds.append(sample['prediction'].lower())
+            cols = line.split('|')
+
+            labels.append(cols[1])
+            preds.append(cols[2])
+
+        # ## json format ##
+        # for line in lines:
+        #     sample = json.loads(line.strip())
+        #     labels.append(sample['label'].lower())
+        #     preds.append(sample['prediction'].lower())
 
         print('private', compare_directive('private', preds, labels))
         print('reduction', compare_directive('reduction', preds, labels))
@@ -173,6 +173,7 @@ def plot_conf_marices(result: dict):
 #reduction vars {'TP': 210, 'FP': 90, 'TN': 0, 'FN': 104}
 
 
+
 # GPT3.5 turbo
 # evaluate_omp('/mnt/lbosm1/home/Share/OMPify/CompCoder/comparison_models/GPT3.5_Turbo/output.log')
 # private {'TP': 86, 'FP': 131, 'TN': 1898, 'FN': 459, 'Illegal': 6}
@@ -181,8 +182,44 @@ def plot_conf_marices(result: dict):
 # reduction var {'TP': 107, 'FP': 38, 'TN': 0, 'FN': 50}
 # reduction operator {'TP': 94, 'FP': 0, 'TN': 0, 'FN': 28}
 
-plot_conf_marices({'private': {'TP': 86, 'FP': 131, 'TN': 1898, 'FN': 459, 'Illegal': 6},
-           'reduction': {'TP': 122, 'FP': 107, 'TN': 2254, 'FN': 91, 'Illegal': 6},
-           'private var': {'TP': 53, 'FP': 341, 'TN': 0, 'FN': 306},
-           'reduction var': {'TP': 107, 'FP': 38, 'TN': 0, 'FN': 50},
-           'reduction operator': {'TP': 94, 'FP': 0, 'TN': 0, 'FN': 28}}) #, output_file='GPT_turbo')
+
+# plot_conf_marices({'private': {'TP': 86, 'FP': 131, 'TN': 1898, 'FN': 459, 'Illegal': 6},
+#            'reduction': {'TP': 122, 'FP': 107, 'TN': 2254, 'FN': 91, 'Illegal': 6},
+#            'private var': {'TP': 53, 'FP': 341, 'TN': 0, 'FN': 306},
+#            'reduction var': {'TP': 107, 'FP': 38, 'TN': 0, 'FN': 50},
+#            'reduction operator': {'TP': 94, 'FP': 0, 'TN': 0, 'FN': 28}}) #, output_file='GPT_turbo')
+
+
+
+
+#  POLY BPE
+# evaluate_omp('/mnt/lbosm1/home/Share/code-lms/polycoder/tasks/omp/hf/final_results/poly_bpe.log')
+# private = {'TP': 446, 'FP': 55, 'TN': 1998, 'FN': 89, 'Illegal': 36}
+# reduction = {'TP': 172, 'FP': 1, 'TN': 2374, 'FN': 41, 'Illegal': 36}
+# private_var = {'TP': 838, 'FP': 251, 'TN': 0, 'FN': 424}
+# reduction_var = {'TP': 189, 'FP': 54, 'TN': 0, 'FN': 53}
+# reduction_operator = {'TP': 136, 'FP': 0, 'TN': 0, 'FN': 36}
+
+
+# evaluate_omp('/mnt/lbosm1/home/Share/code-lms/polycoder/tasks/omp/hf/final_results/poly_replaced_bpe.log')
+# private = {'TP': 609, 'FP': 87, 'TN': 3220, 'FN': 136, 'Illegal': 88}
+# reduction = {'TP': 189, 'FP': 0, 'TN': 3818, 'FN': 45, 'Illegal': 88}
+# private_var = {'TP': 1025, 'FP': 382, 'TN': 0, 'FN': 707}
+# reduction_var = {'TP': 202, 'FP': 50, 'TN': 0, 'FN': 59}
+# reduction_operator = {'TP': 154, 'FP': 0, 'TN': 0, 'FN': 35}
+
+
+
+# evaluate_omp('/mnt/lbosm1/home/Share/code-lms/polycoder/tasks/omp/hf/final_results/poly_tokom.log')
+private = {'TP': 395, 'FP': 203, 'TN': 3078, 'FN': 365, 'Illegal': 49}
+reduction = {'TP': 55, 'FP': 0, 'TN': 3804, 'FN': 182, 'Illegal': 49}
+private_var = {'TP': 282, 'FP': 835, 'TN': 0, 'FN': 1020}
+reduction_var = {'TP': 5, 'FP': 65, 'TN': 0, 'FN': 69}
+reduction_operator = {'TP': 50, 'FP': 0, 'TN': 0, 'FN': 5}
+
+for dist in [private, reduction, private_var, reduction_var, reduction_operator]:
+    metrics = ['precision', 'recall', 'acc']
+    for metric in metrics:
+        print(metric, omp_compute_score(dist, metric=metric))
+
+
