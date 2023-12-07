@@ -53,7 +53,7 @@ with open(hpcorpus_dir, 'r') as f, open(hpcorpus_omp_dir, 'w') as out:
 
         if count_pragma_omp(code) > 0:
             code = remove_comp_dir(connect_lines(code))
-            out.write(json.dumps({'code': code}) + 'n')
+            out.write(json.dumps({'code': code}) + '\n')
             samples += 1
 
         if idx % 10**4 == 0:
