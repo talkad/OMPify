@@ -11,7 +11,8 @@
 **/outputs
 **/.idea
 !vocab.txt
-!original.log
+!original.jsonl
 !processed.log
 !**/HPCorpus_omp/**
+!context*
 *.key
