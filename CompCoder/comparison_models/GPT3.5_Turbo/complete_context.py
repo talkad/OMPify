@@ -3,6 +3,18 @@ from tqdm import tqdm
 import json
 from transformers import GPT2Tokenizer
 
+def remove_pragma(code):
+    buf = []
+
+    for line in code.split('\n'):
+        if line.lstrip().startswith('#pragma'):
+            continue
+
+        buf.append(line)
+
+    return '\n'.join(buf)
+
+
 start_idx = 0
 context = 600
 
@@ -25,7 +37,7 @@ with open(test_file, 'r') as f, open(f'context_{context}.jsonl', 'w') as out:
     for idx, line in tqdm(enumerate(samples[start_idx:])):
         sample = json.loads(line)
         
-        code = sample["code"]
+        code = remove_pragma(sample["code"])
         tokens = tokenizer.encode(code, max_length=context, truncation=True)
         context_window = tokenizer.decode(tokens)
 
@@ -45,5 +57,3 @@ with open(test_file, 'r') as f, open(f'context_{context}.jsonl', 'w') as out:
         except Exception as e:
             print(f'failed at sample {start_idx+idx}')
 
-
-#  samples failed to exceeded length

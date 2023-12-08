@@ -1,0 +1,3 @@
+[submodule "Tokompiler"]
+	path = Tokompiler
+	url = https://github.com/Scientific-Computing-Lab-NRCN/Tokompiler
