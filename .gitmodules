@@ -1,3 +1,6 @@
 [submodule "Tokompiler"]
 	path = Tokompiler
 	url = https://github.com/Scientific-Computing-Lab-NRCN/Tokompiler
+[submodule "code-lms"]
+	path = code-lms
+	url = https://github.com/talkad/code-lms
