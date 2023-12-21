@@ -1,6 +1,6 @@
 # OMPify: Automated Conversion from Serial to Shared-Memory Parallelization
 
-The full paper can be found [here](https://arxiv.org/abs/2305.11999).
+The full OMPify paper can be found [here](https://arxiv.org/abs/2305.11999).
 
 There is an ever-present need for shared memory parallelization schemes to exploit the full potential of multi-core architectures.
 The most common parallelization API addressing this need today is OpenMP. Nevertheless, writing parallel code manually is complex and
@@ -12,174 +12,14 @@ memory attributes in parallel code, given its serial version. OMPify is based on
 
 In this repository,  you will find the dataset and source code required to reproduce the results we obtained.
 
-
-## Overview
-
 <p align="center">
   <img src="https://github.com/talkad/MAANE/assets/48416212/5b1c5113-61b5-4785-a75b-008788219a50" alt=""/>
 </p>
 
-## Results
-
-We compared our model, namely OMPify, with the baseline model Pragformer, as well as with ChatGPT. The results are as follows:
-
-### SPEC Benchmark
-<table>
-   <thead>
-      <tr>
-         <th>Model</th>
-         <th>Precision</th>
-         <th>Recall</th>
-         <th>F1</th>
-         <th>Accuracy</th>
-      </tr>
-   </thead>
-   <tbody>
-      <tr>
-         <td>PragFormer</td>
-         <td>0.445</td>
-         <td>0.802</td>
-         <td>0.572</td>
-         <td>0.837</td>
-      </tr>
-      <tr>
-         <td>OMPify</td>
-         <td><strong>0.572</strong></td>
-         <td><strong>0.854</strong></td>
-         <td><strong>0.685</strong></td>
-         <td><strong>0.894</strong></td>
-      </tr>
-   </tbody>
-</table>
-
-### PolyBench Benchmark
-
-<table>
-   <thead>
-      <tr>
-         <th>Model</th>
-         <th>Precision</th>
-         <th>Recall</th>
-         <th>F1</th>
-         <th>Accuracy</th>
-      </tr>
-   </thead>
-   <tbody>
-      <tr>
-         <td>PragFormer</td>
-         <td>0.703</td>
-         <td>0.301</td>
-         <td>0.422</td>
-         <td>0.648</td>
-      </tr>
-      <tr>
-         <td>OMPify</td>
-         <td><strong>0.836</strong></td>
-         <td><strong>0.810</strong></td>
-         <td><strong>0.823</strong></td>
-         <td><strong>0.851</strong></td>
-      </tr>
-   </tbody>
-</table>
-
-### NAS Benchmark
-
-<table>
-   <thead>
-      <tr>
-         <th>Model</th>
-         <th>Precision</th>
-         <th>Recall</th>
-         <th>F1</th>
-         <th>Accuracy</th>
-      </tr>
-   </thead>
-   <tbody>
-      <tr>
-         <td>PragFormer</td>
-         <td>0.635</td>
-         <td>0.734</td>
-         <td>0.681</td>
-         <td>0.634</td>
-      </tr>
-      <tr>
-         <td>OMPify</td>
-         <td><strong>0.731</strong></td>
-         <td><strong>0.886</strong></td>
-         <td><strong>0.801</strong></td>
-         <td><strong>0.766</strong></td>
-      </tr>
-   </tbody>
-</table>
-
-### ChatGPT Test
-
-<table>
-   <thead>
-      <tr>
-         <th>Model</th>
-         <th>Precision</th>
-         <th>Recall</th>
-         <th>F1</th>
-         <th>Accuracy</th>
-      </tr>
-   </thead>
-  <tbody>
-    <tr>
-      <td>ChatGPT</td>
-      <td>0.401</td>
-      <td><strong>0.913</strong></td>
-      <td>0.557</td>
-      <td>0.401</td>
-    </tr>
-    <tr>
-      <td>PragFormer</td>
-      <td>0.8153</td>
-      <td>0.7215</td>
-      <td>0.7655</td>
-      <td>0.8176</td>
-    </tr>
-    <tr>
-      <td>OMPify</td>
-      <td><strong>0.839</strong></td>
-      <td>0.818</td>
-      <td><strong>0.828</strong></td>
-      <td><strong>0.860</strong></td>
-    </tr>
-  </tbody>
-</table>
-
-
-
-## Examples
-
-1. Load repositories from github between range of dates and extract all the for-loops from C and C++ programming languages:
-```
-python main.py --load "1-5-2008..10-8-2022" --parse "(c|cpp)"
-```
-
-2. Show Open-MP trends in github:
-```
-python main.py --stats
-```
-output:
-![image](https://user-images.githubusercontent.com/48416212/194878405-4261c503-328b-46b1-883c-5b8dda06d7a3.png)
-
-
-
-
-
-## Further Explanation
-
-### HPCorpus Creation
-The creation of the HPCorpus can be performed using the `parse_llvm.py` file located in the `database_creator/parsers/HPCorpus_parser` directory. This script is responsible for parsing LLVM code representations and generating the HPCorpus dataset.
-
-### Tokenizer Functionality
-The tokenizer functionality is implemented in the `tokenizer.py` file located in the `tokenizer` folder. This file contains the necessary code for tokenizing all code representations, including textual code, Abstract Syntax Tree (AST), and Data Flow Graph (DFG).
-
-### Loading HPCorpus Data
-To load the data from the HPCorpus, you can utilize the `generator.py` file located in the `database_creator/parsers/HPCorpus_parser` directory. This file provides a convenient way to load the different representations of the HPCorpus dataset, including the original code, replaced-code, AST, and DFG.
-
-To access the various representations, you can use the functions and methods provided in the `generator.py` file. These functions will allow you to retrieve the desired data for further processing and analysis.
-
+## All Publications
+  1. [Advising OpenMP Parallelization via a Graph-Based Approach with Transformers
+](https://arxiv.org/abs/2305.11999)
+  2. [Quantifying OpenMP: Statistical Insights into Usage and Adoption](https://arxiv.org/abs/2308.08002)
+  3. [Scope is all you need: Transforming LLMs for HPC Code](https://arxiv.org/abs/2308.09440)
+  4. [Domain-Specific Code Language Models: Unraveling the Potential for HPC Codes and Tasks]()
 
