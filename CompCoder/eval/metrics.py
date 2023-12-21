@@ -283,6 +283,7 @@ def pragma2dict(pragma):
     """
     result = {}
     pattern = r' (private)\s*\((.+?)\)| (reduction)\s*\((.+?):(.+?)\)| (simd)'
+    pragma = pragma.replace(',', ' ')
 
     matches = re.findall(pattern, pragma)
     for match in matches:
@@ -343,11 +344,14 @@ def compare_vars(directive, preds, labels, operator=False):
         #     continue
 
         pred_dict, label_dict = pragma2dict(pred), pragma2dict(label)
-        if directive not in pred_dict or directive not in label_dict:
-            continue
+        # import pdb; pdb.set_trace()
+        # if directive not in pred_dict or directive not in label_dict:
+        #     continue
 
         if not operator:
-            pred_vars, label_vars = pred_dict[directive]['vars'], label_dict[directive]['vars']
+            pred_vars = [] if directive not in pred_dict else pred_dict[directive]['vars']
+            label_vars = [] if directive not in label_dict else label_dict[directive]['vars']
+
             total_vars = set(pred_vars + label_vars)
 
             for var in total_vars:
