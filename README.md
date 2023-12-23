@@ -21,5 +21,5 @@ In this repository,  you will find the dataset and source code required to repro
 ](https://arxiv.org/abs/2305.11999)
   2. [Quantifying OpenMP: Statistical Insights into Usage and Adoption](https://arxiv.org/abs/2308.08002)
   3. [Scope is all you need: Transforming LLMs for HPC Code](https://arxiv.org/abs/2308.09440)
-  4. [Domain-Specific Code Language Models: Unraveling the Potential for HPC Codes and Tasks]()
+  4. [Domain-Specific Code Language Models: Unraveling the Potential for HPC Codes and Tasks](https://arxiv.org/abs/2312.13322)
 
